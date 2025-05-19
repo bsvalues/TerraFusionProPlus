@@ -11,13 +11,16 @@ import {
   Users,
   Settings,
   Menu,
-  Calculator
+  Calculator,
+  PlusCircle
 } from 'lucide-react';
 
 // Import page components
 import { Home } from './pages/Home';
 import { Properties } from './pages/Properties';
 import { PropertyDetail } from './pages/PropertyDetail';
+import { AppraisalForm } from './pages/AppraisalForm';
+import { Appraisals } from './pages/Appraisals';
 
 const App = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -70,6 +73,16 @@ const App = () => {
                 >
                   <FileText className="mr-3" size={20} />
                   <span>Appraisals</span>
+                </Link>
+              </li>
+              <li className="mb-1">
+                <Link 
+                  to="/appraisals/new" 
+                  className={`flex items-center px-6 py-3 text-white hover:bg-blue-700 ${isActive('/appraisals/new') ? 'bg-blue-700' : ''}`}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <PlusCircle className="mr-3" size={20} />
+                  <span>New Appraisal</span>
                 </Link>
               </li>
               <li className="mb-1">
@@ -152,6 +165,9 @@ const App = () => {
               <Route path="/" element={<Home />} />
               <Route path="/properties" element={<Properties />} />
               <Route path="/properties/:id" element={<PropertyDetail />} />
+              <Route path="/appraisals" element={<Appraisals />} />
+              <Route path="/appraisals/new" element={<AppraisalForm />} />
+              <Route path="/appraisals/:id/edit" element={<AppraisalForm />} />
               <Route path="*" element={
                 <div className="flex flex-col items-center justify-center h-64">
                   <h2 className="text-2xl font-semibold text-gray-700 mb-4">Page Not Found</h2>
