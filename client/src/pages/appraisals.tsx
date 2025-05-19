@@ -79,7 +79,7 @@ export default function AppraisalsPage() {
          (appraisal.clientName && appraisal.clientName.toLowerCase().includes(searchQuery.toLowerCase())))
       : true;
     
-    const matchesStatusFilter = statusFilter 
+    const matchesStatusFilter = statusFilter && statusFilter !== 'all'
       ? appraisal.status === statusFilter
       : true;
     
@@ -168,7 +168,7 @@ export default function AppraisalsPage() {
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Statuses</SelectItem>
+              <SelectItem value="all">All Statuses</SelectItem>
               <SelectItem value="draft">Draft</SelectItem>
               <SelectItem value="in_progress">In Progress</SelectItem>
               <SelectItem value="review">In Review</SelectItem>
