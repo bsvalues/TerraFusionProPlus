@@ -35,7 +35,7 @@ export default function PropertiesPage() {
         property.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
         property.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
         property.state.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        property.zipCode.includes(searchQuery)
+        property.zip_code.includes(searchQuery)
       )
     : properties;
 
@@ -73,13 +73,13 @@ export default function PropertiesPage() {
   // Property type badge display
   const getPropertyTypeBadge = (type: string) => {
     const types: Record<string, { label: string, variant: "default" | "secondary" | "outline" }> = {
-      residential: { label: "Residential", variant: "default" },
-      commercial: { label: "Commercial", variant: "secondary" },
-      industrial: { label: "Industrial", variant: "outline" },
-      land: { label: "Land", variant: "outline" },
-      multifamily: { label: "Multi-Family", variant: "secondary" },
-      mixeduse: { label: "Mixed Use", variant: "secondary" },
-      special: { label: "Special Purpose", variant: "outline" },
+      "Single Family": { label: "Single Family", variant: "default" },
+      "Commercial": { label: "Commercial", variant: "secondary" },
+      "Industrial": { label: "Industrial", variant: "outline" },
+      "Land": { label: "Land", variant: "outline" },
+      "Multi-Family": { label: "Multi-Family", variant: "secondary" },
+      "Mixed Use": { label: "Mixed Use", variant: "secondary" },
+      "Special Purpose": { label: "Special Purpose", variant: "outline" },
     };
 
     const typeInfo = types[type] || { label: type, variant: "default" };
