@@ -202,9 +202,12 @@ export default function AppraisalDetails() {
                   </>
                 )}
               </CardContent>
-              <CardFooter>
+              <CardFooter className="flex gap-2">
                 <Button variant="outline" onClick={() => setLocation(`/properties/${property?.id}/edit`)}>
                   View Full Property Details
+                </Button>
+                <Button variant="secondary" onClick={() => setLocation(`/market-analysis/${property?.id}`)}>
+                  View Market Analysis
                 </Button>
               </CardFooter>
             </Card>

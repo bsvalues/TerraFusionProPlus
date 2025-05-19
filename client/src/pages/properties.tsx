@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building, Plus, Search, Home, Eye, Edit, Trash2, TrendingUp } from "lucide-react";
+import { Building, Plus, Search, Home, Eye, Edit, Trash2, TrendingUp, BarChart3 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { apiRequest } from "@/lib/queryClient";
 import { Badge } from "@/components/ui/badge";
@@ -156,10 +156,15 @@ export default function PropertiesPage() {
                     </>
                   )}
                 </div>
-                <div className="mt-4 flex justify-between">
-                  <Button variant="outline" size="sm" onClick={() => setLocation(`/properties/${property.id}`)}>
-                    <Eye className="mr-2 h-4 w-4" /> View
-                  </Button>
+                <div className="mt-4 flex justify-between items-center">
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setLocation(`/properties/${property.id}`)}>
+                      <Eye className="mr-2 h-4 w-4" /> View
+                    </Button>
+                    <Button variant="secondary" size="sm" onClick={() => setLocation(`/market-analysis/${property.id}`)}>
+                      <BarChart3 className="mr-2 h-4 w-4" /> Market
+                    </Button>
+                  </div>
                   <div className="space-x-2">
                     <Button variant="ghost" size="sm" onClick={() => setLocation(`/properties/${property.id}/edit`)}>
                       <Edit className="h-4 w-4" />

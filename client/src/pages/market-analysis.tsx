@@ -550,12 +550,28 @@ export default function MarketAnalysis() {
         </TabsContent>
       </Tabs>
       
-      <div className="flex justify-end">
+      <div className="flex justify-end mt-6 space-x-4">
+        {propertyId ? (
+          <Button 
+            onClick={() => setLocation(`/properties/${propertyId}`)}
+            variant="outline"
+          >
+            Back to Property
+          </Button>
+        ) : (
+          <Button 
+            onClick={() => setLocation("/properties")}
+            variant="outline"
+          >
+            Back to Properties
+          </Button>
+        )}
+        
         <Button 
           onClick={() => setLocation("/appraisals")}
           variant="outline"
         >
-          Back to Appraisals
+          View Appraisals
         </Button>
       </div>
     </div>
