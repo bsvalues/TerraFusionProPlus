@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, doublePrecision, varchar, date, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, doublePrecision, varchar, date, jsonb, uniqueIndex, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -65,6 +65,9 @@ export const appraisals = pgTable("appraisals", {
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  // New fields for reconciliation values
+  estimatedValue: integer("estimated_value"),
+  finalValue: integer("final_value"),
 });
 
 // Comparable Properties table
@@ -88,7 +91,23 @@ export const comparables = pgTable("comparables", {
   proximityMiles: doublePrecision("proximity_miles"),
   source: text("source"), // MLS, public records, etc.
   verified: boolean("verified").default(false),
+  daysOnMarket: integer("days_on_market"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Add a separate table for adjustments
+export const adjustments = pgTable("adjustments", {
+  id: serial("id").primaryKey(),
+  comparableId: integer("comparable_id").references(() => comparables.id).notNull(),
+  adjustmentType: text("adjustment_type").notNull(), // location, size, quality, etc.
+  amount: integer("amount").notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => {
+  return {
+    unq: unique().on(table.comparableId, table.adjustmentType),
+  }
 });
 
 // Attachments table (for photos, documents, etc.)
@@ -143,10 +162,18 @@ export const appraisalsRelations = relations(appraisals, ({ one, many }) => ({
   attachments: many(attachments),
 }));
 
-export const comparablesRelations = relations(comparables, ({ one }) => ({
+export const comparablesRelations = relations(comparables, ({ one, many }) => ({
   appraisal: one(appraisals, {
     fields: [comparables.appraisalId],
     references: [appraisals.id],
+  }),
+  adjustments: many(adjustments),
+}));
+
+export const adjustmentsRelations = relations(adjustments, ({ one }) => ({
+  comparable: one(comparables, {
+    fields: [adjustments.comparableId],
+    references: [comparables.id],
   }),
 }));
 
@@ -197,6 +224,12 @@ export const insertComparableSchema = createInsertSchema(comparables).omit({
   createdAt: true,
 });
 
+export const insertAdjustmentSchema = createInsertSchema(adjustments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertAttachmentSchema = createInsertSchema(attachments).omit({
   id: true,
   createdAt: true,
@@ -214,6 +247,9 @@ export type Appraisal = typeof appraisals.$inferSelect;
 
 export type InsertComparable = z.infer<typeof insertComparableSchema>;
 export type Comparable = typeof comparables.$inferSelect;
+
+export type InsertAdjustment = z.infer<typeof insertAdjustmentSchema>;
+export type Adjustment = typeof adjustments.$inferSelect;
 
 export type InsertAttachment = z.infer<typeof insertAttachmentSchema>;
 export type Attachment = typeof attachments.$inferSelect;

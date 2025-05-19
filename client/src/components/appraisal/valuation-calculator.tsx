@@ -1,481 +1,531 @@
-import { useState, useMemo } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import {
-  CircleDollarSign,
-  Building,
-  Calculator,
-  Home,
-  BarChart3,
-  LineChart,
-  FileText,
-} from "lucide-react";
+import { Calculator, TrendingUp, Building, Home, DollarSign } from "lucide-react";
+import { Comparable, Property } from "@shared/schema";
+import { 
+  calculateSalesComparisonValue, 
+  calculateIncomeValue, 
+  calculateCostValue,
+  calculateMarketStatistics
+} from "@/lib/calculations";
 
 interface ValuationCalculatorProps {
-  property: any;
-  comparables?: any[];
+  property: Property;
+  comparables?: Comparable[];
   onValueCalculated?: (method: string, value: number) => void;
 }
-
-const VALUATION_METHODS = [
-  {
-    id: "comparable",
-    name: "Comparable Sales",
-    description: "Estimate based on similar property sales",
-    icon: <Home className="h-4 w-4" />,
-  },
-  {
-    id: "income",
-    name: "Income Approach",
-    description: "Capitalization of potential rental income",
-    icon: <CircleDollarSign className="h-4 w-4" />,
-  },
-  {
-    id: "cost",
-    name: "Cost Approach",
-    description: "Construction cost less depreciation plus land value",
-    icon: <BarChart3 className="h-4 w-4" />,
-  },
-];
 
 export default function ValuationCalculator({
   property,
   comparables = [],
-  onValueCalculated,
+  onValueCalculated
 }: ValuationCalculatorProps) {
-  const [activeMethod, setActiveMethod] = useState("comparable");
-  const [calculatorValues, setCalculatorValues] = useState({
-    squareFeet: property?.squareFeet || 2000,
-    bedrooms: property?.bedrooms || 3,
-    bathrooms: property?.bathrooms || 2,
-    yearBuilt: property?.yearBuilt || 2000,
-    lotSize: property?.lotSize || 0.25,
-    rentalIncome: 2500,
-    vacancyRate: 5,
-    expenseRatio: 35,
-    capRate: 5,
-    constructionCost: 150,
-    landValuePerSqFt: 50,
+  const [activeTab, setActiveTab] = useState("sales");
+  
+  // Sales comparison approach
+  const [salesValue, setSalesValue] = useState<number>(0);
+  
+  // Income approach
+  const [monthlyRent, setMonthlyRent] = useState<number>(property.squareFeet ? property.squareFeet * 1.5 : 2000);
+  const [vacancyRate, setVacancyRate] = useState<number>(5);
+  const [operatingExpensesRate, setOperatingExpensesRate] = useState<number>(45);
+  const [capitalizationRate, setCapitalizationRate] = useState<number>(6);
+  const [incomeValue, setIncomeValue] = useState<number>(0);
+  
+  // Cost approach
+  const [landValue, setLandValue] = useState<number>(150000);
+  const [replacementCost, setReplacementCost] = useState<number>(150);
+  const [physicalDepreciation, setPhysicalDepreciation] = useState<number>(property.yearBuilt ? Math.min(70, (new Date().getFullYear() - property.yearBuilt) * 1.5) : 20);
+  const [functionalObsolescence, setFunctionalObsolescence] = useState<number>(5);
+  const [externalObsolescence, setExternalObsolescence] = useState<number>(5);
+  const [costValue, setCostValue] = useState<number>(0);
+  
+  // Reconciliation
+  const [finalValue, setFinalValue] = useState<number>(0);
+  const [marketStats, setMarketStats] = useState<{
+    averagePrice: number;
+    medianPrice: number;
+    averagePricePerSqft: number;
+    priceRange: [number, number];
+    averageDaysOnMarket: number;
+    salesVolume: number;
+  }>({
+    averagePrice: 0,
+    medianPrice: 0,
+    averagePricePerSqft: 0,
+    priceRange: [0, 0],
+    averageDaysOnMarket: 0,
+    salesVolume: 0
   });
   
-  // Format currency
-  const formatCurrency = (value: number) => {
+  // Format currency for display
+  const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-      maximumFractionDigits: 0,
-    }).format(value);
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
   };
   
-  // Helper function to update calculator values
-  const updateValue = (key: string, value: string | number) => {
-    setCalculatorValues({
-      ...calculatorValues,
-      [key]: typeof value === 'string' ? parseFloat(value) || 0 : value,
-    });
-  };
-  
-  // Calculate value based on comparable sales approach
-  const comparableValue = useMemo(() => {
-    const { squareFeet, bedrooms, bathrooms, yearBuilt } = calculatorValues;
-    const currentYear = new Date().getFullYear();
-    
-    if (!squareFeet) return 0;
-    
-    // Start with average price per square foot from comparables or use default
-    let avgPricePerSqFt = 200; // Default fallback
-    
+  // Calculate sales comparison value when comparables change
+  useEffect(() => {
     if (comparables && comparables.length > 0) {
-      // Calculate average price per square foot from comparable properties
-      avgPricePerSqFt = comparables.reduce((sum, comp) => {
-        if (comp.salePrice && comp.squareFeet) {
-          return sum + (comp.salePrice / comp.squareFeet);
-        }
-        return sum;
-      }, 0) / comparables.filter(comp => comp.salePrice && comp.squareFeet).length;
-      
-      // If no valid comparables with both price and sqft, use default
-      if (isNaN(avgPricePerSqFt)) avgPricePerSqFt = 200;
-    }
-    
-    let baseValue = squareFeet * avgPricePerSqFt;
-    
-    // Adjustments based on bedrooms (more bedrooms typically increase value)
-    if (bedrooms > 2) {
-      baseValue *= (1 + ((bedrooms - 2) * 0.05));
-    }
-    
-    // Adjustments based on bathrooms
-    if (bathrooms > 1.5) {
-      baseValue *= (1 + ((bathrooms - 1.5) * 0.04));
-    }
-    
-    // Age adjustment (newer properties are typically more valuable)
-    if (yearBuilt > 0) {
-      const age = currentYear - yearBuilt;
-      if (age < 5) {
-        baseValue *= 1.15; // Premium for new construction
-      } else if (age < 20) {
-        baseValue *= 1.05; // Slight premium for newer properties
-      } else if (age > 50) {
-        baseValue *= 0.85; // Discount for older properties unless historic
+      const value = calculateSalesComparisonValue(property, comparables, []);
+      setSalesValue(value);
+      if (onValueCalculated) {
+        onValueCalculated("sales_comparison", value);
       }
+      
+      // Calculate market statistics
+      setMarketStats(calculateMarketStatistics(comparables));
     }
-    
-    return Math.round(baseValue);
-  }, [calculatorValues, comparables]);
+  }, [property, comparables, onValueCalculated]);
   
-  // Calculate value based on income approach
-  const incomeValue = useMemo(() => {
-    const { rentalIncome, vacancyRate, expenseRatio, capRate } = calculatorValues;
-    
-    if (!rentalIncome || !capRate) return 0;
-    
-    // Monthly rent to annual
-    const annualRent = rentalIncome * 12;
-    
-    // Account for vacancy
-    const effectiveGrossIncome = annualRent * (1 - (vacancyRate / 100));
-    
-    // Account for expenses
-    const netOperatingIncome = effectiveGrossIncome * (1 - (expenseRatio / 100));
-    
-    // Apply cap rate (as a percentage)
-    const propertyValue = netOperatingIncome / (capRate / 100);
-    
-    return Math.round(propertyValue);
-  }, [calculatorValues]);
-  
-  // Calculate value based on cost approach
-  const costValue = useMemo(() => {
-    const { squareFeet, yearBuilt, lotSize, constructionCost, landValuePerSqFt } = calculatorValues;
-    const currentYear = new Date().getFullYear();
-    
-    if (!squareFeet || !yearBuilt) return 0;
-    
-    // Calculate land value
-    const landValue = lotSize * 43560 * landValuePerSqFt; // 43560 sq ft in an acre
-    
-    // Calculate replacement cost
-    const replacementCost = squareFeet * constructionCost;
-    
-    // Calculate depreciation
-    const age = currentYear - yearBuilt;
-    const economicLife = 60; // Typical economic life of a building in years
-    const straightLineDepreciation = Math.min(age / economicLife, 0.7); // Cap at 70% depreciation
-    const depreciation = replacementCost * straightLineDepreciation;
-    
-    // Land value + (Replacement cost - Depreciation)
-    const propertyValue = landValue + (replacementCost - depreciation);
-    
-    return Math.round(propertyValue);
-  }, [calculatorValues]);
-  
-  // Get value based on current method
-  const currentValue = useMemo(() => {
-    switch (activeMethod) {
-      case "comparable":
-        return comparableValue;
-      case "income":
-        return incomeValue;
-      case "cost":
-        return costValue;
-      default:
-        return 0;
-    }
-  }, [activeMethod, comparableValue, incomeValue, costValue]);
-  
-  // Find highest and lowest values for comparison
-  const highestValue = Math.max(comparableValue, incomeValue, costValue);
-  const lowestValue = Math.min(comparableValue, incomeValue, costValue);
-  
-  // Calculate average of all three methods
-  const averageValue = Math.round(
-    (comparableValue + incomeValue + costValue) / 3
-  );
-  
-  // Call the onValueCalculated callback when currentValue changes
-  useMemo(() => {
+  // Calculate income approach value when inputs change
+  useEffect(() => {
+    const value = calculateIncomeValue(
+      property,
+      monthlyRent,
+      vacancyRate,
+      operatingExpensesRate,
+      capitalizationRate
+    );
+    setIncomeValue(value);
     if (onValueCalculated) {
-      onValueCalculated(activeMethod, currentValue);
+      onValueCalculated("income", value);
     }
-  }, [currentValue, activeMethod, onValueCalculated]);
+  }, [property, monthlyRent, vacancyRate, operatingExpensesRate, capitalizationRate, onValueCalculated]);
+  
+  // Calculate cost approach value when inputs change
+  useEffect(() => {
+    const value = calculateCostValue(
+      property,
+      landValue,
+      replacementCost,
+      physicalDepreciation,
+      functionalObsolescence,
+      externalObsolescence
+    );
+    setCostValue(value);
+    if (onValueCalculated) {
+      onValueCalculated("cost", value);
+    }
+  }, [property, landValue, replacementCost, physicalDepreciation, functionalObsolescence, externalObsolescence, onValueCalculated]);
+  
+  // Calculate final reconciled value
+  useEffect(() => {
+    const salesWeight = activeTab === "sales" ? 0.6 : 0.4;
+    const incomeWeight = activeTab === "income" ? 0.5 : 0.3;
+    const costWeight = activeTab === "cost" ? 0.5 : 0.3;
+    
+    const totalWeight = salesWeight + incomeWeight + costWeight;
+    
+    const reconciled = (
+      (salesValue * salesWeight) +
+      (incomeValue * incomeWeight) +
+      (costValue * costWeight)
+    ) / totalWeight;
+    
+    setFinalValue(Math.round(reconciled));
+    
+    if (onValueCalculated) {
+      onValueCalculated("final", Math.round(reconciled));
+    }
+  }, [salesValue, incomeValue, costValue, activeTab, onValueCalculated]);
   
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center">
-          <Calculator className="mr-2 h-5 w-5 text-primary" />
-          Property Valuation Calculator
-        </CardTitle>
-        <CardDescription>
-          Calculate property value using multiple appraisal methods
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Tabs value={activeMethod} onValueChange={setActiveMethod} className="space-y-4">
-          <TabsList className="grid grid-cols-3 mb-4">
-            {VALUATION_METHODS.map((method) => (
-              <TabsTrigger key={method.id} value={method.id} className="flex items-center">
-                {method.icon}
-                <span className="ml-2 hidden sm:inline">{method.name}</span>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-xl flex items-center">
+            <Calculator className="mr-2 h-5 w-5 text-primary" />
+            Property Valuation Calculator
+          </CardTitle>
+          <CardDescription>
+            Calculate estimated market value using multiple approaches
+          </CardDescription>
+        </CardHeader>
+        
+        <CardContent>
+          <Tabs defaultValue="sales" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+            <TabsList className="grid grid-cols-3 mb-4">
+              <TabsTrigger value="sales" className="flex items-center">
+                <TrendingUp className="h-4 w-4 mr-2" />
+                Sales Comparison
               </TabsTrigger>
-            ))}
-          </TabsList>
-          
-          {/* Comparable Sales Approach */}
-          <TabsContent value="comparable" className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <Label htmlFor="squareFeet">Square Feet</Label>
-                <Input
-                  id="squareFeet"
-                  type="number"
-                  value={calculatorValues.squareFeet}
-                  onChange={(e) => updateValue("squareFeet", e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="bedrooms">Bedrooms</Label>
-                <Input
-                  id="bedrooms"
-                  type="number"
-                  value={calculatorValues.bedrooms}
-                  onChange={(e) => updateValue("bedrooms", e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="bathrooms">Bathrooms</Label>
-                <Input
-                  id="bathrooms"
-                  type="number"
-                  value={calculatorValues.bathrooms}
-                  onChange={(e) => updateValue("bathrooms", e.target.value)}
-                  step="0.5"
-                />
-              </div>
-              <div>
-                <Label htmlFor="yearBuilt">Year Built</Label>
-                <Input
-                  id="yearBuilt"
-                  type="number"
-                  value={calculatorValues.yearBuilt}
-                  onChange={(e) => updateValue("yearBuilt", e.target.value)}
-                />
-              </div>
-            </div>
+              <TabsTrigger value="income" className="flex items-center">
+                <DollarSign className="h-4 w-4 mr-2" />
+                Income Approach
+              </TabsTrigger>
+              <TabsTrigger value="cost" className="flex items-center">
+                <Building className="h-4 w-4 mr-2" />
+                Cost Approach
+              </TabsTrigger>
+            </TabsList>
             
-            <div className="text-sm text-muted-foreground mt-2">
-              {comparables && comparables.length > 0 ? (
-                <>This calculation is based on {comparables.length} comparable properties in the area.</>
-              ) : (
-                <>This calculation uses default market values for your area. Add comparable properties for more accuracy.</>
-              )}
-            </div>
-          </TabsContent>
-          
-          {/* Income Approach */}
-          <TabsContent value="income" className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <Label htmlFor="rentalIncome">Monthly Rental Income ($)</Label>
-                <Input
-                  id="rentalIncome"
-                  type="number"
-                  value={calculatorValues.rentalIncome}
-                  onChange={(e) => updateValue("rentalIncome", e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="vacancyRate">Vacancy Rate (%)</Label>
-                <Input
-                  id="vacancyRate"
-                  type="number"
-                  value={calculatorValues.vacancyRate}
-                  onChange={(e) => updateValue("vacancyRate", e.target.value)}
-                  step="0.1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="expenseRatio">Operating Expense Ratio (%)</Label>
-                <Input
-                  id="expenseRatio"
-                  type="number"
-                  value={calculatorValues.expenseRatio}
-                  onChange={(e) => updateValue("expenseRatio", e.target.value)}
-                  step="0.1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="capRate">Capitalization Rate (%)</Label>
-                <Input
-                  id="capRate"
-                  type="number"
-                  value={calculatorValues.capRate}
-                  onChange={(e) => updateValue("capRate", e.target.value)}
-                  step="0.1"
-                />
-              </div>
-            </div>
-            
-            <div className="text-sm text-muted-foreground mt-2">
-              The income approach calculates property value based on potential rental income and expenses.
-            </div>
-          </TabsContent>
-          
-          {/* Cost Approach */}
-          <TabsContent value="cost" className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <Label htmlFor="constructionCost">Construction Cost ($ per sqft)</Label>
-                <Input
-                  id="constructionCost"
-                  type="number"
-                  value={calculatorValues.constructionCost}
-                  onChange={(e) => updateValue("constructionCost", e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="landValuePerSqFt">Land Value ($ per sqft)</Label>
-                <Input
-                  id="landValuePerSqFt"
-                  type="number"
-                  value={calculatorValues.landValuePerSqFt}
-                  onChange={(e) => updateValue("landValuePerSqFt", e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="lotSize">Lot Size (acres)</Label>
-                <Input
-                  id="lotSize"
-                  type="number"
-                  value={calculatorValues.lotSize}
-                  onChange={(e) => updateValue("lotSize", e.target.value)}
-                  step="0.01"
-                />
-              </div>
-              <div>
-                <Label htmlFor="yearBuilt2">Year Built</Label>
-                <Input
-                  id="yearBuilt2"
-                  type="number"
-                  value={calculatorValues.yearBuilt}
-                  onChange={(e) => updateValue("yearBuilt", e.target.value)}
-                />
-              </div>
-            </div>
-            
-            <div className="text-sm text-muted-foreground mt-2">
-              The cost approach estimates property value as the cost to construct a replacement building, minus depreciation, plus land value.
-            </div>
-          </TabsContent>
-          
-          {/* Results */}
-          <div className="mt-6 pt-6 border-t space-y-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <h3 className="font-medium">Estimated Value:</h3>
-                <p className="text-sm text-muted-foreground">
-                  Using {activeMethod === "comparable" ? "Comparable Sales" : activeMethod === "income" ? "Income" : "Cost"} Approach
-                </p>
-              </div>
-              <div className="text-2xl font-bold text-primary">
-                {formatCurrency(currentValue)}
-              </div>
-            </div>
-            
-            {/* Method Comparison */}
-            <div>
-              <h4 className="text-sm font-medium mb-2">Valuation Method Comparison</h4>
-              <div className="space-y-2">
-                {/* Comparable Method Bar */}
+            {/* Sales Comparison Approach */}
+            <TabsContent value="sales" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <div className="flex justify-between text-xs mb-1">
-                    <span>Comparable Sales</span>
-                    <span>{formatCurrency(comparableValue)}</span>
+                  <div className="mb-4">
+                    <h3 className="text-lg font-medium mb-2">Sales Comparison Approach</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Valuation based on {comparables.length} comparable properties in the area.
+                    </p>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2.5">
-                    <div 
-                      className="bg-blue-600 h-2.5 rounded-full" 
-                      style={{ width: highestValue > 0 ? `${(comparableValue / highestValue) * 100}%` : '0%' }}
-                    ></div>
+                  
+                  <div className="space-y-4">
+                    <div className="p-4 border rounded-lg">
+                      <div className="font-medium mb-1">Estimated Value</div>
+                      <div className="text-2xl font-bold text-primary">{formatCurrency(salesValue)}</div>
+                      <div className="text-sm text-muted-foreground mt-1">
+                        Based on adjusted comparable sales
+                      </div>
+                    </div>
+                    
+                    <div className="p-4 border rounded-lg">
+                      <div className="font-medium mb-1">Price per Sq. Ft.</div>
+                      <div className="text-xl font-bold">
+                        {property.squareFeet && salesValue 
+                          ? `$${Math.round(salesValue / property.squareFeet)}/sqft` 
+                          : 'N/A'}
+                      </div>
+                      <div className="text-sm text-muted-foreground mt-1">
+                        Market average: ${Math.round(marketStats.averagePricePerSqft)}/sqft
+                      </div>
+                    </div>
                   </div>
                 </div>
                 
-                {/* Income Method Bar */}
-                <div>
-                  <div className="flex justify-between text-xs mb-1">
-                    <span>Income</span>
-                    <span>{formatCurrency(incomeValue)}</span>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h4 className="font-medium">Market Statistics</h4>
+                    <span className="text-xs text-muted-foreground">Based on {marketStats.salesVolume} sales</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2.5">
-                    <div 
-                      className="bg-green-600 h-2.5 rounded-full" 
-                      style={{ width: highestValue > 0 ? `${(incomeValue / highestValue) * 100}%` : '0%' }}
-                    ></div>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3 border rounded">
+                      <div className="text-sm text-muted-foreground">Average Price</div>
+                      <div className="font-bold">{formatCurrency(marketStats.averagePrice)}</div>
+                    </div>
+                    <div className="p-3 border rounded">
+                      <div className="text-sm text-muted-foreground">Median Price</div>
+                      <div className="font-bold">{formatCurrency(marketStats.medianPrice)}</div>
+                    </div>
+                    <div className="p-3 border rounded">
+                      <div className="text-sm text-muted-foreground">Price Range</div>
+                      <div className="font-bold">
+                        {formatCurrency(marketStats.priceRange[0])} - {formatCurrency(marketStats.priceRange[1])}
+                      </div>
+                    </div>
+                    <div className="p-3 border rounded">
+                      <div className="text-sm text-muted-foreground">Days on Market</div>
+                      <div className="font-bold">{Math.round(marketStats.averageDaysOnMarket)} days</div>
+                    </div>
                   </div>
-                </div>
-                
-                {/* Cost Method Bar */}
-                <div>
-                  <div className="flex justify-between text-xs mb-1">
-                    <span>Cost</span>
-                    <span>{formatCurrency(costValue)}</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2.5">
-                    <div 
-                      className="bg-amber-600 h-2.5 rounded-full" 
-                      style={{ width: highestValue > 0 ? `${(costValue / highestValue) * 100}%` : '0%' }}
-                    ></div>
-                  </div>
-                </div>
-                
-                {/* Average Value */}
-                <div className="pt-2 mt-2 border-t">
-                  <div className="flex justify-between text-xs mb-1">
-                    <span className="font-medium">Reconciled Value (Average)</span>
-                    <span className="font-medium">{formatCurrency(averageValue)}</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2.5">
-                    <div 
-                      className="bg-primary h-2.5 rounded-full" 
-                      style={{ width: highestValue > 0 ? `${(averageValue / highestValue) * 100}%` : '0%' }}
-                    ></div>
+                  
+                  <div className="p-4 border rounded-lg bg-slate-50">
+                    <h4 className="font-medium mb-2">Subject Property</h4>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Address:</span> {property.address}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Size:</span> {property.squareFeet?.toLocaleString()} sqft
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Year Built:</span> {property.yearBuilt || 'N/A'}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Bed/Bath:</span> {property.bedrooms || 'N/A'}/{property.bathrooms || 'N/A'}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
+            </TabsContent>
+            
+            {/* Income Approach */}
+            <TabsContent value="income" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <div className="mb-4">
+                    <h3 className="text-lg font-medium mb-2">Income Approach</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Valuation based on income potential and capitalization rate.
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="p-4 border rounded-lg">
+                      <div className="font-medium mb-1">Estimated Value</div>
+                      <div className="text-2xl font-bold text-primary">{formatCurrency(incomeValue)}</div>
+                      <div className="text-sm text-muted-foreground mt-1">
+                        Based on capitalized rental income
+                      </div>
+                    </div>
+                    
+                    <div className="p-4 border rounded-lg space-y-2">
+                      <div>
+                        <span className="text-sm text-muted-foreground">Annual Gross Income:</span>{' '}
+                        {formatCurrency(monthlyRent * 12)}
+                      </div>
+                      <div>
+                        <span className="text-sm text-muted-foreground">Effective Gross Income:</span>{' '}
+                        {formatCurrency(monthlyRent * 12 * (1 - vacancyRate / 100))}
+                      </div>
+                      <div>
+                        <span className="text-sm text-muted-foreground">Net Operating Income:</span>{' '}
+                        {formatCurrency(monthlyRent * 12 * (1 - vacancyRate / 100) * (1 - operatingExpensesRate / 100))}
+                      </div>
+                      <div>
+                        <span className="text-sm text-muted-foreground">Cap Rate:</span>{' '}
+                        {capitalizationRate}%
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="font-medium mb-1">Income Parameters</div>
+                  
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="monthly-rent">Monthly Rent</Label>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-muted-foreground">$</span>
+                        <Input
+                          id="monthly-rent"
+                          type="number"
+                          value={monthlyRent}
+                          onChange={(e) => setMonthlyRent(Number(e.target.value))}
+                          className="flex-1"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <Label htmlFor="vacancy-rate">Vacancy Rate: {vacancyRate}%</Label>
+                      </div>
+                      <Slider
+                        id="vacancy-rate"
+                        min={0}
+                        max={20}
+                        step={1}
+                        value={[vacancyRate]}
+                        onValueChange={(value) => setVacancyRate(value[0])}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <Label htmlFor="expenses-rate">Operating Expenses: {operatingExpensesRate}%</Label>
+                      </div>
+                      <Slider
+                        id="expenses-rate"
+                        min={20}
+                        max={70}
+                        step={1}
+                        value={[operatingExpensesRate]}
+                        onValueChange={(value) => setOperatingExpensesRate(value[0])}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <Label htmlFor="cap-rate">Capitalization Rate: {capitalizationRate}%</Label>
+                      </div>
+                      <Slider
+                        id="cap-rate"
+                        min={3}
+                        max={12}
+                        step={0.25}
+                        value={[capitalizationRate]}
+                        onValueChange={(value) => setCapitalizationRate(value[0])}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+            
+            {/* Cost Approach */}
+            <TabsContent value="cost" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <div className="mb-4">
+                    <h3 className="text-lg font-medium mb-2">Cost Approach</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Valuation based on cost to rebuild minus depreciation plus land value.
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="p-4 border rounded-lg">
+                      <div className="font-medium mb-1">Estimated Value</div>
+                      <div className="text-2xl font-bold text-primary">{formatCurrency(costValue)}</div>
+                      <div className="text-sm text-muted-foreground mt-1">
+                        Based on cost to rebuild minus depreciation
+                      </div>
+                    </div>
+                    
+                    <div className="p-4 border rounded-lg space-y-2">
+                      <div>
+                        <span className="text-sm text-muted-foreground">Land Value:</span>{' '}
+                        {formatCurrency(landValue)}
+                      </div>
+                      <div>
+                        <span className="text-sm text-muted-foreground">Replacement Cost New:</span>{' '}
+                        {formatCurrency(property.squareFeet ? property.squareFeet * replacementCost : 0)}
+                      </div>
+                      <div>
+                        <span className="text-sm text-muted-foreground">Total Depreciation:</span>{' '}
+                        {formatCurrency(property.squareFeet
+                          ? property.squareFeet * replacementCost * 
+                            (physicalDepreciation + functionalObsolescence + externalObsolescence) / 100
+                          : 0
+                        )}
+                      </div>
+                      <div>
+                        <span className="text-sm text-muted-foreground">Depreciated Improvement Value:</span>{' '}
+                        {formatCurrency(property.squareFeet
+                          ? property.squareFeet * replacementCost * 
+                            (1 - (physicalDepreciation + functionalObsolescence + externalObsolescence) / 100)
+                          : 0
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="font-medium mb-1">Cost Parameters</div>
+                  
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="land-value">Land Value</Label>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-muted-foreground">$</span>
+                        <Input
+                          id="land-value"
+                          type="number"
+                          value={landValue}
+                          onChange={(e) => setLandValue(Number(e.target.value))}
+                          className="flex-1"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="replacement-cost">Replacement Cost Per Sq Ft</Label>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-muted-foreground">$</span>
+                        <Input
+                          id="replacement-cost"
+                          type="number"
+                          value={replacementCost}
+                          onChange={(e) => setReplacementCost(Number(e.target.value))}
+                          className="flex-1"
+                        />
+                        <span className="text-muted-foreground">/sqft</span>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <Label htmlFor="physical-dep">Physical Depreciation: {physicalDepreciation}%</Label>
+                      </div>
+                      <Slider
+                        id="physical-dep"
+                        min={0}
+                        max={80}
+                        step={1}
+                        value={[physicalDepreciation]}
+                        onValueChange={(value) => setPhysicalDepreciation(value[0])}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <Label htmlFor="functional-obs">Functional Obsolescence: {functionalObsolescence}%</Label>
+                      </div>
+                      <Slider
+                        id="functional-obs"
+                        min={0}
+                        max={30}
+                        step={1}
+                        value={[functionalObsolescence]}
+                        onValueChange={(value) => setFunctionalObsolescence(value[0])}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <Label htmlFor="external-obs">External Obsolescence: {externalObsolescence}%</Label>
+                      </div>
+                      <Slider
+                        id="external-obs"
+                        min={0}
+                        max={30}
+                        step={1}
+                        value={[externalObsolescence]}
+                        onValueChange={(value) => setExternalObsolescence(value[0])}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+      
+      {/* Reconciliation Card */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-xl flex items-center">
+            <TrendingUp className="mr-2 h-5 w-5 text-primary" />
+            Value Reconciliation
+          </CardTitle>
+        </CardHeader>
+        
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="p-4 border rounded-lg">
+              <div className="text-sm text-muted-foreground">Sales Comparison</div>
+              <div className="text-lg font-bold">{formatCurrency(salesValue)}</div>
             </div>
             
-            <div className="flex justify-end">
-              <Button variant="outline">
-                <FileText className="mr-2 h-4 w-4" />
-                Generate Valuation Report
-              </Button>
+            <div className="p-4 border rounded-lg">
+              <div className="text-sm text-muted-foreground">Income Approach</div>
+              <div className="text-lg font-bold">{formatCurrency(incomeValue)}</div>
+            </div>
+            
+            <div className="p-4 border rounded-lg">
+              <div className="text-sm text-muted-foreground">Cost Approach</div>
+              <div className="text-lg font-bold">{formatCurrency(costValue)}</div>
+            </div>
+            
+            <div className="p-4 border rounded-lg bg-primary/5">
+              <div className="text-sm text-muted-foreground">Final Value</div>
+              <div className="text-xl font-bold text-primary">{formatCurrency(finalValue)}</div>
             </div>
           </div>
-        </Tabs>
-      </CardContent>
-    </Card>
+          
+          <div className="mt-4">
+            <p className="text-sm text-muted-foreground">
+              The final value is a weighted average of the three approaches, with emphasis on the {activeTab === "sales" ? "sales comparison" : activeTab === "income" ? "income" : "cost"} approach.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
