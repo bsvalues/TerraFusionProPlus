@@ -16,6 +16,8 @@ import PropertyForm from "@/pages/property-form";
 // Appraisal Management
 import Appraisals from "@/pages/appraisals";
 import AppraisalForm from "@/pages/appraisal-form";
+import Comparables from "@/pages/comparables";
+import ComparableForm from "@/pages/comparable-form";
 
 // Existing pages repurposed for different sections
 import Security from "@/pages/security"; // Used for User Management
@@ -40,6 +42,11 @@ function Router() {
         <Route path="/appraisals/new" component={AppraisalForm} />
         <Route path="/appraisals/:id/edit" component={AppraisalForm} />
         <Route path="/properties/:propertyId/appraisals/new" component={AppraisalForm} />
+        
+        {/* Comparable Properties */}
+        <Route path="/appraisals/:appraisalId/comparables" component={Comparables} />
+        <Route path="/appraisals/:appraisalId/comparables/new" component={ComparableForm} />
+        <Route path="/appraisals/:appraisalId/comparables/:comparableId/edit" component={ComparableForm} />
         
         {/* Property Analytics and Reports */}
         <Route path="/analytics" component={Monitoring} />
