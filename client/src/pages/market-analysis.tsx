@@ -143,20 +143,18 @@ export default function MarketAnalysis() {
   const [timeframe, setTimeframe] = useState("12m");
   const [zipCode, setZipCode] = useState("90210");
   
-  // In a real app, we would fetch this data from an API
-  // const { data: marketData, isLoading } = useQuery({
-  //   queryKey: ['/api/market-analysis', zipCode, timeframe],
-  // });
+  // Fetch market analysis data from our API
+  const { data: marketData = {}, isLoading: marketLoading } = useQuery({
+    queryKey: ['/api/market-analysis', zipCode, timeframe],
+  });
   
-  const marketData = {
-    averagePrice: 352000,
-    medianPrice: 348000,
-    salesVolume: 383,
-    averageDaysOnMarket: 35,
-    priceChange: 4.2,
-    inventoryChange: -2.8,
-    pricePerSqFt: 192,
-  };
+  const { data: marketTrendsData = [], isLoading: trendsLoading } = useQuery({
+    queryKey: ['/api/market-analysis/trends', zipCode, timeframe],
+  });
+  
+  const { data: recentSalesData = [], isLoading: salesLoading } = useQuery({
+    queryKey: ['/api/market-analysis/recent-sales', zipCode],
+  });
   
   const generateReport = () => {
     toast({
@@ -286,7 +284,7 @@ export default function MarketAnalysis() {
             <CardContent>
               <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={marketTrends}>
+                  <LineChart data={marketTrendsData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
                     <YAxis 

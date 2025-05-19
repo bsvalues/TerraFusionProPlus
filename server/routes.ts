@@ -352,6 +352,129 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Market Analysis API endpoints
+  app.get("/api/market-analysis", async (req, res) => {
+    try {
+      const zipCode = req.query.zipCode as string || '90210';
+      const timeframe = req.query.timeframe as string || '12m';
+      
+      // In a real implementation, we would fetch data from a real estate API
+      // or database based on these parameters
+      
+      // Sample market data for MVP implementation
+      const marketData = {
+        averagePrice: 352000,
+        medianPrice: 348000,
+        salesVolume: 383,
+        averageDaysOnMarket: 35,
+        priceChange: 4.2,
+        inventoryChange: -2.8,
+        pricePerSqFt: 192,
+        lastUpdated: new Date().toISOString()
+      };
+      
+      res.json(marketData);
+    } catch (error) {
+      res.status(400).json({ message: (error as Error).message });
+    }
+  });
+  
+  app.get("/api/market-analysis/trends", async (req, res) => {
+    try {
+      const zipCode = req.query.zipCode as string || '90210';
+      const timeframe = req.query.timeframe as string || '12m';
+      
+      // Sample trends data
+      const marketTrends = [
+        { month: 'Jan', value: 320000, sales: 24, daysOnMarket: 45 },
+        { month: 'Feb', value: 325000, sales: 28, daysOnMarket: 42 },
+        { month: 'Mar', value: 330000, sales: 32, daysOnMarket: 38 },
+        { month: 'Apr', value: 335000, sales: 35, daysOnMarket: 35 },
+        { month: 'May', value: 338000, sales: 30, daysOnMarket: 32 },
+        { month: 'Jun', value: 342000, sales: 36, daysOnMarket: 30 },
+        { month: 'Jul', value: 350000, sales: 40, daysOnMarket: 28 },
+        { month: 'Aug', value: 355000, sales: 38, daysOnMarket: 30 },
+        { month: 'Sep', value: 360000, sales: 35, daysOnMarket: 32 },
+        { month: 'Oct', value: 358000, sales: 32, daysOnMarket: 34 },
+        { month: 'Nov', value: 355000, sales: 28, daysOnMarket: 36 },
+        { month: 'Dec', value: 352000, sales: 25, daysOnMarket: 40 },
+      ];
+      
+      res.json(marketTrends);
+    } catch (error) {
+      res.status(400).json({ message: (error as Error).message });
+    }
+  });
+  
+  app.get("/api/market-analysis/recent-sales", async (req, res) => {
+    try {
+      const zipCode = req.query.zipCode as string || '90210';
+      
+      // Sample recent sales data
+      const recentSales = [
+        { 
+          address: "125 Oak Drive", 
+          city: "Westwood", 
+          state: "CA", 
+          saleDate: "2023-11-15", 
+          salePrice: 375000, 
+          beds: 3, 
+          baths: 2, 
+          sqft: 1850, 
+          pricePerSqft: 203
+        },
+        { 
+          address: "47 Maple Ave", 
+          city: "Westwood", 
+          state: "CA", 
+          saleDate: "2023-11-02", 
+          salePrice: 410000, 
+          beds: 4, 
+          baths: 2.5, 
+          sqft: 2200, 
+          pricePerSqft: 186
+        },
+        { 
+          address: "892 Pine St", 
+          city: "Westwood", 
+          state: "CA", 
+          saleDate: "2023-10-28", 
+          salePrice: 342000, 
+          beds: 3, 
+          baths: 2, 
+          sqft: 1750, 
+          pricePerSqft: 195
+        },
+        { 
+          address: "1432 Cedar Ln", 
+          city: "Westwood", 
+          state: "CA", 
+          saleDate: "2023-10-15", 
+          salePrice: 398000, 
+          beds: 3, 
+          baths: 2.5, 
+          sqft: 2100, 
+          pricePerSqft: 190
+        },
+        { 
+          address: "542 Redwood Ct", 
+          city: "Westwood", 
+          state: "CA", 
+          saleDate: "2023-10-05", 
+          salePrice: 425000, 
+          beds: 4, 
+          baths: 3, 
+          sqft: 2350, 
+          pricePerSqft: 181
+        },
+      ];
+      
+      res.json(recentSales);
+    } catch (error) {
+      res.status(400).json({ message: (error as Error).message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
