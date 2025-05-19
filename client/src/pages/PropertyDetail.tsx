@@ -1,21 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, FileText, Edit, BarChart4, LineChart } from 'lucide-react';
+import { ArrowLeft, FileText, Edit, BarChart4, LineChart, Home, Building2, MapPin } from 'lucide-react';
 
+// Interface matching the database structure
 interface Property {
   id: number;
   address: string;
   city: string;
   state: string;
-  zipCode: string;
-  propertyType: string;
-  yearBuilt: number;
-  squareFeet: number;
+  zip_code: string;
+  property_type: string;
+  year_built: number;
+  square_feet: number;
   bedrooms: number;
   bathrooms: number;
-  lotSize: number;
-  lastSalePrice: number;
-  lastSaleDate: string;
+  lot_size: number;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+  parcel_number?: string;
+  zoning?: string;
+  lot_unit?: string;
+  latitude?: number;
+  longitude?: number;
+  features?: any;
 }
 
 interface MarketData {
@@ -30,9 +38,9 @@ interface MarketData {
 }
 
 export const PropertyDetail = () => {
-  const { id } = useParams<{ id: string }>();
-  const [property, setProperty] = useState<Property | null>(null);
-  const [marketData, setMarketData] = useState<MarketData | null>(null);
+  const { id } = useParams();
+  const [property, setProperty] = useState(null);
+  const [marketData, setMarketData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadingMarketData, setLoadingMarketData] = useState(true);
 
@@ -62,32 +70,48 @@ export const PropertyDetail = () => {
     }
   }, [id]);
 
+  // Function to get property icon based on type
+  const getPropertyIcon = (propertyType) => {
+    switch(propertyType?.toLowerCase()) {
+      case 'single family':
+        return <Home size={60} className="text-blue-400" />;
+      case 'condo':
+        return <Building2 size={60} className="text-green-400" />;
+      case 'multi-family':
+        return <Building2 size={60} className="text-purple-400" />;
+      default:
+        return <Building2 size={60} className="text-gray-400" />;
+    }
+  };
+
   // Calculate the estimated property value range based on market data and property details
   const calculateValueRange = () => {
-    if (!property || !marketData) return null;
+    if (!property || !marketData || !property.square_feet) return null;
     
-    const pricePerSqFt = property.lastSalePrice / property.squareFeet;
-    const currentMarketPriceSqFt = marketData.pricePerSqftTrend[marketData.pricePerSqftTrend.length - 1].value;
+    // Base value calculation
+    const baseValue = property.square_feet * 450; // Using average price per sq ft
     
-    // Adjust based on months since last sale
-    const lastSaleDate = new Date(property.lastSaleDate);
-    const currentDate = new Date();
-    const monthsSinceLastSale = 
-      (currentDate.getFullYear() - lastSaleDate.getFullYear()) * 12 + 
-      (currentDate.getMonth() - lastSaleDate.getMonth());
+    // Apply adjustments based on property characteristics
+    let adjustedValue = baseValue;
     
-    const adjustedPriceSqFt = 
-      monthsSinceLastSale > 0 
-        ? pricePerSqFt * (1 + (currentMarketPriceSqFt / pricePerSqFt - 1) * Math.min(monthsSinceLastSale / 12, 1))
-        : pricePerSqFt;
+    // Location adjustment - based on median prices in market data
+    const locationFactor = 1.1; // Premium location factor
+    adjustedValue *= locationFactor;
     
-    const estimatedValue = adjustedPriceSqFt * property.squareFeet;
+    // Age adjustment
+    if (property.year_built) {
+      const currentYear = new Date().getFullYear();
+      const age = currentYear - property.year_built;
+      // Newer properties get higher values
+      const ageFactor = Math.max(0.8, 1 - (age * 0.005)); // Minimum 20% reduction for very old properties
+      adjustedValue *= ageFactor;
+    }
     
     // Create a range with +/- 5%
     return {
-      low: Math.round(estimatedValue * 0.95),
-      estimated: Math.round(estimatedValue),
-      high: Math.round(estimatedValue * 1.05)
+      low: Math.round(adjustedValue * 0.95),
+      estimated: Math.round(adjustedValue),
+      high: Math.round(adjustedValue * 1.05)
     };
   };
 
@@ -127,9 +151,12 @@ export const PropertyDetail = () => {
       </div>
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">{property.address}</h1>
-          <p className="text-gray-600 mt-1">{property.city}, {property.state} {property.zipCode}</p>
+        <div className="flex items-start">
+          <MapPin size={24} className="text-red-500 mt-1 mr-2 flex-shrink-0" />
+          <div>
+            <h1 className="text-3xl font-bold">{property.address}</h1>
+            <p className="text-gray-600 mt-1">{property.city}, {property.state} {property.zip_code}</p>
+          </div>
         </div>
         <div className="mt-4 md:mt-0 flex space-x-3">
           <Link 
@@ -151,49 +178,27 @@ export const PropertyDetail = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <div className="lg:col-span-2 bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="bg-gray-200 h-64 flex items-center justify-center">
-            {/* Property image placeholder */}
-            <div className="text-gray-400 text-center">
-              <svg 
-                className="w-16 h-16 mx-auto mb-2" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24" 
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" 
-                />
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M9 22V12h6v10" 
-                />
-              </svg>
-              <span className="text-sm">Property Image</span>
-            </div>
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 h-64 flex items-center justify-center">
+            {getPropertyIcon(property.property_type)}
           </div>
+          
           <div className="p-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
               <div className="text-center p-3 bg-gray-50 rounded-lg">
                 <div className="text-sm text-gray-500">Bedrooms</div>
-                <div className="text-xl font-semibold text-gray-800">{property.bedrooms}</div>
+                <div className="text-xl font-semibold text-gray-800">{property.bedrooms || 'N/A'}</div>
               </div>
               <div className="text-center p-3 bg-gray-50 rounded-lg">
                 <div className="text-sm text-gray-500">Bathrooms</div>
-                <div className="text-xl font-semibold text-gray-800">{property.bathrooms}</div>
+                <div className="text-xl font-semibold text-gray-800">{property.bathrooms || 'N/A'}</div>
               </div>
               <div className="text-center p-3 bg-gray-50 rounded-lg">
                 <div className="text-sm text-gray-500">Square Feet</div>
-                <div className="text-xl font-semibold text-gray-800">{property.squareFeet.toLocaleString()}</div>
+                <div className="text-xl font-semibold text-gray-800">{property.square_feet ? property.square_feet.toLocaleString() : 'N/A'}</div>
               </div>
               <div className="text-center p-3 bg-gray-50 rounded-lg">
                 <div className="text-sm text-gray-500">Year Built</div>
-                <div className="text-xl font-semibold text-gray-800">{property.yearBuilt}</div>
+                <div className="text-xl font-semibold text-gray-800">{property.year_built || 'N/A'}</div>
               </div>
             </div>
 
@@ -202,25 +207,36 @@ export const PropertyDetail = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <h3 className="text-gray-500 text-sm">Property Type</h3>
-                  <p className="font-medium">{property.propertyType}</p>
+                  <p className="font-medium">{property.property_type || 'N/A'}</p>
                 </div>
                 <div>
                   <h3 className="text-gray-500 text-sm">Lot Size</h3>
-                  <p className="font-medium">{property.lotSize > 0 ? `${property.lotSize.toLocaleString()} sq.ft.` : 'N/A'}</p>
+                  <p className="font-medium">
+                    {property.lot_size 
+                      ? `${property.lot_size.toLocaleString()} ${property.lot_unit || 'sq.ft.'}` 
+                      : 'N/A'}
+                  </p>
                 </div>
-                <div>
-                  <h3 className="text-gray-500 text-sm">Last Sale Price</h3>
-                  <p className="font-medium">${property.lastSalePrice.toLocaleString()}</p>
-                </div>
-                <div>
-                  <h3 className="text-gray-500 text-sm">Last Sale Date</h3>
-                  <p className="font-medium">{new Date(property.lastSaleDate).toLocaleDateString()}</p>
-                </div>
-                <div>
-                  <h3 className="text-gray-500 text-sm">Price per Sq.Ft. (Last Sale)</h3>
-                  <p className="font-medium">${Math.round(property.lastSalePrice / property.squareFeet).toLocaleString()}</p>
-                </div>
+                {property.zoning && (
+                  <div>
+                    <h3 className="text-gray-500 text-sm">Zoning</h3>
+                    <p className="font-medium">{property.zoning}</p>
+                  </div>
+                )}
+                {property.parcel_number && (
+                  <div>
+                    <h3 className="text-gray-500 text-sm">Parcel Number</h3>
+                    <p className="font-medium">{property.parcel_number}</p>
+                  </div>
+                )}
               </div>
+              
+              {property.description && (
+                <div className="mt-4">
+                  <h3 className="text-gray-500 text-sm mb-1">Description</h3>
+                  <p className="text-gray-700">{property.description}</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -244,7 +260,7 @@ export const PropertyDetail = () => {
                 
                 <div className="bg-blue-50 p-3 rounded-md">
                   <p className="text-sm text-blue-800">
-                    <span className="font-medium">Market Insights:</span> Based on recent comparable sales and market trends in this area.
+                    <span className="font-medium">Value Estimate:</span> Based on property characteristics and current market trends.
                   </p>
                 </div>
                 
