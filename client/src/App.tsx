@@ -19,6 +19,7 @@ import AppraisalForm from "@/pages/appraisal-form";
 import AppraisalDetails from "@/pages/appraisal-details";
 import Comparables from "@/pages/comparables";
 import ComparableForm from "@/pages/comparable-form";
+import MarketAnalysis from "@/pages/market-analysis";
 
 // Existing pages repurposed for different sections
 import Security from "@/pages/security"; // Used for User Management
@@ -52,6 +53,7 @@ function Router() {
         
         {/* Property Analytics and Reports */}
         <Route path="/analytics" component={Monitoring} />
+        <Route path="/market-analysis" component={MarketAnalysis} />
         
         {/* User Management */}
         <Route path="/users" component={Security} />
