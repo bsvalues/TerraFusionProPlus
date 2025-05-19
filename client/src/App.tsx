@@ -12,6 +12,7 @@ import Dashboard from "@/pages/dashboard";
 // Property Management
 import Properties from "@/pages/properties";
 import PropertyForm from "@/pages/property-form";
+import PropertyDetail from "@/pages/property-detail";
 
 // Appraisal Management
 import Appraisals from "@/pages/appraisals";
@@ -37,6 +38,7 @@ function Router() {
         {/* Property Management */}
         <Route path="/properties" component={Properties} />
         <Route path="/properties/new" component={PropertyForm} />
+        <Route path="/properties/:id" component={PropertyDetail} />
         <Route path="/properties/:id/edit" component={PropertyForm} />
         
         {/* Appraisal Workflows */}
