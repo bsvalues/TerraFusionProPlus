@@ -528,6 +528,27 @@ export default function MarketAnalysis() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Valuation Method</label>
+                    <Select 
+                      value={valuationMethod} 
+                      onValueChange={setValuationMethod}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select method" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="comparable">Comparable Sales Approach</SelectItem>
+                        <SelectItem value="income">Income Approach</SelectItem>
+                        <SelectItem value="cost">Cost Approach</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {valuationMethod === "comparable" && "Bases value on similar properties that have recently sold"}
+                      {valuationMethod === "income" && "Calculates value based on potential rental income"}
+                      {valuationMethod === "cost" && "Estimates value using construction costs less depreciation plus land value"}
+                    </p>
+                  </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Square Footage</label>
