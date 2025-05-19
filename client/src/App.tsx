@@ -13,8 +13,11 @@ import Dashboard from "@/pages/dashboard";
 import Properties from "@/pages/properties";
 import PropertyForm from "@/pages/property-form";
 
+// Appraisal Management
+import Appraisals from "@/pages/appraisals";
+import AppraisalForm from "@/pages/appraisal-form";
+
 // Existing pages repurposed for different sections
-import Pipelines from "@/pages/pipelines"; // Used for Appraisal Workflows
 import Security from "@/pages/security"; // Used for User Management
 import Monitoring from "@/pages/monitoring"; // Used for Analytics
 import LocalSetup from "@/pages/local-setup"; // Used for Field Data Collection
@@ -33,7 +36,10 @@ function Router() {
         <Route path="/properties/:id/edit" component={PropertyForm} />
         
         {/* Appraisal Workflows */}
-        <Route path="/appraisals" component={Pipelines} />
+        <Route path="/appraisals" component={Appraisals} />
+        <Route path="/appraisals/new" component={AppraisalForm} />
+        <Route path="/appraisals/:id/edit" component={AppraisalForm} />
+        <Route path="/properties/:propertyId/appraisals/new" component={AppraisalForm} />
         
         {/* Property Analytics and Reports */}
         <Route path="/analytics" component={Monitoring} />

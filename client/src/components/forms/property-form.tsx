@@ -50,7 +50,7 @@ export default function PropertyForm({
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const [_, navigate] = useLocation();
+  const [_, setLocation] = useLocation();
 
   // Initialize the form with existing property data or defaults
   const form = useForm<PropertyFormValues>({
@@ -85,7 +85,7 @@ export default function PropertyForm({
       if (onSuccess) {
         onSuccess(result);
       } else {
-        navigate("/properties");
+        setLocation("/properties");
       }
     } catch (error) {
       toast({
@@ -375,7 +375,7 @@ export default function PropertyForm({
               <Button 
                 type="button" 
                 variant="outline" 
-                onClick={() => navigate("/properties")}
+                onClick={() => setLocation("/properties")}
               >
                 Cancel
               </Button>

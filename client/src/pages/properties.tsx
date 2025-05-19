@@ -21,7 +21,7 @@ export default function PropertiesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [propertyToDelete, setPropertyToDelete] = useState<number | null>(null);
-  const [_, navigate] = useLocation();
+  const [_, setLocation] = useLocation();
   const { toast } = useToast();
 
   // Fetch properties
@@ -93,7 +93,7 @@ export default function PropertiesPage() {
           <h1 className="text-2xl font-bold">Property Portfolio</h1>
           <p className="text-muted-foreground">Manage your property listings</p>
         </div>
-        <Button onClick={() => navigate("/properties/new")}>
+        <Button onClick={() => setLocation("/properties/new")}>
           <Plus className="mr-2 h-4 w-4" /> Add Property
         </Button>
       </div>
@@ -152,11 +152,11 @@ export default function PropertiesPage() {
                   )}
                 </div>
                 <div className="mt-4 flex justify-between">
-                  <Button variant="outline" size="sm" onClick={() => navigate(`/properties/${property.id}`)}>
+                  <Button variant="outline" size="sm" onClick={() => setLocation(`/properties/${property.id}`)}>
                     <Eye className="mr-2 h-4 w-4" /> View
                   </Button>
                   <div className="space-x-2">
-                    <Button variant="ghost" size="sm" onClick={() => navigate(`/properties/${property.id}/edit`)}>
+                    <Button variant="ghost" size="sm" onClick={() => setLocation(`/properties/${property.id}/edit`)}>
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(property.id)}>
@@ -178,7 +178,7 @@ export default function PropertiesPage() {
               : "You haven't added any properties yet."}
           </p>
           {!searchQuery && (
-            <Button onClick={() => navigate("/properties/new")}>
+            <Button onClick={() => setLocation("/properties/new")}>
               <Plus className="mr-2 h-4 w-4" /> Add Your First Property
             </Button>
           )}

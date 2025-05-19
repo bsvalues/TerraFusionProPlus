@@ -5,7 +5,7 @@ import { insertAppraisalSchema } from "@shared/schema";
 import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "wouter";
+import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 
 import {
@@ -51,7 +51,7 @@ export default function AppraisalForm({
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const [_, navigate] = useNavigate();
+  const [_, setLocation] = useLocation();
 
   // Fetch properties for selection
   const { data: properties = [] } = useQuery({
