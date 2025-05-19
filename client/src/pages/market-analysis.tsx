@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useLocation } from "wouter";
+import { useLocation, useRoute } from "wouter";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 
@@ -95,11 +95,15 @@ const formatCurrency = (value: number) => {
 
 export default function MarketAnalysis() {
   const [location, setLocation] = useLocation();
+  const [match, params] = useRoute("/market-analysis/:propertyId?");
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
   const [timeframe, setTimeframe] = useState("12m");
   const [zipCode, setZipCode] = useState("90210");
   const [propertyType, setPropertyType] = useState("all");
+  
+  // Check if we're viewing a specific property's market analysis
+  const propertyId = params?.propertyId;
   
   // Fetch market analysis data from our API
   const { data: marketData = {} as MarketData, isLoading: marketLoading } = useQuery<MarketData>({
@@ -112,6 +116,12 @@ export default function MarketAnalysis() {
   
   const { data: recentSalesData = [] as RecentSale[], isLoading: salesLoading } = useQuery<RecentSale[]>({
     queryKey: ['/api/market-analysis/recent-sales', zipCode, propertyType],
+  });
+  
+  // Fetch property data if propertyId is available
+  const { data: propertyData, isLoading: propertyLoading } = useQuery({
+    queryKey: [`/api/properties/${propertyId}`],
+    enabled: !!propertyId,
   });
   
   const generateReport = () => {
@@ -171,6 +181,82 @@ export default function MarketAnalysis() {
         </div>
       </div>
 
+      {propertyId && !propertyLoading && propertyData && (
+        <Card className="mb-6">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xl">Property Comparison</CardTitle>
+            <CardDescription>
+              Comparing {propertyData.address} against local market trends
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="font-medium mb-2">Property Details</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Address:</span>
+                    <span className="font-medium">{propertyData.address}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Location:</span>
+                    <span className="font-medium">{propertyData.city}, {propertyData.state} {propertyData.zipCode}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Property Type:</span>
+                    <span className="font-medium">{propertyData.propertyType}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Bedrooms/Bathrooms:</span>
+                    <span className="font-medium">{propertyData.bedrooms || 'N/A'} / {propertyData.bathrooms || 'N/A'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Square Feet:</span>
+                    <span className="font-medium">{propertyData.squareFeet?.toLocaleString() || 'N/A'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Year Built:</span>
+                    <span className="font-medium">{propertyData.yearBuilt || 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="font-medium mb-2">Market Comparison</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Market Median Price:</span>
+                    <span className="font-medium">{formatCurrency(marketData.medianPrice || 0)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Market Price/SqFt:</span>
+                    <span className="font-medium">${marketData.pricePerSqFt || 0}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Estimated Value:</span>
+                    <span className="font-medium">
+                      {propertyData.squareFeet && marketData.pricePerSqFt 
+                        ? formatCurrency(propertyData.squareFeet * marketData.pricePerSqFt)
+                        : 'Insufficient data'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Price Trend:</span>
+                    <span className={`font-medium ${(marketData.priceChange || 0) > 0 ? "text-green-600" : "text-red-600"}`}>
+                      {(marketData.priceChange || 0) > 0 ? "+" : ""}{marketData.priceChange || 0}% annually
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Avg. Days on Market:</span>
+                    <span className="font-medium">{marketData.averageDaysOnMarket || 0} days</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid grid-cols-3 md:w-[400px]">
           <TabsTrigger value="overview">Overview</TabsTrigger>

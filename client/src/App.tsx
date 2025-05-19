@@ -53,7 +53,7 @@ function Router() {
         
         {/* Property Analytics and Reports */}
         <Route path="/analytics" component={Monitoring} />
-        <Route path="/market-analysis" component={MarketAnalysis} />
+        <Route path="/market-analysis/:propertyId?" component={MarketAnalysis} />
         
         {/* User Management */}
         <Route path="/users" component={Security} />

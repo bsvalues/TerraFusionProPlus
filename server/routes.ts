@@ -526,20 +526,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
           beds: 3, 
           baths: 2.5, 
           sqft: 2100, 
-          pricePerSqft: 190
+          pricePerSqft: 190,
+          propertyType: "singleFamily"
         },
+        // Condos
         { 
-          address: "542 Redwood Ct", 
+          address: "542 Redwood Ct, Unit 3A", 
           city: "Westwood", 
           state: "CA", 
           saleDate: "2023-10-05", 
-          salePrice: 425000, 
-          beds: 4, 
-          baths: 3, 
-          sqft: 2350, 
-          pricePerSqft: 181
+          salePrice: 268000, 
+          beds: 2, 
+          baths: 2, 
+          sqft: 1250, 
+          pricePerSqft: 214,
+          propertyType: "condo"
         },
+        { 
+          address: "78 Lakeview Terrace #12", 
+          city: "Westwood", 
+          state: "CA", 
+          saleDate: "2023-10-12", 
+          salePrice: 235000, 
+          beds: 1, 
+          baths: 1, 
+          sqft: 950, 
+          pricePerSqft: 247,
+          propertyType: "condo"
+        },
+        // Multi-Family
+        { 
+          address: "425 Washington St", 
+          city: "Westwood", 
+          state: "CA", 
+          saleDate: "2023-11-06", 
+          salePrice: 650000, 
+          beds: 6, 
+          baths: 4, 
+          sqft: 3800, 
+          pricePerSqft: 171,
+          propertyType: "multiFamily"
+        },
+        // Commercial
+        { 
+          address: "123 Business Park Dr", 
+          city: "Westwood", 
+          state: "CA", 
+          saleDate: "2023-10-20", 
+          salePrice: 895000, 
+          beds: 0, 
+          baths: 2, 
+          sqft: 4200, 
+          pricePerSqft: 213,
+          propertyType: "commercial"
+        },
+        // Land
+        { 
+          address: "Lot 15, Valley View", 
+          city: "Westwood", 
+          state: "CA", 
+          saleDate: "2023-09-28", 
+          salePrice: 175000, 
+          beds: 0, 
+          baths: 0, 
+          sqft: 0, 
+          pricePerSqft: 0,
+          propertyType: "land"
+        }
       ];
+      
+      // Filter by property type if specified
+      const recentSales = propertyType === 'all' 
+        ? allSales 
+        : allSales.filter(sale => sale.propertyType === propertyType);
       
       res.json(recentSales);
     } catch (error) {
