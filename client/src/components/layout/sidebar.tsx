@@ -2,7 +2,18 @@ import { Link, useLocation } from "wouter";
 import { useState, useEffect } from "react";
 import { useMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
-import { Globe, X, Menu, BarChart3, Cog, Shield, Rocket, Terminal, Book } from "lucide-react";
+import { 
+  Home, 
+  Building, 
+  FileText, 
+  BarChart2, 
+  Users, 
+  Camera, 
+  HelpCircle, 
+  X, 
+  Menu, 
+  Settings 
+} from "lucide-react";
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -24,13 +35,13 @@ export default function Sidebar() {
   }, [isMobile]);
 
   const navigationItems = [
-    { title: "DevOps Dashboard", path: "/", icon: <BarChart3 className="mr-4 h-5 w-5 text-primary-300" /> },
-    { title: "Infrastructure", path: "/infrastructure", icon: <Cog className="mr-4 h-5 w-5 text-gray-400" /> },
-    { title: "CI/CD Pipelines", path: "/pipelines", icon: <Rocket className="mr-4 h-5 w-5 text-gray-400" /> },
-    { title: "Security", path: "/security", icon: <Shield className="mr-4 h-5 w-5 text-gray-400" /> },
-    { title: "Monitoring", path: "/monitoring", icon: <BarChart3 className="mr-4 h-5 w-5 text-gray-400" /> },
-    { title: "Local Setup", path: "/local-setup", icon: <Terminal className="mr-4 h-5 w-5 text-gray-400" /> },
-    { title: "Documentation", path: "/documentation", icon: <Book className="mr-4 h-5 w-5 text-gray-400" /> },
+    { title: "Dashboard", path: "/", icon: <Home className="mr-4 h-5 w-5 text-primary-300" /> },
+    { title: "Properties", path: "/properties", icon: <Building className="mr-4 h-5 w-5 text-gray-400" /> },
+    { title: "Appraisals", path: "/appraisals", icon: <FileText className="mr-4 h-5 w-5 text-gray-400" /> },
+    { title: "Analytics", path: "/analytics", icon: <BarChart2 className="mr-4 h-5 w-5 text-gray-400" /> },
+    { title: "Users", path: "/users", icon: <Users className="mr-4 h-5 w-5 text-gray-400" /> },
+    { title: "Field Data", path: "/field-data", icon: <Camera className="mr-4 h-5 w-5 text-gray-400" /> },
+    { title: "Help Center", path: "/help", icon: <HelpCircle className="mr-4 h-5 w-5 text-gray-400" /> },
   ];
 
   return (
@@ -47,7 +58,7 @@ export default function Sidebar() {
             >
               <Menu className="h-6 w-6" />
             </Button>
-            <h1 className="text-lg font-medium">TerraFusionPro</h1>
+            <h1 className="text-lg font-medium">TerraFusionProfessional</h1>
           </div>
         </div>
       )}
@@ -61,8 +72,8 @@ export default function Sidebar() {
         `}
       >
         <div className="flex items-center px-4 pb-4 border-b border-gray-800">
-          <Globe className="h-6 w-6 text-secondary-500 mr-2" />
-          <h1 className="text-xl font-bold text-white">TerraFusionPro</h1>
+          <Building className="h-6 w-6 text-secondary-500 mr-2" />
+          <h1 className="text-xl font-bold text-white">TerraFusion<span className="text-secondary-400">Pro</span></h1>
           {isMobile && (
             <Button 
               variant="ghost" 
@@ -98,14 +109,14 @@ export default function Sidebar() {
         <div className="px-4 pt-4 border-t border-gray-800">
           <div className="flex items-center">
             <div className="h-8 w-8 rounded-full bg-gray-700 flex items-center justify-center">
-              <span className="text-xs text-white">DA</span>
+              <span className="text-xs text-white">RA</span>
             </div>
             <div className="ml-3">
-              <p className="text-sm font-medium text-white">DevOps Admin</p>
-              <p className="text-xs font-medium text-gray-400">admin@terrafusion.com</p>
+              <p className="text-sm font-medium text-white">Real Estate Appraiser</p>
+              <p className="text-xs font-medium text-gray-400">appraiser@terrafusion.com</p>
             </div>
             <button className="ml-auto text-gray-400 hover:text-white">
-              <Cog className="h-5 w-5" />
+              <Settings className="h-5 w-5" />
             </button>
           </div>
         </div>
