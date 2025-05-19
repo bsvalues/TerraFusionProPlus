@@ -39,11 +39,11 @@ function Router() {
         <Route path="/properties/:id/edit" component={PropertyForm} />
         
         {/* Appraisal Workflows */}
-        <Route path="/appraisals" component={Appraisals} />
         <Route path="/appraisals/new" component={AppraisalForm} />
         <Route path="/appraisals/:id/edit" component={AppraisalForm} />
-        <Route path="/appraisals/:id" component={AppraisalDetails} />
         <Route path="/properties/:propertyId/appraisals/new" component={AppraisalForm} />
+        <Route path="/appraisals/:id" component={AppraisalDetails} />
+        <Route path="/appraisals" component={Appraisals} />
         
         {/* Comparable Properties */}
         <Route path="/appraisals/:appraisalId/comparables" component={Comparables} />
