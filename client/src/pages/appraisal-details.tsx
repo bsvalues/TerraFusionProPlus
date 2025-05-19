@@ -14,7 +14,8 @@ import {
   User,
   Clock,
   Clipboard,
-  Plus
+  Plus,
+  TrendingUp
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -395,9 +396,13 @@ export default function AppraisalDetails() {
             </Card>
           )}
           
-          <div className="mt-4 flex justify-center">
+          <div className="mt-4 flex justify-center space-x-4">
             <Button variant="outline" onClick={() => setLocation(`/appraisals/${id}/comparables`)}>
               Manage All Comparables
+            </Button>
+            <Button variant="secondary" onClick={() => setLocation(`/market-analysis`)}>
+              <TrendingUp className="mr-2 h-4 w-4" />
+              View Market Analysis
             </Button>
           </div>
         </TabsContent>
