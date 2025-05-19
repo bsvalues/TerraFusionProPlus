@@ -6,14 +6,19 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Layout from "@/components/layout/layout";
 
-// Import existing pages that we'll repurpose
+// Dashboard
 import Dashboard from "@/pages/dashboard";
-import Infrastructure from "@/pages/infrastructure"; // Will become Property Portfolio
-import Pipelines from "@/pages/pipelines"; // Will become Appraisal Workflows
-import Security from "@/pages/security"; // Will become User Management
-import Monitoring from "@/pages/monitoring"; // Will become Analytics
-import LocalSetup from "@/pages/local-setup"; // Will become Field Data Collection
-import Documentation from "@/pages/documentation"; // Will become Help Center
+
+// Property Management
+import Properties from "@/pages/properties";
+import PropertyForm from "@/pages/property-form";
+
+// Existing pages repurposed for different sections
+import Pipelines from "@/pages/pipelines"; // Used for Appraisal Workflows
+import Security from "@/pages/security"; // Used for User Management
+import Monitoring from "@/pages/monitoring"; // Used for Analytics
+import LocalSetup from "@/pages/local-setup"; // Used for Field Data Collection
+import Documentation from "@/pages/documentation"; // Used for Help Center
 
 function Router() {
   return (
@@ -23,7 +28,9 @@ function Router() {
         <Route path="/" component={Dashboard} />
         
         {/* Property Management */}
-        <Route path="/properties" component={Infrastructure} />
+        <Route path="/properties" component={Properties} />
+        <Route path="/properties/new" component={PropertyForm} />
+        <Route path="/properties/:id/edit" component={PropertyForm} />
         
         {/* Appraisal Workflows */}
         <Route path="/appraisals" component={Pipelines} />
