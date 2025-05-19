@@ -166,6 +166,9 @@ export default function MarketAnalysis() {
     enabled: !!propertyId,
   });
   
+  // State for valuation method
+  const [valuationMethod, setValuationMethod] = useState("comparable");
+  
   // Calculate estimated value based on calculator inputs
   const calculateEstimatedValue = () => {
     const { squareFeet, bedrooms, bathrooms, yearBuilt } = calculatorValues;
@@ -173,29 +176,66 @@ export default function MarketAnalysis() {
     
     if (!squareFeet) return formatCurrency(0);
     
-    // Base calculation using price per square foot
-    let baseValue = squareFeet * (marketData.pricePerSqFt || 200);
+    // Base value using selected method
+    let baseValue = 0;
     
-    // Adjustments based on bedrooms (more bedrooms typically increase value)
-    if (bedrooms > 2) {
-      baseValue *= (1 + ((bedrooms - 2) * 0.05));
-    }
-    
-    // Adjustments based on bathrooms
-    if (bathrooms > 1.5) {
-      baseValue *= (1 + ((bathrooms - 1.5) * 0.04));
-    }
-    
-    // Age adjustment (newer properties are typically more valuable)
-    if (yearBuilt > 0) {
-      const age = currentYear - yearBuilt;
-      if (age < 5) {
-        baseValue *= 1.15; // Premium for new construction
-      } else if (age < 20) {
-        baseValue *= 1.05; // Slight premium for newer properties
-      } else if (age > 50) {
-        baseValue *= 0.85; // Discount for older properties unless historic
-      }
+    switch (valuationMethod) {
+      case "comparable":
+        // Comparable sales approach
+        baseValue = squareFeet * (marketData.pricePerSqFt || 200);
+        
+        // Adjustments based on bedrooms (more bedrooms typically increase value)
+        if (bedrooms > 2) {
+          baseValue *= (1 + ((bedrooms - 2) * 0.05));
+        }
+        
+        // Adjustments based on bathrooms
+        if (bathrooms > 1.5) {
+          baseValue *= (1 + ((bathrooms - 1.5) * 0.04));
+        }
+        
+        // Age adjustment (newer properties are typically more valuable)
+        if (yearBuilt > 0) {
+          const age = currentYear - yearBuilt;
+          if (age < 5) {
+            baseValue *= 1.15; // Premium for new construction
+          } else if (age < 20) {
+            baseValue *= 1.05; // Slight premium for newer properties
+          } else if (age > 50) {
+            baseValue *= 0.85; // Discount for older properties unless historic
+          }
+        }
+        break;
+        
+      case "income":
+        // Income approach (simplified cap rate method)
+        // Assume monthly rent is roughly 0.8% of property value for typical residential
+        const estimatedMonthlyRent = (squareFeet * (marketData.pricePerSqFt || 200)) * 0.008;
+        const annualRent = estimatedMonthlyRent * 12;
+        // Use cap rate of 5% for residential properties
+        baseValue = annualRent / 0.05;
+        break;
+        
+      case "cost":
+        // Cost approach
+        // Base construction cost per square foot (varies by property type and location)
+        const baseCostPerSqFt = 150;
+        const constructionCost = squareFeet * baseCostPerSqFt;
+        
+        // Land value (roughly 20-30% of total value in many areas)
+        const landValue = squareFeet * (marketData.pricePerSqFt || 200) * 0.25;
+        
+        // Depreciation based on age
+        let depreciationFactor = 0;
+        if (yearBuilt > 0) {
+          const age = currentYear - yearBuilt;
+          // Simple straight-line depreciation over 50 years (2% per year)
+          depreciationFactor = Math.min(0.7, age * 0.02); // Cap at 70% depreciation
+        }
+        
+        // Calculate final value: Land + (Construction Cost - Depreciation)
+        baseValue = landValue + (constructionCost * (1 - depreciationFactor));
+        break;
     }
     
     return formatCurrency(baseValue);
