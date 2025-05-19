@@ -123,7 +123,7 @@ export default function PropertiesPage() {
           {filteredProperties.map((property: any) => (
             <Card key={property.id} className="overflow-hidden">
               <div className="h-40 bg-gray-200 flex items-center justify-center">
-                {property.propertyType === 'land' ? (
+                {property.property_type === 'Land' ? (
                   <Building size={40} className="text-gray-400" />
                 ) : (
                   <Home size={40} className="text-gray-400" />
@@ -134,17 +134,17 @@ export default function PropertiesPage() {
                   <div>
                     <CardTitle className="text-lg">{property.address}</CardTitle>
                     <CardDescription>
-                      {property.city}, {property.state} {property.zipCode}
+                      {property.city}, {property.state} {property.zip_code}
                     </CardDescription>
                   </div>
-                  {getPropertyTypeBadge(property.propertyType)}
+                  {getPropertyTypeBadge(property.property_type)}
                 </div>
               </CardHeader>
               <CardContent className="p-4 pt-2">
                 <div className="mt-2 flex flex-wrap gap-x-4 text-sm text-muted-foreground">
-                  {property.yearBuilt && <span>Built: {property.yearBuilt}</span>}
-                  {property.squareFeet && <span>{property.squareFeet} sq ft</span>}
-                  {property.propertyType === 'residential' && (
+                  {property.year_built && <span>Built: {property.year_built}</span>}
+                  {property.square_feet && <span>{property.square_feet} sq ft</span>}
+                  {property.property_type === 'Single Family' && (
                     <>
                       {property.bedrooms && <span>{property.bedrooms} bed</span>}
                       {property.bathrooms && <span>{property.bathrooms} bath</span>}
