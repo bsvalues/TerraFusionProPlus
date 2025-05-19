@@ -134,17 +134,17 @@ export default function PropertiesPage() {
                   <div>
                     <CardTitle className="text-lg">{property.address}</CardTitle>
                     <CardDescription>
-                      {property.city}, {property.state} {property.zip_code}
+                      {property.city}, {property.state} {property.zipCode}
                     </CardDescription>
                   </div>
-                  {getPropertyTypeBadge(property.property_type)}
+                  {getPropertyTypeBadge(property.propertyType)}
                 </div>
               </CardHeader>
               <CardContent className="p-4 pt-2">
                 <div className="mt-2 flex flex-wrap gap-x-4 text-sm text-muted-foreground">
-                  {property.year_built && <span>Built: {property.year_built}</span>}
-                  {property.square_feet && <span>{property.square_feet} sq ft</span>}
-                  {property.property_type === 'Single Family' && (
+                  {property.yearBuilt && <span>Built: {property.yearBuilt}</span>}
+                  {property.squareFeet && <span>{property.squareFeet} sq ft</span>}
+                  {property.propertyType === 'Single Family' && (
                     <>
                       {property.bedrooms && <span>{property.bedrooms} bed</span>}
                       {property.bathrooms && <span>{property.bathrooms} bath</span>}
