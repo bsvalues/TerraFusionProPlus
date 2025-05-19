@@ -357,20 +357,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const zipCode = req.query.zipCode as string || '90210';
       const timeframe = req.query.timeframe as string || '12m';
+      const propertyType = req.query.propertyType as string || 'all';
       
       // In a real implementation, we would fetch data from a real estate API
       // or database based on these parameters
       
+      // Sample market data adjusted based on property type
+      let priceAdjustment = 1.0;
+      let inventoryAdjustment = 0;
+      
+      if (propertyType === 'singleFamily') {
+        priceAdjustment = 1.15;
+        inventoryAdjustment = -1.2;
+      } else if (propertyType === 'condo') {
+        priceAdjustment = 0.85;
+        inventoryAdjustment = 2.5;
+      } else if (propertyType === 'multiFamily') {
+        priceAdjustment = 1.45;
+        inventoryAdjustment = -3.0;
+      } else if (propertyType === 'commercial') {
+        priceAdjustment = 2.2;
+        inventoryAdjustment = -5.0;
+      } else if (propertyType === 'land') {
+        priceAdjustment = 0.65;
+        inventoryAdjustment = 1.5;
+      }
+      
       // Sample market data for MVP implementation
       const marketData = {
-        averagePrice: 352000,
-        medianPrice: 348000,
+        averagePrice: Math.round(352000 * priceAdjustment),
+        medianPrice: Math.round(348000 * priceAdjustment),
         salesVolume: 383,
         averageDaysOnMarket: 35,
         priceChange: 4.2,
-        inventoryChange: -2.8,
-        pricePerSqFt: 192,
-        lastUpdated: new Date().toISOString()
+        inventoryChange: -2.8 + inventoryAdjustment,
+        pricePerSqFt: Math.round(192 * priceAdjustment),
+        lastUpdated: new Date().toISOString(),
+        propertyType: propertyType
       };
       
       res.json(marketData);
@@ -383,9 +406,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const zipCode = req.query.zipCode as string || '90210';
       const timeframe = req.query.timeframe as string || '12m';
+      const propertyType = req.query.propertyType as string || 'all';
+      
+      // Apply adjustment factor based on property type
+      let priceAdjustment = 1.0;
+      let salesAdjustment = 1.0;
+      let daysAdjustment = 1.0;
+      
+      if (propertyType === 'singleFamily') {
+        priceAdjustment = 1.15;
+        salesAdjustment = 1.2;
+        daysAdjustment = 0.9;
+      } else if (propertyType === 'condo') {
+        priceAdjustment = 0.85;
+        salesAdjustment = 1.5;
+        daysAdjustment = 0.8;
+      } else if (propertyType === 'multiFamily') {
+        priceAdjustment = 1.45;
+        salesAdjustment = 0.6;
+        daysAdjustment = 1.3;
+      } else if (propertyType === 'commercial') {
+        priceAdjustment = 2.2;
+        salesAdjustment = 0.4;
+        daysAdjustment = 1.8;
+      } else if (propertyType === 'land') {
+        priceAdjustment = 0.65;
+        salesAdjustment = 0.5;
+        daysAdjustment = 1.5;
+      }
       
       // Sample trends data
-      const marketTrends = [
+      const baseTrends = [
         { month: 'Jan', value: 320000, sales: 24, daysOnMarket: 45 },
         { month: 'Feb', value: 325000, sales: 28, daysOnMarket: 42 },
         { month: 'Mar', value: 330000, sales: 32, daysOnMarket: 38 },
@@ -400,7 +451,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         { month: 'Dec', value: 352000, sales: 25, daysOnMarket: 40 },
       ];
       
-      res.json(marketTrends);
+      // Apply the property type adjustments
+      const marketTrends = baseTrends.map(trend => ({
+        ...trend,
+        value: Math.round(trend.value * priceAdjustment),
+        sales: Math.round(trend.sales * salesAdjustment),
+        daysOnMarket: Math.round(trend.daysOnMarket * daysAdjustment)
+      }));
+      
+      // Adjust for timeframe - return only the months needed
+      let filteredTrends = marketTrends;
+      if (timeframe === '3m') {
+        filteredTrends = marketTrends.slice(9);
+      } else if (timeframe === '6m') {
+        filteredTrends = marketTrends.slice(6);
+      }
+      
+      res.json(filteredTrends);
     } catch (error) {
       res.status(400).json({ message: (error as Error).message });
     }
@@ -409,9 +476,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/market-analysis/recent-sales", async (req, res) => {
     try {
       const zipCode = req.query.zipCode as string || '90210';
+      const propertyType = req.query.propertyType as string || 'all';
       
-      // Sample recent sales data
-      const recentSales = [
+      // Define all property types with sample data
+      const allSales = [
+        // Single Family Homes
         { 
           address: "125 Oak Drive", 
           city: "Westwood", 
@@ -421,7 +490,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           beds: 3, 
           baths: 2, 
           sqft: 1850, 
-          pricePerSqft: 203
+          pricePerSqft: 203,
+          propertyType: "singleFamily"
         },
         { 
           address: "47 Maple Ave", 
@@ -432,7 +502,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           beds: 4, 
           baths: 2.5, 
           sqft: 2200, 
-          pricePerSqft: 186
+          pricePerSqft: 186,
+          propertyType: "singleFamily"
         },
         { 
           address: "892 Pine St", 
@@ -443,7 +514,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           beds: 3, 
           baths: 2, 
           sqft: 1750, 
-          pricePerSqft: 195
+          pricePerSqft: 195,
+          propertyType: "singleFamily"
         },
         { 
           address: "1432 Cedar Ln", 

@@ -99,18 +99,19 @@ export default function MarketAnalysis() {
   const [activeTab, setActiveTab] = useState("overview");
   const [timeframe, setTimeframe] = useState("12m");
   const [zipCode, setZipCode] = useState("90210");
+  const [propertyType, setPropertyType] = useState("all");
   
   // Fetch market analysis data from our API
   const { data: marketData = {} as MarketData, isLoading: marketLoading } = useQuery<MarketData>({
-    queryKey: ['/api/market-analysis', zipCode, timeframe],
+    queryKey: ['/api/market-analysis', zipCode, timeframe, propertyType],
   });
   
   const { data: marketTrendsData = [] as MarketTrend[], isLoading: trendsLoading } = useQuery<MarketTrend[]>({
-    queryKey: ['/api/market-analysis/trends', zipCode, timeframe],
+    queryKey: ['/api/market-analysis/trends', zipCode, timeframe, propertyType],
   });
   
   const { data: recentSalesData = [] as RecentSale[], isLoading: salesLoading } = useQuery<RecentSale[]>({
-    queryKey: ['/api/market-analysis/recent-sales', zipCode],
+    queryKey: ['/api/market-analysis/recent-sales', zipCode, propertyType],
   });
   
   const generateReport = () => {
@@ -130,7 +131,7 @@ export default function MarketAnalysis() {
           </p>
         </div>
         
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Input
             className="w-24 md:w-32"
             placeholder="ZIP Code"
@@ -146,6 +147,20 @@ export default function MarketAnalysis() {
               <SelectItem value="6m">6 Months</SelectItem>
               <SelectItem value="12m">12 Months</SelectItem>
               <SelectItem value="24m">24 Months</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Select value={propertyType} onValueChange={setPropertyType}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Property Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Properties</SelectItem>
+              <SelectItem value="singleFamily">Single Family</SelectItem>
+              <SelectItem value="condo">Condo/Townhouse</SelectItem>
+              <SelectItem value="multiFamily">Multi-Family</SelectItem>
+              <SelectItem value="commercial">Commercial</SelectItem>
+              <SelectItem value="land">Land/Lots</SelectItem>
             </SelectContent>
           </Select>
           
