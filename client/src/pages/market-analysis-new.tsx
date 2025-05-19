@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, useRoute } from "wouter";
 import { format } from "date-fns";
@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   BarChart,
   Bar,
@@ -245,11 +246,11 @@ export default function MarketAnalysis() {
     return formatCurrency(calculateValueByMethod(valuationMethod));
   };
   
-  // Calculate all method values in advance
-  const comparableValue = calculateValueByMethod("comparable");
-  const incomeValue = calculateValueByMethod("income");
-  const costValue = calculateValueByMethod("cost");
-  const maxValue = Math.max(comparableValue, incomeValue, costValue);
+  // Calculate all method values for comparison
+  const comparableValue = useMemo(() => calculateValueByMethod("comparable"), [calculatorValues, marketData.pricePerSqFt]);
+  const incomeValue = useMemo(() => calculateValueByMethod("income"), [calculatorValues, marketData.pricePerSqFt]);
+  const costValue = useMemo(() => calculateValueByMethod("cost"), [calculatorValues, marketData.pricePerSqFt]);
+  const maxValue = useMemo(() => Math.max(comparableValue, incomeValue, costValue), [comparableValue, incomeValue, costValue]);
 
   const generateReport = () => {
     toast({
@@ -435,98 +436,82 @@ export default function MarketAnalysis() {
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid grid-cols-3 md:w-[400px]">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="overview">Market Overview</TabsTrigger>
           <TabsTrigger value="trends">Price Trends</TabsTrigger>
-          <TabsTrigger value="comps">Recent Sales</TabsTrigger>
+          <TabsTrigger value="sales">Recent Sales</TabsTrigger>
         </TabsList>
         
-        {/* Overview Tab */}
+        {/* Market Overview Tab */}
         <TabsContent value="overview" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard 
-              title="Average Price" 
-              value={formatCurrency(marketData.averagePrice || 0)} 
-              icon={<CircleDollarSign />}
+              title="Median Home Price" 
+              value={formatCurrency(marketData.medianPrice || 0)} 
+              icon={<Home className="w-4 h-4" />}
               percentChange={marketData.priceChange}
             />
             <StatCard 
-              title="Price Per SqFt" 
+              title="Avg. Price per SqFt" 
               value={`$${marketData.pricePerSqFt || 0}`} 
-              icon={<Home />}
+              icon={<Map className="w-4 h-4" />}
+              percentChange={3.2}
             />
             <StatCard 
               title="Days on Market" 
-              value={`${marketData.averageDaysOnMarket || 0}`} 
-              icon={<Calendar />}
+              value={`${marketData.averageDaysOnMarket || 0} days`} 
+              icon={<Calendar className="w-4 h-4" />}
+              percentChange={-5.8}
             />
             <StatCard 
-              title="Inventory Change" 
-              value={`${(marketData.inventoryChange || 0) > 0 ? "+" : ""}${marketData.inventoryChange || 0}%`} 
-              icon={<Activity />}
+              title="Sales Volume" 
+              value={`${marketData.salesVolume || 0}`} 
+              icon={<Activity className="w-4 h-4" />}
+              percentChange={marketData.inventoryChange || 0}
             />
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Market Summary Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Market Summary</CardTitle>
-                <CardDescription>
-                  Price trends for the past 12 months in {zipCode}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {trendsLoading ? (
-                  <div className="h-[300px] flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-                      <p className="text-muted-foreground">Loading market data...</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={marketTrendsData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" />
-                        <YAxis 
-                          yAxisId="left"
-                          orientation="left" 
-                          tickFormatter={(value) => `$${value/1000}k`}
-                        />
-                        <YAxis 
-                          yAxisId="right"
-                          orientation="right" 
-                          tickFormatter={(value) => `${value}`}
-                        />
-                        <Tooltip 
-                          formatter={(value, name) => {
-                            if (name === "value") return formatCurrency(value as number);
-                            return value;
-                          }}
-                        />
-                        <Legend />
-                        <Line 
-                          yAxisId="left"
-                          type="monotone" 
-                          dataKey="value" 
-                          name="Median Price" 
-                          stroke="#8884d8" 
-                          activeDot={{ r: 8 }} 
-                        />
-                        <Line 
-                          yAxisId="right"
-                          type="monotone" 
-                          dataKey="daysOnMarket" 
-                          name="Days on Market" 
-                          stroke="#82ca9d" 
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="md:col-span-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Home Price Trends</CardTitle>
+                  <CardDescription>
+                    Last {timeframe === '3m' ? '3 months' : timeframe === '6m' ? '6 months' : timeframe === '24m' ? '2 years' : '12 months'} price trends in {zipCode}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={marketTrendsData}
+                      margin={{
+                        top: 5,
+                        right: 10,
+                        left: 10,
+                        bottom: 5,
+                      }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis 
+                        tickFormatter={(value) => `$${(value / 1000)}k`}
+                      />
+                      <Tooltip 
+                        formatter={(value) => [`${formatCurrency(value as number)}`, "Median Price"]}
+                      />
+                      <Legend />
+                      <Line
+                        type="monotone"
+                        dataKey="value"
+                        stroke="#6366F1"
+                        strokeWidth={2}
+                        activeDot={{ r: 8 }}
+                        name="Median Price"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </div>
             
             {/* Property Valuation Calculator */}
             <Card>
@@ -539,7 +524,7 @@ export default function MarketAnalysis() {
               <CardContent>
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Valuation Method</label>
+                    <Label htmlFor="valuation-method">Valuation Method</Label>
                     <Select 
                       value={valuationMethod} 
                       onValueChange={setValuationMethod}
@@ -559,6 +544,7 @@ export default function MarketAnalysis() {
                       {valuationMethod === "cost" && "Estimates value using construction costs less depreciation plus land value"}
                     </p>
                   </div>
+                  
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Square Footage</label>
@@ -666,115 +652,6 @@ export default function MarketAnalysis() {
                               ></div>
                             </div>
                           </div>
-                            // Calculate values for all methods without changing state
-                            const calculateValueForMethod = (method: string) => {
-                              const { squareFeet, bedrooms, bathrooms, yearBuilt } = calculatorValues;
-                              const currentYear = new Date().getFullYear();
-                              
-                              if (!squareFeet) return 0;
-                              
-                              let baseValue = 0;
-                              
-                              if (method === "comparable") {
-                                // Comparable sales approach
-                                baseValue = squareFeet * (marketData.pricePerSqFt || 200);
-                                
-                                if (bedrooms > 2) {
-                                  baseValue *= (1 + ((bedrooms - 2) * 0.05));
-                                }
-                                
-                                if (bathrooms > 1.5) {
-                                  baseValue *= (1 + ((bathrooms - 1.5) * 0.04));
-                                }
-                                
-                                if (yearBuilt > 0) {
-                                  const age = currentYear - yearBuilt;
-                                  if (age < 5) {
-                                    baseValue *= 1.15;
-                                  } else if (age < 20) {
-                                    baseValue *= 1.05;
-                                  } else if (age > 50) {
-                                    baseValue *= 0.85;
-                                  }
-                                }
-                              } else if (method === "income") {
-                                // Income approach
-                                const estimatedMonthlyRent = (squareFeet * (marketData.pricePerSqFt || 200)) * 0.008;
-                                const annualRent = estimatedMonthlyRent * 12;
-                                baseValue = annualRent / 0.05;
-                              } else if (method === "cost") {
-                                // Cost approach
-                                const baseCostPerSqFt = 150;
-                                const constructionCost = squareFeet * baseCostPerSqFt;
-                                const landValue = squareFeet * (marketData.pricePerSqFt || 200) * 0.25;
-                                
-                                let depreciationFactor = 0;
-                                if (yearBuilt > 0) {
-                                  const age = currentYear - yearBuilt;
-                                  depreciationFactor = Math.min(0.7, age * 0.02);
-                                }
-                                
-                                baseValue = landValue + (constructionCost * (1 - depreciationFactor));
-                              }
-                              
-                              return baseValue;
-                            };
-                            
-                            // Calculate values for all three methods
-                            const comparableValue = calculateValueForMethod("comparable");
-                            const incomeValue = calculateValueForMethod("income");
-                            const costValue = calculateValueForMethod("cost");
-                            
-                            // Find max value for scaling
-                            const maxValue = Math.max(comparableValue, incomeValue, costValue);
-                            
-                            return (
-                              <>
-                                {/* Comparable Method Bar */}
-                                <div>
-                                  <div className="flex justify-between text-xs mb-1">
-                                    <span>Comparable Sales</span>
-                                    <span>{formatCurrency(comparableValue)}</span>
-                                  </div>
-                                  <div className="w-full bg-gray-200 rounded-full h-2.5">
-                                    <div 
-                                      className="bg-blue-600 h-2.5 rounded-full" 
-                                      style={{ width: maxValue > 0 ? `${(comparableValue / maxValue) * 100}%` : '0%' }}
-                                    ></div>
-                                  </div>
-                                </div>
-                                
-                                {/* Income Method Bar */}
-                                <div>
-                                  <div className="flex justify-between text-xs mb-1">
-                                    <span>Income</span>
-                                    <span>{formatCurrency(incomeValue)}</span>
-                                  </div>
-                                  <div className="w-full bg-gray-200 rounded-full h-2.5">
-                                    <div 
-                                      className="bg-green-600 h-2.5 rounded-full" 
-                                      style={{ width: maxValue > 0 ? `${(incomeValue / maxValue) * 100}%` : '0%' }}
-                                    ></div>
-                                  </div>
-                                </div>
-                                
-                                {/* Cost Method Bar */}
-                                <div>
-                                  <div className="flex justify-between text-xs mb-1">
-                                    <span>Cost</span>
-                                    <span>{formatCurrency(costValue)}</span>
-                                  </div>
-                                  <div className="w-full bg-gray-200 rounded-full h-2.5">
-                                    <div 
-                                      className="bg-amber-600 h-2.5 rounded-full" 
-                                      style={{ width: maxValue > 0 ? `${(costValue / maxValue) * 100}%` : '0%' }}
-                                    ></div>
-                                  </div>
-                                </div>
-                              </>
-                            );
-                          })()}
-                          </div>
                         </div>
                       </div>
                     </div>
@@ -830,147 +707,213 @@ export default function MarketAnalysis() {
         <TabsContent value="trends" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Price Trends</CardTitle>
+              <CardTitle>Market Trends</CardTitle>
               <CardDescription>
-                Historical market value changes over time
+                Historical market data for {zipCode} ({propertyType === 'all' ? 'All Properties' : propertyType})
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {trendsLoading ? (
-                <div className="h-[400px] flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-                    <p className="text-muted-foreground">Loading trend data...</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                  <h3 className="text-lg font-medium mb-4">Price Trends</h3>
+                  <div className="h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart
+                        data={marketTrendsData}
+                        margin={{
+                          top: 5,
+                          right: 10,
+                          left: 10,
+                          bottom: 5,
+                        }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis 
+                          tickFormatter={(value) => `$${(value / 1000)}k`}
+                        />
+                        <Tooltip 
+                          formatter={(value) => [`${formatCurrency(value as number)}`, "Median Price"]}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="value"
+                          stroke="#6366F1"
+                          strokeWidth={2}
+                          name="Median Price"
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
                   </div>
                 </div>
-              ) : (
-                <div className="h-[400px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={marketTrendsData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis tickFormatter={(value) => `$${value/1000}k`} />
-                      <Tooltip formatter={(value) => formatCurrency(value as number)} />
-                      <Legend />
-                      <Bar 
-                        dataKey="value" 
-                        name="Median Price" 
-                        fill="#3b82f6" 
-                      />
-                      <Bar 
-                        dataKey="sales" 
-                        name="Number of Sales" 
-                        fill="#10b981" 
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Days on Market Trend</CardTitle>
-              <CardDescription>
-                Average time to sell properties over time
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {trendsLoading ? (
-                <div className="h-[300px] flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-                    <p className="text-muted-foreground">Loading trend data...</p>
+
+                <div>
+                  <h3 className="text-lg font-medium mb-4">Sales Volume</h3>
+                  <div className="h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={marketTrendsData}
+                        margin={{
+                          top: 5,
+                          right: 10,
+                          left: 10,
+                          bottom: 5,
+                        }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis />
+                        <Tooltip 
+                          formatter={(value) => [`${value}`, "Sales"]}
+                        />
+                        <Bar dataKey="sales" fill="#22C55E" name="Sales" />
+                      </BarChart>
+                    </ResponsiveContainer>
                   </div>
                 </div>
-              ) : (
-                <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={marketTrendsData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Line 
-                        type="monotone" 
-                        dataKey="daysOnMarket" 
-                        name="Days on Market" 
-                        stroke="#f43f5e" 
-                        strokeWidth={2}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
+                
+                <div>
+                  <h3 className="text-lg font-medium mb-4">Days on Market</h3>
+                  <div className="h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart
+                        data={marketTrendsData}
+                        margin={{
+                          top: 5,
+                          right: 10,
+                          left: 10,
+                          bottom: 5,
+                        }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis />
+                        <Tooltip 
+                          formatter={(value) => [`${value} days`, "Avg Days on Market"]}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="daysOnMarket"
+                          stroke="#F59E0B"
+                          strokeWidth={2}
+                          name="Avg Days on Market"
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
-              )}
+                
+                <div>
+                  <h3 className="text-lg font-medium mb-4">Market Summary</h3>
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="space-y-4">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Median Sale Price:</span>
+                          <span className="font-medium">{formatCurrency(marketData.medianPrice || 0)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Average Sale Price:</span>
+                          <span className="font-medium">{formatCurrency(marketData.averagePrice || 0)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Price/Sq Ft:</span>
+                          <span className="font-medium">${marketData.pricePerSqFt || 0}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Sales Volume:</span>
+                          <span className="font-medium">{marketData.salesVolume || 0} properties</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Avg Days on Market:</span>
+                          <span className="font-medium">{marketData.averageDaysOnMarket || 0} days</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">YoY Price Change:</span>
+                          <span className={`font-medium ${(marketData.priceChange || 0) > 0 ? "text-green-600" : "text-red-600"}`}>
+                            {(marketData.priceChange || 0) > 0 ? "+" : ""}{marketData.priceChange || 0}%
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Inventory Change:</span>
+                          <span className={`font-medium ${(marketData.inventoryChange || 0) > 0 ? "text-green-600" : "text-red-600"}`}>
+                            {(marketData.inventoryChange || 0) > 0 ? "+" : ""}{marketData.inventoryChange || 0}%
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Data Updated:</span>
+                          <span className="font-medium">{marketData.lastUpdated ? format(new Date(marketData.lastUpdated), 'MMM d, yyyy') : 'N/A'}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
         
         {/* Recent Sales Tab */}
-        <TabsContent value="comps" className="space-y-4">
+        <TabsContent value="sales" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Recent Sales in the Area</CardTitle>
+              <CardTitle>Recent Sales</CardTitle>
               <CardDescription>
-                Comparable properties sold in the past 6 months
+                Recent property sales in {zipCode} area
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {salesLoading ? (
-                <div className="h-[400px] flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-                    <p className="text-muted-foreground">Loading sales data...</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="overflow-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Address</TableHead>
-                        <TableHead>Sale Date</TableHead>
-                        <TableHead>Sale Price</TableHead>
-                        <TableHead>Beds</TableHead>
-                        <TableHead>Baths</TableHead>
-                        <TableHead>Sq Ft</TableHead>
-                        <TableHead>Price/Sq Ft</TableHead>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Address</TableHead>
+                      <TableHead>Sale Date</TableHead>
+                      <TableHead>Sale Price</TableHead>
+                      <TableHead className="hidden md:table-cell">Beds/Baths</TableHead>
+                      <TableHead className="hidden md:table-cell">SqFt</TableHead>
+                      <TableHead className="hidden md:table-cell">Price/SqFt</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {recentSalesData.map((sale, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="font-medium">
+                          <div>{sale.address}</div>
+                          <div className="text-xs text-muted-foreground">{sale.city}, {sale.state}</div>
+                        </TableCell>
+                        <TableCell>
+                          {format(new Date(sale.saleDate), 'MMM d, yyyy')}
+                        </TableCell>
+                        <TableCell>
+                          {formatCurrency(sale.salePrice)}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {sale.beds} / {sale.baths}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {sale.sqft.toLocaleString()}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          ${sale.pricePerSqft}
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {recentSalesData.map((sale, index) => (
-                        <TableRow key={index}>
-                          <TableCell className="font-medium">
-                            {sale.address}
-                            <div className="text-xs text-muted-foreground">{sale.city}, {sale.state}</div>
-                          </TableCell>
-                          <TableCell>{new Date(sale.saleDate).toLocaleDateString()}</TableCell>
-                          <TableCell>{formatCurrency(sale.salePrice)}</TableCell>
-                          <TableCell>{sale.beds}</TableCell>
-                          <TableCell>{sale.baths}</TableCell>
-                          <TableCell>{sale.sqft.toLocaleString()}</TableCell>
-                          <TableCell>${sale.pricePerSqft}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              <div className="flex justify-center mt-4">
+                <Button variant="outline">
+                  <Download className="mr-2 h-4 w-4" />
+                  Export Sales Data
+                </Button>
+                <Button variant="outline" className="ml-2">
+                  <Printer className="mr-2 h-4 w-4" />
+                  Print Report
+                </Button>
+              </div>
             </CardContent>
           </Card>
-          
-          <div className="flex justify-end space-x-2">
-            <Button variant="outline">
-              <Download className="mr-2 h-4 w-4" />
-              Export Data
-            </Button>
-            <Button variant="outline">
-              <Printer className="mr-2 h-4 w-4" />
-              Print Report
-            </Button>
-          </div>
         </TabsContent>
       </Tabs>
     </div>
