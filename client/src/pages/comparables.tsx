@@ -225,10 +225,10 @@ export default function ComparablesPage() {
                       <span>{comparable.bedrooms}b/{comparable.bathrooms}b</span>
                     </div>
                   )}
-                  {comparable.distanceFromSubject && (
+                  {comparable.proximityMiles && (
                     <div className="flex items-center">
                       <MapPin className="h-3 w-3 mr-1 text-muted-foreground" />
-                      <span>{comparable.distanceFromSubject} mi</span>
+                      <span>{comparable.proximityMiles} mi</span>
                     </div>
                   )}
                 </div>

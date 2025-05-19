@@ -73,7 +73,7 @@ export default function ComparableForm({
       squareFeet: undefined,
       yearBuilt: undefined,
       lotSize: undefined,
-      distanceFromSubject: undefined,
+      proximityMiles: undefined,
       adjustments: 0,
       adjustedPrice: undefined,
     },
@@ -367,7 +367,7 @@ export default function ComparableForm({
                   
                   <FormField
                     control={form.control}
-                    name="distanceFromSubject"
+                    name="proximityMiles"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Distance (miles)</FormLabel>
