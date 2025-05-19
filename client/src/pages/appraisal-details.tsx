@@ -344,6 +344,11 @@ export default function AppraisalDetails() {
                           <span className="text-muted-foreground">Built:</span> {comparable.yearBuilt}
                         </div>
                       )}
+                      {comparable.proximityMiles && (
+                        <div>
+                          <span className="text-muted-foreground">Distance:</span> {comparable.proximityMiles} mi
+                        </div>
+                      )}
                     </div>
                     
                     {comparable.adjustments !== 0 && comparable.adjustedPrice && (
