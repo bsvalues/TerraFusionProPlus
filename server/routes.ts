@@ -241,6 +241,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ message: (error as Error).message });
     }
   });
+  
+  app.get("/api/appraisals/:appraisalId/comparables", async (req, res) => {
+    try {
+      const appraisalId = parseId(req.params.appraisalId);
+      const comparables = await storage.getComparables(appraisalId);
+      res.json(comparables);
+    } catch (error) {
+      res.status(400).json({ message: (error as Error).message });
+    }
+  });
 
   app.get("/api/comparables/:id", async (req, res) => {
     try {

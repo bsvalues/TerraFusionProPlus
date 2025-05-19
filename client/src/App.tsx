@@ -16,6 +16,7 @@ import PropertyForm from "@/pages/property-form";
 // Appraisal Management
 import Appraisals from "@/pages/appraisals";
 import AppraisalForm from "@/pages/appraisal-form";
+import AppraisalDetails from "@/pages/appraisal-details";
 import Comparables from "@/pages/comparables";
 import ComparableForm from "@/pages/comparable-form";
 
@@ -41,6 +42,7 @@ function Router() {
         <Route path="/appraisals" component={Appraisals} />
         <Route path="/appraisals/new" component={AppraisalForm} />
         <Route path="/appraisals/:id/edit" component={AppraisalForm} />
+        <Route path="/appraisals/:id" component={AppraisalDetails} />
         <Route path="/properties/:propertyId/appraisals/new" component={AppraisalForm} />
         
         {/* Comparable Properties */}
