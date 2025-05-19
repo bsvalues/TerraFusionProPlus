@@ -14,7 +14,9 @@ import {
   Clock, 
   UserCheck,
   Building,
-  DollarSign
+  DollarSign,
+  TrendingUp,
+  BarChart2
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -146,9 +148,14 @@ export default function AppraisalsPage() {
           <h1 className="text-2xl font-bold">Appraisal Workflows</h1>
           <p className="text-muted-foreground">Manage your property appraisals</p>
         </div>
-        <Button onClick={() => setLocation("/appraisals/new")}>
-          <Plus className="mr-2 h-4 w-4" /> New Appraisal
-        </Button>
+        <div className="flex space-x-3">
+          <Button variant="outline" onClick={() => setLocation("/market-analysis")}>
+            <TrendingUp className="mr-2 h-4 w-4" /> Market Analysis
+          </Button>
+          <Button onClick={() => setLocation("/appraisals/new")}>
+            <Plus className="mr-2 h-4 w-4" /> New Appraisal
+          </Button>
+        </div>
       </div>
 
       {/* Search and filters */}

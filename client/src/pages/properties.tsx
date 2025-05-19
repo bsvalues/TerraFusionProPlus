@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building, Plus, Search, Home, Eye, Edit, Trash2 } from "lucide-react";
+import { Building, Plus, Search, Home, Eye, Edit, Trash2, TrendingUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { apiRequest } from "@/lib/queryClient";
 import { Badge } from "@/components/ui/badge";
@@ -93,9 +93,14 @@ export default function PropertiesPage() {
           <h1 className="text-2xl font-bold">Property Portfolio</h1>
           <p className="text-muted-foreground">Manage your property listings</p>
         </div>
-        <Button onClick={() => setLocation("/properties/new")}>
-          <Plus className="mr-2 h-4 w-4" /> Add Property
-        </Button>
+        <div className="flex space-x-3">
+          <Button variant="outline" onClick={() => setLocation("/market-analysis")}>
+            <TrendingUp className="mr-2 h-4 w-4" /> Market Analysis
+          </Button>
+          <Button onClick={() => setLocation("/properties/new")}>
+            <Plus className="mr-2 h-4 w-4" /> Add Property
+          </Button>
+        </div>
       </div>
 
       {/* Search and filters */}
