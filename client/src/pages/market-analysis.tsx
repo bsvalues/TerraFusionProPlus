@@ -250,6 +250,42 @@ export default function MarketAnalysis() {
                     <span className="text-muted-foreground">Avg. Days on Market:</span>
                     <span className="font-medium">{marketData.averageDaysOnMarket || 0} days</span>
                   </div>
+                  
+                  {/* Visual Comparison */}
+                  {propertyData.squareFeet && marketData.pricePerSqFt && (
+                    <div className="pt-4 mt-4 border-t">
+                      <h4 className="text-sm font-medium mb-2">Value Comparison</h4>
+                      <div className="space-y-2">
+                        <div>
+                          <div className="flex justify-between text-xs mb-1">
+                            <span>Market Median</span>
+                            <span>{formatCurrency(marketData.medianPrice || 0)}</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2.5">
+                            <div 
+                              className="bg-primary h-2.5 rounded-full" 
+                              style={{ width: '50%' }}
+                            ></div>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <div className="flex justify-between text-xs mb-1">
+                            <span>Estimated Value</span>
+                            <span>{formatCurrency(propertyData.squareFeet * marketData.pricePerSqFt)}</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2.5">
+                            <div 
+                              className="bg-secondary h-2.5 rounded-full" 
+                              style={{ 
+                                width: `${Math.min(100, (propertyData.squareFeet * marketData.pricePerSqFt) / marketData.medianPrice * 50)}%` 
+                              }}
+                            ></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
