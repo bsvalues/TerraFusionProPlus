@@ -42,7 +42,7 @@ export default function AppraisalsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [appraisalToDelete, setAppraisalToDelete] = useState<number | null>(null);
-  const [_, navigate] = useLocation();
+  const [_, setLocation] = useLocation();
   const { toast } = useToast();
 
   // Fetch appraisals
@@ -146,7 +146,7 @@ export default function AppraisalsPage() {
           <h1 className="text-2xl font-bold">Appraisal Workflows</h1>
           <p className="text-muted-foreground">Manage your property appraisals</p>
         </div>
-        <Button onClick={() => navigate("/appraisals/new")}>
+        <Button onClick={() => setLocation("/appraisals/new")}>
           <Plus className="mr-2 h-4 w-4" /> New Appraisal
         </Button>
       </div>
@@ -250,11 +250,11 @@ export default function AppraisalsPage() {
                     </div>
                     
                     <div className="flex md:flex-col gap-2">
-                      <Button size="sm" variant="outline" onClick={() => navigate(`/appraisals/${appraisal.id}`)}>
+                      <Button size="sm" variant="outline" onClick={() => setLocation(`/appraisals/${appraisal.id}`)}>
                         <Eye className="h-4 w-4 md:mr-2" />
                         <span className="hidden md:inline">View</span>
                       </Button>
-                      <Button size="sm" variant="ghost" onClick={() => navigate(`/appraisals/${appraisal.id}/edit`)}>
+                      <Button size="sm" variant="ghost" onClick={() => setLocation(`/appraisals/${appraisal.id}/edit`)}>
                         <Edit className="h-4 w-4 md:mr-2" />
                         <span className="hidden md:inline">Edit</span>
                       </Button>
@@ -279,7 +279,7 @@ export default function AppraisalsPage() {
               : "You haven't created any appraisals yet."}
           </p>
           {!searchQuery && !statusFilter && (
-            <Button onClick={() => navigate("/appraisals/new")}>
+            <Button onClick={() => setLocation("/appraisals/new")}>
               <Plus className="mr-2 h-4 w-4" /> Create Your First Appraisal
             </Button>
           )}

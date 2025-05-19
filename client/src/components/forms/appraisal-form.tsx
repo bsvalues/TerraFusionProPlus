@@ -108,7 +108,7 @@ export default function AppraisalForm({
       if (onSuccess) {
         onSuccess(result);
       } else {
-        navigate("/appraisals");
+        setLocation("/appraisals");
       }
     } catch (error) {
       toast({
@@ -500,7 +500,7 @@ export default function AppraisalForm({
               <Button 
                 type="button" 
                 variant="outline" 
-                onClick={() => navigate("/appraisals")}
+                onClick={() => setLocation("/appraisals")}
               >
                 Cancel
               </Button>
