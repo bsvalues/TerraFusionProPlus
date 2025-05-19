@@ -290,6 +290,95 @@ export default function AppraisalDetails() {
           )}
         </TabsContent>
         
+        {/* Comparables Tab */}
+        <TabsContent value="comparables" className="space-y-4">
+          {propertyLoading || comparablesLoading ? (
+            <div className="animate-pulse">
+              <div className="h-64 bg-muted rounded mb-4"></div>
+              <div className="h-32 bg-muted rounded"></div>
+            </div>
+          ) : (
+            <>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">Comparable Properties</h2>
+                <Button onClick={() => setLocation(`/comparable-form?appraisalId=${id}`)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Comparable
+                </Button>
+              </div>
+              
+              {comparables && comparables.length > 0 ? (
+                <ComparableGrid 
+                  subject={property}
+                  comparables={comparables}
+                  onPrint={() => {
+                    window.print();
+                  }}
+                />
+              ) : (
+                <Card>
+                  <CardContent className="py-8">
+                    <div className="text-center">
+                      <Building className="h-12 w-12 text-gray-300 mx-auto mb-2" />
+                      <h3 className="text-lg font-medium mb-2">No Comparable Properties</h3>
+                      <p className="text-muted-foreground mb-4">
+                        Add comparable properties to help determine the market value of this property.
+                      </p>
+                      <Button onClick={() => setLocation(`/comparable-form?appraisalId=${id}`)}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Your First Comparable
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+              
+              <div className="mt-6">
+                <h3 className="text-lg font-medium mb-4">Market Analysis</h3>
+                {comparables && comparables.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <Card>
+                      <CardContent className="pt-6">
+                        <div className="text-2xl font-bold">{formatCurrency(getAveragePrice())}</div>
+                        <p className="text-sm text-muted-foreground">Average Sale Price</p>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardContent className="pt-6">
+                        <div className="text-2xl font-bold">{getAveragePricePerSqFt()}</div>
+                        <p className="text-sm text-muted-foreground">Avg. Price per SqFt</p>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardContent className="pt-6">
+                        <div className="text-2xl font-bold">{comparables.length}</div>
+                        <p className="text-sm text-muted-foreground">Comparable Properties</p>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardContent className="pt-6">
+                        <div className="text-2xl font-bold">{getPriceRange()}</div>
+                        <p className="text-sm text-muted-foreground">Price Range</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                ) : (
+                  <Card>
+                    <CardContent className="py-4">
+                      <p className="text-muted-foreground text-center">
+                        Add comparable properties to see market analysis.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </>
+          )}
+        </TabsContent>
+        
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
