@@ -54,79 +54,36 @@ import {
   Printer
 } from "lucide-react";
 
-// Sample market data
-const marketTrends = [
-  { month: 'Jan', value: 320000, sales: 24, daysOnMarket: 45 },
-  { month: 'Feb', value: 325000, sales: 28, daysOnMarket: 42 },
-  { month: 'Mar', value: 330000, sales: 32, daysOnMarket: 38 },
-  { month: 'Apr', value: 335000, sales: 35, daysOnMarket: 35 },
-  { month: 'May', value: 338000, sales: 30, daysOnMarket: 32 },
-  { month: 'Jun', value: 342000, sales: 36, daysOnMarket: 30 },
-  { month: 'Jul', value: 350000, sales: 40, daysOnMarket: 28 },
-  { month: 'Aug', value: 355000, sales: 38, daysOnMarket: 30 },
-  { month: 'Sep', value: 360000, sales: 35, daysOnMarket: 32 },
-  { month: 'Oct', value: 358000, sales: 32, daysOnMarket: 34 },
-  { month: 'Nov', value: 355000, sales: 28, daysOnMarket: 36 },
-  { month: 'Dec', value: 352000, sales: 25, daysOnMarket: 40 },
-];
+// Define types for our API responses
+interface MarketData {
+  averagePrice: number;
+  medianPrice: number;
+  salesVolume: number;
+  averageDaysOnMarket: number;
+  priceChange: number;
+  inventoryChange: number;
+  pricePerSqFt: number;
+  lastUpdated: string;
+}
 
-const recentSales = [
-  { 
-    address: "125 Oak Drive", 
-    city: "Westwood", 
-    state: "CA", 
-    saleDate: "2023-11-15", 
-    salePrice: 375000, 
-    beds: 3, 
-    baths: 2, 
-    sqft: 1850, 
-    pricePerSqft: 203
-  },
-  { 
-    address: "47 Maple Ave", 
-    city: "Westwood", 
-    state: "CA", 
-    saleDate: "2023-11-02", 
-    salePrice: 410000, 
-    beds: 4, 
-    baths: 2.5, 
-    sqft: 2200, 
-    pricePerSqft: 186
-  },
-  { 
-    address: "892 Pine St", 
-    city: "Westwood", 
-    state: "CA", 
-    saleDate: "2023-10-28", 
-    salePrice: 342000, 
-    beds: 3, 
-    baths: 2, 
-    sqft: 1750, 
-    pricePerSqft: 195
-  },
-  { 
-    address: "1432 Cedar Ln", 
-    city: "Westwood", 
-    state: "CA", 
-    saleDate: "2023-10-15", 
-    salePrice: 398000, 
-    beds: 3, 
-    baths: 2.5, 
-    sqft: 2100, 
-    pricePerSqft: 190
-  },
-  { 
-    address: "542 Redwood Ct", 
-    city: "Westwood", 
-    state: "CA", 
-    saleDate: "2023-10-05", 
-    salePrice: 425000, 
-    beds: 4, 
-    baths: 3, 
-    sqft: 2350, 
-    pricePerSqft: 181
-  },
-];
+interface MarketTrend {
+  month: string;
+  value: number;
+  sales: number;
+  daysOnMarket: number;
+}
+
+interface RecentSale {
+  address: string;
+  city: string;
+  state: string;
+  saleDate: string;
+  salePrice: number;
+  beds: number;
+  baths: number;
+  sqft: number;
+  pricePerSqft: number;
+}
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('en-US', {
@@ -144,15 +101,15 @@ export default function MarketAnalysis() {
   const [zipCode, setZipCode] = useState("90210");
   
   // Fetch market analysis data from our API
-  const { data: marketData = {}, isLoading: marketLoading } = useQuery({
+  const { data: marketData = {} as MarketData, isLoading: marketLoading } = useQuery<MarketData>({
     queryKey: ['/api/market-analysis', zipCode, timeframe],
   });
   
-  const { data: marketTrendsData = [], isLoading: trendsLoading } = useQuery({
+  const { data: marketTrendsData = [] as MarketTrend[], isLoading: trendsLoading } = useQuery<MarketTrend[]>({
     queryKey: ['/api/market-analysis/trends', zipCode, timeframe],
   });
   
-  const { data: recentSalesData = [], isLoading: salesLoading } = useQuery({
+  const { data: recentSalesData = [] as RecentSale[], isLoading: salesLoading } = useQuery<RecentSale[]>({
     queryKey: ['/api/market-analysis/recent-sales', zipCode],
   });
   
@@ -217,10 +174,10 @@ export default function MarketAnalysis() {
                 <CircleDollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{formatCurrency(marketData.medianPrice)}</div>
+                <div className="text-2xl font-bold">{formatCurrency(marketData.medianPrice || 0)}</div>
                 <p className="text-xs text-muted-foreground">
-                  <span className={marketData.priceChange > 0 ? "text-green-600" : "text-red-600"}>
-                    {marketData.priceChange > 0 ? "↑" : "↓"} {Math.abs(marketData.priceChange)}%
+                  <span className={(marketData.priceChange || 0) > 0 ? "text-green-600" : "text-red-600"}>
+                    {(marketData.priceChange || 0) > 0 ? "↑" : "↓"} {Math.abs(marketData.priceChange || 0)}%
                   </span> from last year
                 </p>
               </CardContent>
@@ -234,7 +191,7 @@ export default function MarketAnalysis() {
                 <Home className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">${marketData.pricePerSqFt}</div>
+                <div className="text-2xl font-bold">${marketData.pricePerSqFt || 0}</div>
                 <p className="text-xs text-muted-foreground">
                   Average for {zipCode} area
                 </p>
@@ -249,7 +206,7 @@ export default function MarketAnalysis() {
                 <Calendar className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{marketData.averageDaysOnMarket}</div>
+                <div className="text-2xl font-bold">{marketData.averageDaysOnMarket || 0}</div>
                 <p className="text-xs text-muted-foreground">
                   Average time to sell
                 </p>
@@ -265,7 +222,7 @@ export default function MarketAnalysis() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {marketData.inventoryChange > 0 ? "+" : ""}{marketData.inventoryChange}%
+                  {(marketData.inventoryChange || 0) > 0 ? "+" : ""}{marketData.inventoryChange || 0}%
                 </div>
                 <p className="text-xs text-muted-foreground">
                   From previous period
@@ -282,46 +239,55 @@ export default function MarketAnalysis() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={marketTrendsData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis 
-                      yAxisId="left"
-                      orientation="left" 
-                      tickFormatter={(value) => `$${value/1000}k`}
-                    />
-                    <YAxis 
-                      yAxisId="right"
-                      orientation="right" 
-                      tickFormatter={(value) => `${value}`}
-                    />
-                    <Tooltip 
-                      formatter={(value, name) => {
-                        if (name === "value") return formatCurrency(value as number);
-                        return value;
-                      }}
-                    />
-                    <Legend />
-                    <Line 
-                      yAxisId="left"
-                      type="monotone" 
-                      dataKey="value" 
-                      name="Median Price" 
-                      stroke="#8884d8" 
-                      activeDot={{ r: 8 }} 
-                    />
-                    <Line 
-                      yAxisId="right"
-                      type="monotone" 
-                      dataKey="daysOnMarket" 
-                      name="Days on Market" 
-                      stroke="#82ca9d" 
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
+              {trendsLoading ? (
+                <div className="h-[300px] flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+                    <p className="text-muted-foreground">Loading market data...</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={marketTrendsData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis 
+                        yAxisId="left"
+                        orientation="left" 
+                        tickFormatter={(value) => `$${value/1000}k`}
+                      />
+                      <YAxis 
+                        yAxisId="right"
+                        orientation="right" 
+                        tickFormatter={(value) => `${value}`}
+                      />
+                      <Tooltip 
+                        formatter={(value, name) => {
+                          if (name === "value") return formatCurrency(value as number);
+                          return value;
+                        }}
+                      />
+                      <Legend />
+                      <Line 
+                        yAxisId="left"
+                        type="monotone" 
+                        dataKey="value" 
+                        name="Median Price" 
+                        stroke="#8884d8" 
+                        activeDot={{ r: 8 }} 
+                      />
+                      <Line 
+                        yAxisId="right"
+                        type="monotone" 
+                        dataKey="daysOnMarket" 
+                        name="Days on Market" 
+                        stroke="#82ca9d" 
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -336,19 +302,28 @@ export default function MarketAnalysis() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[400px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={marketTrends}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis tickFormatter={(value) => `$${value/1000}k`} />
-                    <Tooltip formatter={(value) => formatCurrency(value as number)} />
-                    <Legend />
-                    <Bar dataKey="value" name="Median Sale Price" fill="#8884d8" />
-                    <Bar dataKey="sales" name="Number of Sales" fill="#82ca9d" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+              {trendsLoading ? (
+                <div className="h-[400px] flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+                    <p className="text-muted-foreground">Loading trend data...</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="h-[400px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={marketTrendsData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis tickFormatter={(value) => `$${value/1000}k`} />
+                      <Tooltip formatter={(value) => formatCurrency(value as number)} />
+                      <Legend />
+                      <Bar dataKey="value" name="Median Sale Price" fill="#8884d8" />
+                      <Bar dataKey="sales" name="Number of Sales" fill="#82ca9d" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
               
               <div className="mt-6 space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -391,8 +366,8 @@ export default function MarketAnalysis() {
                 
                 <p className="text-sm text-muted-foreground">
                   The market in ZIP code {zipCode} has shown consistent growth over the past
-                  twelve months. Demand remains strong with properties selling within {marketData.averageDaysOnMarket} days
-                  on average. The price per square foot has increased from $183 to ${marketData.pricePerSqFt}
+                  twelve months. Demand remains strong with properties selling within {marketData.averageDaysOnMarket || 35} days
+                  on average. The price per square foot has increased from $183 to ${marketData.pricePerSqFt || 192}
                   during this period.
                 </p>
               </div>
@@ -410,44 +385,53 @@ export default function MarketAnalysis() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Address</TableHead>
-                    <TableHead>Sale Date</TableHead>
-                    <TableHead className="text-right">Price</TableHead>
-                    <TableHead>Beds/Baths</TableHead>
-                    <TableHead className="text-right">Sq Ft</TableHead>
-                    <TableHead className="text-right">$/Sq Ft</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {recentSales.map((sale, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-medium">
-                        {sale.address}
-                        <div className="text-xs text-muted-foreground">
-                          {sale.city}, {sale.state}
-                        </div>
-                      </TableCell>
-                      <TableCell>{format(new Date(sale.saleDate), "MM/dd/yyyy")}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(sale.salePrice)}</TableCell>
-                      <TableCell>{sale.beds}/{sale.baths}</TableCell>
-                      <TableCell className="text-right">{sale.sqft.toLocaleString()}</TableCell>
-                      <TableCell className="text-right">${sale.pricePerSqft}</TableCell>
+              {salesLoading ? (
+                <div className="h-[300px] flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+                    <p className="text-muted-foreground">Loading recent sales data...</p>
+                  </div>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Address</TableHead>
+                      <TableHead>Sale Date</TableHead>
+                      <TableHead className="text-right">Price</TableHead>
+                      <TableHead>Beds/Baths</TableHead>
+                      <TableHead className="text-right">Sq Ft</TableHead>
+                      <TableHead className="text-right">$/Sq Ft</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {recentSalesData.map((sale, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="font-medium">
+                          {sale.address}
+                          <div className="text-xs text-muted-foreground">
+                            {sale.city}, {sale.state}
+                          </div>
+                        </TableCell>
+                        <TableCell>{sale.saleDate}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(sale.salePrice)}</TableCell>
+                        <TableCell>{sale.beds}/{sale.baths}</TableCell>
+                        <TableCell className="text-right">{sale.sqft.toLocaleString()}</TableCell>
+                        <TableCell className="text-right">${sale.pricePerSqft}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
               
-              <div className="mt-4 flex justify-end space-x-2">
-                <Button variant="outline" size="sm">
-                  <Printer className="mr-2 h-4 w-4" />
-                  Print
-                </Button>
-                <Button variant="outline" size="sm">
+              <div className="flex justify-between mt-6">
+                <Button variant="outline">
                   <Download className="mr-2 h-4 w-4" />
                   Export
+                </Button>
+                <Button variant="outline">
+                  <Printer className="mr-2 h-4 w-4" />
+                  Print
                 </Button>
               </div>
               
