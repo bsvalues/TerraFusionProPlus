@@ -425,11 +425,18 @@ export default function AppraisalDetails() {
         {/* Comparables Tab */}
         <TabsContent value="comparables" className="space-y-4">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-medium">Comparable Properties</h2>
-            <Button onClick={() => setLocation(`/appraisals/${id}/comparables/new`)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Comparable
-            </Button>
+            <h2 className="text-xl font-bold">Comparable Properties</h2>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setLocation(`/market-analysis/${appraisal?.propertyId}`)}
+              >
+                <TrendingUp className="mr-2 h-4 w-4" /> View Market Analysis
+              </Button>
+              <Button onClick={() => setLocation(`/appraisals/${id}/comparables/new`)}>
+                <Plus className="mr-2 h-4 w-4" /> Add Comparable
+              </Button>
+            </div>
           </div>
           
           {comparablesLoading ? (
