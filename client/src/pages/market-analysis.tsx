@@ -102,6 +102,49 @@ export default function MarketAnalysis() {
   const [zipCode, setZipCode] = useState("90210");
   const [propertyType, setPropertyType] = useState("all");
   
+  // State for property valuation calculator
+  const [calculatorValues, setCalculatorValues] = useState({
+    squareFeet: 2000,
+    bedrooms: 3,
+    bathrooms: 2,
+    yearBuilt: 2000
+  });
+  
+  // Calculate estimated value based on calculator inputs
+  const calculateEstimatedValue = () => {
+    const { squareFeet, bedrooms, bathrooms, yearBuilt } = calculatorValues;
+    const currentYear = new Date().getFullYear();
+    
+    if (!squareFeet) return formatCurrency(0);
+    
+    // Base calculation using price per square foot
+    let baseValue = squareFeet * (marketData.pricePerSqFt || 200);
+    
+    // Adjustments based on bedrooms (more bedrooms typically increase value)
+    if (bedrooms > 2) {
+      baseValue *= (1 + ((bedrooms - 2) * 0.05));
+    }
+    
+    // Adjustments based on bathrooms
+    if (bathrooms > 1.5) {
+      baseValue *= (1 + ((bathrooms - 1.5) * 0.04));
+    }
+    
+    // Age adjustment (newer properties are typically more valuable)
+    if (yearBuilt > 0) {
+      const age = currentYear - yearBuilt;
+      if (age < 5) {
+        baseValue *= 1.15; // Premium for new construction
+      } else if (age < 20) {
+        baseValue *= 1.05; // Slight premium for newer properties
+      } else if (age > 50) {
+        baseValue *= 0.85; // Discount for older properties unless historic
+      }
+    }
+    
+    return formatCurrency(baseValue);
+  };
+  
   // Check if we're viewing a specific property's market analysis
   const propertyId = params?.propertyId;
   
@@ -368,22 +411,24 @@ export default function MarketAnalysis() {
             </Card>
           </div>
           
-          <Card>
-            <CardHeader>
-              <CardTitle>Market Summary</CardTitle>
-              <CardDescription>
-                Price trends for the past 12 months in {zipCode}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {trendsLoading ? (
-                <div className="h-[300px] flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-                    <p className="text-muted-foreground">Loading market data...</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Market Summary Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Market Summary</CardTitle>
+                <CardDescription>
+                  Price trends for the past 12 months in {zipCode}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {trendsLoading ? (
+                  <div className="h-[300px] flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+                      <p className="text-muted-foreground">Loading market data...</p>
+                    </div>
                   </div>
-                </div>
-              ) : (
+                ) : (
                 <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={marketTrendsData}>
