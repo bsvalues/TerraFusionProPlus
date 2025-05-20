@@ -95,21 +95,25 @@ const Dashboard = () => {
   // Fetch data
   const deploymentStatusQuery = useQuery({
     queryKey: ['/api/deployments/status'],
+    queryFn: () => getDeploymentStatus(),
     staleTime: 30000 // 30 seconds
   });
   
   const pipelineStatusQuery = useQuery({
     queryKey: ['/api/pipelines/status'],
+    queryFn: () => getPipelineStatus(),
     staleTime: 30000
   });
   
   const environmentsQuery = useQuery({
     queryKey: ['/api/environments'],
+    queryFn: () => getEnvironments(),
     staleTime: 60000 // 1 minute
   });
   
   const monitoringQuery = useQuery({
     queryKey: ['/api/monitoring/metrics'],
+    queryFn: () => getMonitoring(),
     staleTime: 15000 // 15 seconds
   });
 

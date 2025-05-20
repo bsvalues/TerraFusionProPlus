@@ -42,6 +42,7 @@ const Pipelines = () => {
   // Fetch pipeline data
   const { data: pipelines, isLoading } = useQuery({
     queryKey: ['/api/pipelines/status'],
+    queryFn: () => getPipelineStatus(),
     staleTime: 30000
   });
 

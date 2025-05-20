@@ -1,4 +1,4 @@
 #!/bin/bash
 
-# Start our real estate appraisal platform server
-node server/simple-server.js
+# Start the server and client concurrently
+concurrently "node server/index.js" "cd client && vite"
