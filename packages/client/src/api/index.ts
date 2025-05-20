@@ -1,167 +1,97 @@
-// API utilities and endpoint definitions
-import { queryClient } from '../lib/queryClient';
+// API utility for TerraFusionProfessional client
 
-const API_BASE_URL = '/api';
+// Base URL for API requests - will adapt to the environment
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
-// Generic fetch wrapper with error handling
-export async function apiFetch(endpoint: string, options: RequestInit = {}) {
-  try {
+// Generic error handling for fetch requests
+const handleResponse = async (response: Response) => {
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null);
+    const errorMessage = errorData?.error || response.statusText || 'Unknown error';
+    throw new Error(errorMessage);
+  }
+  return response.json();
+};
+
+// HTTP request methods with proper error handling
+const httpClient = {
+  get: async (endpoint: string) => {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`);
+    return handleResponse(response);
+  },
+  
+  post: async (endpoint: string, data: any) => {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...options,
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...options.headers,
       },
+      body: JSON.stringify(data),
     });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        errorData.error || `API Error: ${response.status} ${response.statusText}`
-      );
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('API fetch error:', error);
-    throw error;
-  }
-}
-
-// Deployment-related API calls
-export async function getDeploymentStatus() {
-  return apiFetch('/deployments/status');
-}
-
-export async function getDeploymentById(id: string) {
-  return apiFetch(`/deployments/${id}`);
-}
-
-export async function getDeploymentLogs(id: string) {
-  return apiFetch(`/deployments/${id}/logs`);
-}
-
-export async function createDeployment(deploymentData: {
-  name: string;
-  environment: string;
-  branch?: string;
-  version?: string;
-}) {
-  return apiFetch('/deployments', {
-    method: 'POST',
-    body: JSON.stringify(deploymentData),
-  });
-}
-
-export async function updateDeploymentStatus(id: string, status: string) {
-  return apiFetch(`/deployments/${id}/status`, {
-    method: 'PATCH',
-    body: JSON.stringify({ status }),
-  });
-}
-
-// Pipeline-related API calls
-export async function getPipelineStatus(filters?: { status?: string; type?: string }) {
-  const queryParams = new URLSearchParams();
-  if (filters?.status) queryParams.append('status', filters.status);
-  if (filters?.type) queryParams.append('type', filters.type);
+    return handleResponse(response);
+  },
   
-  const queryString = queryParams.toString();
-  const endpoint = queryString 
-    ? `/pipelines/status?${queryString}` 
-    : '/pipelines/status';
+  put: async (endpoint: string, data: any) => {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    return handleResponse(response);
+  },
   
-  return apiFetch(endpoint);
-}
+  delete: async (endpoint: string) => {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'DELETE',
+    });
+    return handleResponse(response);
+  },
+};
 
-export async function getPipelineById(id: string) {
-  return apiFetch(`/pipelines/${id}`);
-}
+// Deployments API
+export const deploymentsApi = {
+  getAll: () => httpClient.get('/deployments'),
+  getById: (id: number) => httpClient.get(`/deployments/${id}`),
+  create: (data: any) => httpClient.post('/deployments', data),
+  update: (id: number, data: any) => httpClient.put(`/deployments/${id}`, data),
+  delete: (id: number) => httpClient.delete(`/deployments/${id}`),
+};
 
-export async function getPipelineStages(id: string) {
-  return apiFetch(`/pipelines/${id}/stages`);
-}
+// Monitoring API
+export const monitoringApi = {
+  getMetrics: () => httpClient.get('/monitoring/metrics'),
+  getAlerts: () => httpClient.get('/monitoring/alerts'),
+  getLogs: (params: { limit?: number, level?: string, service?: string } = {}) => {
+    const queryString = new URLSearchParams();
+    if (params.limit) queryString.append('limit', params.limit.toString());
+    if (params.level) queryString.append('level', params.level);
+    if (params.service) queryString.append('service', params.service);
+    
+    const query = queryString.toString() ? `?${queryString.toString()}` : '';
+    return httpClient.get(`/monitoring/logs${query}`);
+  },
+  getServices: () => httpClient.get('/monitoring/services'),
+  acknowledgeAlert: (id: number) => httpClient.post(`/monitoring/alerts/${id}/acknowledge`, {}),
+};
 
-export async function triggerPipeline(pipelineData: {
-  name: string;
-  repository: string;
-  branch?: string;
-  type?: string;
-}) {
-  return apiFetch('/pipelines/trigger', {
-    method: 'POST',
-    body: JSON.stringify(pipelineData),
-  });
-}
+// Pipelines API
+export const pipelinesApi = {
+  getAll: () => httpClient.get('/pipelines'),
+  getById: (id: number) => httpClient.get(`/pipelines/${id}`),
+  create: (data: any) => httpClient.post('/pipelines', data),
+  update: (id: number, data: any) => httpClient.put(`/pipelines/${id}`, data),
+  delete: (id: number) => httpClient.delete(`/pipelines/${id}`),
+  run: (id: number) => httpClient.post(`/pipelines/${id}/run`, {}),
+  getRuns: (id: number) => httpClient.get(`/pipelines/${id}/runs`),
+};
 
-export async function updatePipelineStatus(id: string, status: string) {
-  return apiFetch(`/pipelines/${id}/status`, {
-    method: 'PATCH',
-    body: JSON.stringify({ status }),
-  });
-}
+// Combined API export
+const api = {
+  deployments: deploymentsApi,
+  monitoring: monitoringApi,
+  pipelines: pipelinesApi,
+};
 
-// Monitoring-related API calls
-export async function getMonitoring() {
-  return apiFetch('/monitoring/metrics');
-}
-
-export async function getResourceMetrics() {
-  return apiFetch('/monitoring/metrics/resources');
-}
-
-export async function getResourceHistory(resource: string, timeRange?: { startTime: Date; endTime: Date }) {
-  let endpoint = `/monitoring/metrics/history/${resource}`;
-  
-  if (timeRange) {
-    const queryParams = new URLSearchParams();
-    queryParams.append('startTime', timeRange.startTime.toISOString());
-    queryParams.append('endTime', timeRange.endTime.toISOString());
-    endpoint += `?${queryParams.toString()}`;
-  }
-  
-  return apiFetch(endpoint);
-}
-
-export async function getAlerts(type?: string) {
-  const endpoint = type 
-    ? `/monitoring/alerts?type=${type}` 
-    : '/monitoring/alerts';
-  
-  return apiFetch(endpoint);
-}
-
-export async function getPods() {
-  return apiFetch('/monitoring/pods');
-}
-
-export async function getHealthStatus(service?: string) {
-  const endpoint = service 
-    ? `/monitoring/health?service=${service}` 
-    : '/monitoring/health';
-  
-  return apiFetch(endpoint);
-}
-
-export async function createAlert(alertData: { type: string; message: string }) {
-  return apiFetch('/monitoring/alerts', {
-    method: 'POST',
-    body: JSON.stringify(alertData),
-  });
-}
-
-// Environment-related API calls
-export async function getEnvironments() {
-  // This is a placeholder until we implement actual environments endpoints
-  return [
-    { id: 'env-1', name: 'Production', status: 'success', region: 'us-west-1', type: 'kubernetes' },
-    { id: 'env-2', name: 'Staging', status: 'success', region: 'us-west-1', type: 'kubernetes' },
-    { id: 'env-3', name: 'Development', status: 'success', region: 'us-east-1', type: 'kubernetes' },
-  ];
-}
-
-// Utility function to invalidate queries
-export function invalidateQueries(queryKey: string | string[]) {
-  const key = Array.isArray(queryKey) ? queryKey : [queryKey];
-  return queryClient.invalidateQueries({ queryKey: key });
-}
+export default api;

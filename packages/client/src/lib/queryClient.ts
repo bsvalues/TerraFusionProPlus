@@ -1,23 +1,30 @@
 import { QueryClient } from '@tanstack/react-query';
-import { apiFetch } from '../api';
 
-export const queryClient = new QueryClient({
+// Set up default query client options
+const defaultQueryClientOptions = {
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
       refetchOnWindowFocus: false,
+      retry: 1,
+    },
+    mutations: {
+      retry: 1,
     },
   },
-});
+};
 
-// Helper for making API requests
-export const apiRequest = async ({ 
-  endpoint, 
-  method = 'GET', 
-  data = undefined,
+// Create and export the query client instance
+export const queryClient = new QueryClient(defaultQueryClientOptions);
+
+// Helper function for making API requests in mutations
+export const apiRequest = async ({
+  url,
+  method,
+  data,
 }: {
-  endpoint: string;
-  method?: string;
+  url: string;
+  method: 'POST' | 'PUT' | 'DELETE';
   data?: any;
 }) => {
   const options: RequestInit = {
@@ -31,5 +38,28 @@ export const apiRequest = async ({
     options.body = JSON.stringify(data);
   }
 
-  return apiFetch(endpoint, options);
+  const response = await fetch(url, options);
+  
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null);
+    const errorMessage = errorData?.error || response.statusText || 'Unknown error';
+    throw new Error(errorMessage);
+  }
+  
+  return response.json();
 };
+
+// Cache key prefixes for consistent cache management
+export const QUERY_KEYS = {
+  DEPLOYMENTS: '/api/deployments',
+  DEPLOYMENT: (id: number) => ['/api/deployments', id],
+  MONITORING_METRICS: '/api/monitoring/metrics',
+  MONITORING_ALERTS: '/api/monitoring/alerts',
+  MONITORING_LOGS: '/api/monitoring/logs',
+  MONITORING_SERVICES: '/api/monitoring/services',
+  PIPELINES: '/api/pipelines',
+  PIPELINE: (id: number) => ['/api/pipelines', id],
+  PIPELINE_RUNS: (id: number) => ['/api/pipelines', id, 'runs'],
+};
+
+export default queryClient;
