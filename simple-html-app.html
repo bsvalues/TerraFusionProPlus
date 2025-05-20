@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TerraFusion Professional</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f7fa;
+        }
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(to bottom, #1e3a8a, #2563eb);
+            color: white;
+            padding: 20px 0;
+        }
+        .logo {
+            padding: 0 20px 20px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+        .logo h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .logo h2 {
+            margin: 0;
+            font-size: 16px;
+            opacity: 0.8;
+        }
+        .menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .menu li {
+            padding: 12px 20px;
+            cursor: pointer;
+        }
+        .menu li:hover, .menu li.active {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .menu li.active {
+            border-left: 3px solid white;
+        }
+        .content {
+            flex: 1;
+            padding: 30px;
+        }
+        .header {
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            background: linear-gradient(to right, #3b82f6, #2563eb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .header p {
+            margin: 5px 0 0 0;
+            color: #6b7280;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .stat-icon {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            line-height: 40px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .properties { background-color: #dbeafe; color: #3b82f6; }
+        .appraisals { background-color: #dcfce7; color: #22c55e; }
+        .comparables { background-color: #f3e8ff; color: #a855f7; }
+        .team { background-color: #fff7ed; color: #f97316; }
+        .stat-label {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        .table-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        .table-card h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th {
+            text-align: left;
+            padding: 12px 15px;
+            background-color: #f9fafb;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #6b7280;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        .status {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .completed { background-color: #dcfce7; color: #166534; }
+        .in-progress { background-color: #fef3c7; color: #92400e; }
+        .draft { background-color: #dbeafe; color: #1e40af; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="logo">
+                <h1>TerraFusion</h1>
+                <h2>Professional</h2>
+            </div>
+            <ul class="menu">
+                <li class="active">Dashboard</li>
+                <li>Properties</li>
+                <li>Appraisals</li>
+                <li>New Appraisal</li>
+                <li>Comparables</li>
+                <li>Valuation Calculator</li>
+                <li>Market Analysis</li>
+            </ul>
+        </div>
+        <div class="content">
+            <div class="header">
+                <h1>TerraFusion Professional</h1>
+                <p>Real Estate Appraisal Management Platform</p>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-icon properties">B</div>
+                    <div class="stat-label">Properties</div>
+                    <div class="stat-value">243</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon appraisals">F</div>
+                    <div class="stat-label">Appraisals</div>
+                    <div class="stat-value">128</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon comparables">C</div>
+                    <div class="stat-label">Comparables</div>
+                    <div class="stat-value">572</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon team">U</div>
+                    <div class="stat-label">Team Members</div>
+                    <div class="stat-value">8</div>
+                </div>
+            </div>
+            
+            <div class="table-card">
+                <h2>Recent Properties</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Address</th>
+                            <th>Type</th>
+                            <th>Size</th>
+                            <th>Last Sale Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>123 Main St, San Francisco, CA</td>
+                            <td>Single Family</td>
+                            <td>2,100 sq.ft.</td>
+                            <td>$950,000</td>
+                        </tr>
+                        <tr>
+                            <td>456 Oak Ave, San Francisco, CA</td>
+                            <td>Condo</td>
+                            <td>1,200 sq.ft.</td>
+                            <td>$750,000</td>
+                        </tr>
+                        <tr>
+                            <td>789 Pine Rd, San Francisco, CA</td>
+                            <td>Multi-Family</td>
+                            <td>3,200 sq.ft.</td>
+                            <td>$1,650,000</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="table-card">
+                <h2>Recent Appraisals</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Appraiser</th>
+                            <th>Status</th>
+                            <th>Market Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>123 Main St, San Francisco, CA</td>
+                            <td>John Smith</td>
+                            <td><span class="status completed">Completed</span></td>
+                            <td>$975,000</td>
+                        </tr>
+                        <tr>
+                            <td>456 Oak Ave, San Francisco, CA</td>
+                            <td>Jane Doe</td>
+                            <td><span class="status in-progress">In Progress</span></td>
+                            <td>Pending</td>
+                        </tr>
+                        <tr>
+                            <td>789 Pine Rd, San Francisco, CA</td>
+                            <td>Robert Johnson</td>
+                            <td><span class="status draft">Draft</span></td>
+                            <td>Pending</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
