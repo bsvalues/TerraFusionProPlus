@@ -11,36 +11,43 @@ export const queryClient = new QueryClient({
   },
 });
 
-// Base fetch function for API requests
+// Default fetch options
+const defaultFetchOptions: RequestInit = {
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  credentials: 'same-origin',
+};
+
+// API request function for standardizing all API calls
 export async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const headers = {
-    'Content-Type': 'application/json',
-    ...options.headers,
+  const mergedOptions = {
+    ...defaultFetchOptions,
+    ...options,
   };
 
-  const response = await fetch(endpoint, {
-    ...options,
-    headers,
-  });
+  const response = await fetch(endpoint, mergedOptions);
 
+  // Handle API errors
   if (!response.ok) {
-    // Parse error response if possible
-    try {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `API Error: ${response.status}`);
-    } catch (e) {
-      // If error response isn't valid JSON
-      throw new Error(`API Error: ${response.status}`);
-    }
+    const errorData = await response.json().catch(() => ({}));
+    const errorMessage = errorData.message || response.statusText || 'API request failed';
+    
+    const error = new Error(errorMessage);
+    (error as any).status = response.status;
+    (error as any).data = errorData;
+    
+    throw error;
   }
 
-  // For 204 No Content responses, return empty object
+  // For successful responses with no content (204)
   if (response.status === 204) {
     return {} as T;
   }
 
+  // For successful responses with content
   return response.json();
 }
