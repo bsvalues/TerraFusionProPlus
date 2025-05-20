@@ -1,57 +1,117 @@
-// Property types
-export type Property = {
+// Types imported from schema.ts
+export interface User {
+  id: number;
+  username: string;
+  email: string;
+  password_hash: string;
+  full_name: string;
+  role: string;
+  license_number?: string;
+  phone?: string;
+  created_at: Date;
+  updated_at?: Date;
+}
+
+export interface InsertUser {
+  username: string;
+  email: string;
+  password_hash: string;
+  full_name: string;
+  role: string;
+  license_number?: string;
+  phone?: string;
+}
+
+export interface Property {
   id: number;
   address: string;
   city: string;
   state: string;
   zip_code: string;
   property_type: string;
-  year_built: number;
-  square_feet: number;
-  bedrooms: number;
-  bathrooms: number;
-  lot_size: number;
+  year_built?: number;
+  square_feet?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  lot_size?: number;
   description?: string;
-  created_at: string;
-  updated_at: string;
   parcel_number?: string;
   zoning?: string;
   latitude?: number;
   longitude?: number;
-  features?: Record<string, any>;
-  created_by?: number;
-};
+  features?: string[];
+  created_at: Date;
+  updated_at?: Date;
+  owner_id?: number;
+}
 
-export type InsertProperty = Omit<Property, 'id' | 'created_at' | 'updated_at'>;
+export interface InsertProperty {
+  address: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  property_type: string;
+  year_built?: number;
+  square_feet?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  lot_size?: number;
+  description?: string;
+  parcel_number?: string;
+  zoning?: string;
+  latitude?: number;
+  longitude?: number;
+  features?: string[];
+  owner_id?: number;
+}
 
-// Appraisal types
-export type Appraisal = {
+export interface Appraisal {
   id: number;
   property_id: number;
   appraiser_id: number;
   status: string;
   purpose: string;
-  market_value: number | null;
-  created_at: string;
-  completed_at: string | null;
-  inspection_date: string | null;
-  effective_date: string | null;
-  report_type: string | null;
-  client_name: string | null;
-  client_email: string | null;
-  client_phone: string | null;
-  lender_name: string | null;
-  loan_number: string | null;
-  intended_use: string | null;
-  valuation_method: string | null;
-  scope_of_work: string | null;
-  notes: string | null;
-};
+  market_value?: number;
+  inspection_date?: Date;
+  effective_date?: Date;
+  report_type?: string;
+  client_name?: string;
+  client_email?: string;
+  client_phone?: string;
+  lender_name?: string;
+  loan_number?: string;
+  intended_use?: string;
+  valuation_method?: string;
+  scope_of_work?: string;
+  notes?: string;
+  created_at: Date;
+  updated_at?: Date;
+  completed_at?: Date;
+  property?: Property;
+  appraiser?: User;
+}
 
-export type InsertAppraisal = Omit<Appraisal, 'id' | 'created_at' | 'completed_at'>;
+export interface InsertAppraisal {
+  property_id: number;
+  appraiser_id: number;
+  status: string;
+  purpose: string;
+  market_value?: number;
+  inspection_date?: Date;
+  effective_date?: Date;
+  report_type?: string;
+  client_name?: string;
+  client_email?: string;
+  client_phone?: string;
+  lender_name?: string;
+  loan_number?: string;
+  intended_use?: string;
+  valuation_method?: string;
+  scope_of_work?: string;
+  notes?: string;
+}
 
-// Comparable types
-export type Comparable = {
+export interface Comparable {
   id: number;
   appraisal_id: number;
   address: string;
@@ -59,8 +119,8 @@ export type Comparable = {
   state: string;
   zip_code: string;
   sale_price: number;
-  sale_date: string;
-  square_feet: number;
+  sale_date: Date;
+  square_feet?: number;
   bedrooms?: number;
   bathrooms?: number;
   year_built?: number;
@@ -71,100 +131,149 @@ export type Comparable = {
   source?: string;
   adjusted_price?: number;
   adjustment_notes?: string;
-  created_at: string;
-};
+  created_at: Date;
+  appraisal?: Appraisal;
+}
 
-export type InsertComparable = Omit<Comparable, 'id' | 'created_at'>;
+export interface InsertComparable {
+  appraisal_id: number;
+  address: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  sale_price: number;
+  sale_date: Date;
+  square_feet?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  year_built?: number;
+  property_type: string;
+  lot_size?: number;
+  condition?: string;
+  days_on_market?: number;
+  source?: string;
+  adjusted_price?: number;
+  adjustment_notes?: string;
+}
 
-// Adjustment types
-export type Adjustment = {
+export interface Adjustment {
   id: number;
   comparable_id: number;
-  category: string;
-  description: string;
+  factor: string;
   amount: number;
-  is_percentage: boolean;
-  notes?: string;
-  created_at: string;
-};
+  description?: string;
+  created_at: Date;
+  comparable?: Comparable;
+}
 
-export type InsertAdjustment = Omit<Adjustment, 'id' | 'created_at'>;
+export interface InsertAdjustment {
+  comparable_id: number;
+  factor: string;
+  amount: number;
+  description?: string;
+}
 
-// User types
-export type User = {
+export interface Attachment {
   id: number;
-  username: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  role: string;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-};
-
-export type InsertUser = Omit<User, 'id' | 'created_at' | 'updated_at'>;
-
-// Attachment types
-export type Attachment = {
-  id: number;
-  property_id?: number;
-  appraisal_id?: number;
+  appraisal_id: number;
   file_name: string;
   file_type: string;
-  file_size: number;
-  file_url: string;
-  uploaded_by: number;
-  category?: string;
+  file_path: string;
   description?: string;
-  upload_date: string;
-};
+  created_at: Date;
+  appraisal?: Appraisal;
+}
 
-export type InsertAttachment = Omit<Attachment, 'id' | 'upload_date'>;
+export interface InsertAttachment {
+  appraisal_id: number;
+  file_name: string;
+  file_type: string;
+  file_path: string;
+  description?: string;
+}
 
-// Market data types
-export type MarketData = {
+export interface MarketData {
   id: number;
   location: string;
-  data_type: string;
-  time: string; 
-  value: number;
-  comparison_value?: number;
-  percent_change?: number;
+  property_type: string;
+  date: Date;
+  median_price?: number;
+  price_per_sqft?: number;
+  days_on_market?: number;
+  inventory_count?: number;
+  sales_count?: number;
+  new_listings?: number;
   source?: string;
-  notes?: string;
-  created_at: string;
-  updated_at: string;
-};
+  created_at: Date;
+}
 
-export type InsertMarketData = Omit<MarketData, 'id' | 'created_at' | 'updated_at'>;
+export interface InsertMarketData {
+  location: string;
+  property_type: string;
+  date: Date;
+  median_price?: number;
+  price_per_sqft?: number;
+  days_on_market?: number;
+  inventory_count?: number;
+  sales_count?: number;
+  new_listings?: number;
+  source?: string;
+}
 
-// UI-specific types for visualization data
-export type PriceTrendDataPoint = {
+// Market data chart types
+export interface PriceTrendDataPoint {
   month: string;
   value: number;
   year: number;
-};
+}
 
-export type DomTrendDataPoint = {
+export interface DomTrendDataPoint {
   month: string;
   days: number;
   year: number;
-};
+}
 
-export type SalesTrendDataPoint = {
+export interface SalesTrendDataPoint {
   month: string;
   sales: number;
   year: number;
-};
+}
 
-export type PropertyTypeDataPoint = {
+export interface PropertyTypeDataPoint {
   name: string;
   value: number;
-};
+}
 
-export type NeighborhoodPriceDataPoint = {
+export interface NeighborhoodPriceDataPoint {
   name: string;
   medianPrice: number;
   pricePerSqft: number;
-};
+}
+
+// Valuation specific types
+export interface ValuationInput {
+  propertyId?: number;
+  location: string;
+  propertyType: string;
+  squareFeet: number;
+  bedrooms: number;
+  bathrooms: number;
+  yearBuilt: number;
+  lotSize: number;
+  condition: string;
+  features: string[];
+}
+
+export interface ValuationResult {
+  estimatedValue: number;
+  valuePerSqft: number;
+  confidence: number;
+  comparables: Comparable[];
+  adjustments: {
+    locationAdjustment: number;
+    conditionAdjustment: number;
+    sizeAdjustment: number;
+    featuresAdjustment: number;
+    marketTrendsAdjustment: number;
+  };
+}

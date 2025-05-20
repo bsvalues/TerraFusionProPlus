@@ -1,61 +1,99 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { queryClient, apiRequest } from '../lib/queryClient';
 import { Comparable, InsertComparable } from '../types';
+import { queryClient, apiRequest } from '../lib/queryClient';
 
+// API endpoints
 const COMPARABLES_ENDPOINT = '/api/comparables';
 
-export function useComparables(appraisalId: number | undefined) {
+// Get all comparables
+export function useComparables(appraisalId?: number, options = {}) {
+  const endpoint = appraisalId 
+    ? `${COMPARABLES_ENDPOINT}/appraisal/${appraisalId}` 
+    : COMPARABLES_ENDPOINT;
+    
   return useQuery({
-    queryKey: ['comparables', { appraisal_id: appraisalId }],
-    queryFn: () => 
-      apiRequest<Comparable[]>({ 
-        url: `${COMPARABLES_ENDPOINT}?appraisal_id=${appraisalId}` 
-      }),
-    enabled: !!appraisalId,
+    queryKey: [endpoint],
+    enabled: !appraisalId || appraisalId > 0,
+    ...options,
   });
 }
 
-export function useComparable(id: number) {
+// Get a single comparable by ID
+export function useComparable(id: number, options = {}) {
   return useQuery({
-    queryKey: ['comparables', id],
-    queryFn: () => apiRequest<Comparable>({ url: `${COMPARABLES_ENDPOINT}/${id}` }),
-    enabled: !!id,
+    queryKey: [`${COMPARABLES_ENDPOINT}/${id}`],
+    enabled: id > 0,
+    ...options,
   });
 }
 
+// Create a new comparable
 export function useCreateComparable() {
   return useMutation({
     mutationFn: (data: InsertComparable) => {
-      return apiRequest<Comparable>({
-        url: COMPARABLES_ENDPOINT,
+      return apiRequest<Comparable>(COMPARABLES_ENDPOINT, {
         method: 'POST',
-        body: data,
+        body: JSON.stringify(data),
       });
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['comparables'] });
-      queryClient.invalidateQueries({ 
-        queryKey: ['comparables', { appraisal_id: data.appraisal_id }] 
-      });
+      // Invalidate all comparables queries
+      queryClient.invalidateQueries({ queryKey: [COMPARABLES_ENDPOINT] });
+      
+      // Also invalidate the specific appraisal comparables list
+      if (data.appraisal_id) {
+        queryClient.invalidateQueries({ 
+          queryKey: [`${COMPARABLES_ENDPOINT}/appraisal/${data.appraisal_id}`] 
+        });
+      }
     },
   });
 }
 
+// Update an existing comparable
 export function useUpdateComparable() {
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<InsertComparable> }) => {
-      return apiRequest<Comparable>({
-        url: `${COMPARABLES_ENDPOINT}/${id}`,
+    mutationFn: ({ id, data }: { id: number; data: Partial<Comparable> }) => {
+      return apiRequest<Comparable>(`${COMPARABLES_ENDPOINT}/${id}`, {
         method: 'PUT',
-        body: data,
+        body: JSON.stringify(data),
       });
     },
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['comparables'] });
-      queryClient.invalidateQueries({ queryKey: ['comparables', variables.id] });
-      queryClient.invalidateQueries({ 
-        queryKey: ['comparables', { appraisal_id: data.appraisal_id }] 
+    onSuccess: (data, { id }) => {
+      // Invalidate general comparables list
+      queryClient.invalidateQueries({ queryKey: [COMPARABLES_ENDPOINT] });
+      
+      // Invalidate the specific comparable
+      queryClient.invalidateQueries({ queryKey: [`${COMPARABLES_ENDPOINT}/${id}`] });
+      
+      // Also invalidate the specific appraisal comparables list
+      if (data.appraisal_id) {
+        queryClient.invalidateQueries({ 
+          queryKey: [`${COMPARABLES_ENDPOINT}/appraisal/${data.appraisal_id}`] 
+        });
+      }
+    },
+  });
+}
+
+// Delete a comparable
+export function useDeleteComparable() {
+  return useMutation({
+    mutationFn: (comparable: Comparable) => {
+      return apiRequest(`${COMPARABLES_ENDPOINT}/${comparable.id}`, {
+        method: 'DELETE',
       });
+    },
+    onSuccess: (_, comparable) => {
+      // Invalidate general comparables list
+      queryClient.invalidateQueries({ queryKey: [COMPARABLES_ENDPOINT] });
+      
+      // Also invalidate the specific appraisal comparables list
+      if (comparable.appraisal_id) {
+        queryClient.invalidateQueries({ 
+          queryKey: [`${COMPARABLES_ENDPOINT}/appraisal/${comparable.appraisal_id}`] 
+        });
+      }
     },
   });
 }

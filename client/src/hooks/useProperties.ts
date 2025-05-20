@@ -1,27 +1,28 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Property, InsertProperty } from '../types';
-import { queryClient, apiRequest, createResource, updateResource, deleteResource } from '../lib/queryClient';
+import { apiRequest, queryClient } from '../lib/queryClient';
 
 // API endpoints
 const PROPERTIES_ENDPOINT = '/api/properties';
 
 // Get all properties
 export function useProperties() {
-  return useQuery({
+  return useQuery<Property[]>({
     queryKey: [PROPERTIES_ENDPOINT],
+    queryFn: () => apiRequest<Property[]>(PROPERTIES_ENDPOINT),
   });
 }
 
 // Get a single property by ID
-export function useProperty(id: number, options = {}) {
-  return useQuery({
+export function useProperty(id: number) {
+  return useQuery<Property>({
     queryKey: [`${PROPERTIES_ENDPOINT}/${id}`],
-    enabled: id > 0,
-    ...options,
+    queryFn: () => apiRequest<Property>(`${PROPERTIES_ENDPOINT}/${id}`),
+    enabled: !!id, // Only run if ID is provided
   });
 }
 
-// Create a new property
+// Create a property
 export function useCreateProperty() {
   return useMutation({
     mutationFn: (data: InsertProperty) => {
@@ -31,12 +32,13 @@ export function useCreateProperty() {
       });
     },
     onSuccess: () => {
+      // Invalidate the properties query to refetch the list
       queryClient.invalidateQueries({ queryKey: [PROPERTIES_ENDPOINT] });
     },
   });
 }
 
-// Update an existing property
+// Update a property
 export function useUpdateProperty() {
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<Property> }) => {
@@ -45,9 +47,12 @@ export function useUpdateProperty() {
         body: JSON.stringify(data),
       });
     },
-    onSuccess: (_, { id }) => {
+    onSuccess: (_, variables) => {
+      // Invalidate both the properties list and the specific property
       queryClient.invalidateQueries({ queryKey: [PROPERTIES_ENDPOINT] });
-      queryClient.invalidateQueries({ queryKey: [`${PROPERTIES_ENDPOINT}/${id}`] });
+      queryClient.invalidateQueries({ 
+        queryKey: [`${PROPERTIES_ENDPOINT}/${variables.id}`] 
+      });
     },
   });
 }
@@ -55,8 +60,8 @@ export function useUpdateProperty() {
 // Delete a property
 export function useDeleteProperty() {
   return useMutation({
-    mutationFn: (id: number) => {
-      return apiRequest(`${PROPERTIES_ENDPOINT}/${id}`, {
+    mutationFn: (property: Property) => {
+      return apiRequest<void>(`${PROPERTIES_ENDPOINT}/${property.id}`, {
         method: 'DELETE',
       });
     },
