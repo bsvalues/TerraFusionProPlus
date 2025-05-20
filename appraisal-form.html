@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TerraFusion Professional - Appraisal Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f7fa;
+        }
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(to bottom, #1e3a8a, #2563eb);
+            color: white;
+            padding: 20px 0;
+        }
+        .logo {
+            padding: 0 20px 20px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+        .logo h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .logo h2 {
+            margin: 0;
+            font-size: 16px;
+            opacity: 0.8;
+        }
+        .menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .menu li {
+            padding: 12px 20px;
+            cursor: pointer;
+        }
+        .menu li:hover, .menu li.active {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .menu li.active {
+            border-left: 3px solid white;
+        }
+        .content {
+            flex: 1;
+            padding: 30px;
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            color: #3b82f6;
+            text-decoration: none;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .back-link svg {
+            margin-right: 5px;
+        }
+        .header {
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .header-left h1 {
+            margin: 0;
+            font-size: 28px;
+            background: linear-gradient(to right, #3b82f6, #2563eb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .header-left p {
+            margin: 5px 0 0 0;
+            color: #6b7280;
+        }
+        .header-right button {
+            padding: 10px 16px;
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+        .header-right button:hover {
+            background-color: #2563eb;
+        }
+        .header-right button svg {
+            margin-right: 8px;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .card-header {
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 16px;
+            margin-bottom: 20px;
+        }
+        .card-header h2 {
+            margin: 0;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+        }
+        .card-header h2 .icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 8px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+        .icon-property {
+            background-color: #dbeafe;
+            color: #3b82f6;
+        }
+        .icon-purpose {
+            background-color: #dcfce7;
+            color: #22c55e;
+        }
+        .icon-client {
+            background-color: #f3e8ff;
+            color: #a855f7;
+        }
+        .icon-approach {
+            background-color: #fff7ed;
+            color: #f97316;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+        }
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+        select.form-control {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 16px;
+            padding-right: 40px;
+        }
+        textarea.form-control {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .form-hint {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        .required::after {
+            content: " *";
+            color: #ef4444;
+        }
+        .btn-group {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        .btn {
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+        .btn-secondary {
+            background-color: white;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+        .btn-secondary:hover {
+            background-color: #f9fafb;
+        }
+        .property-info {
+            padding: 16px;
+            background-color: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .property-info-header {
+            display: flex;
+            margin-bottom: 12px;
+        }
+        .property-info-header .icon {
+            margin-right: 12px;
+            color: #0284c7;
+        }
+        .property-info-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            font-size: 14px;
+        }
+        .property-info-item {
+            display: flex;
+        }
+        .property-info-label {
+            width: 100px;
+            font-weight: 500;
+            color: #374151;
+        }
+        .property-info-value {
+            color: #6b7280;
+        }
+        .radio-group {
+            display: flex;
+            gap: 16px;
+        }
+        .radio-option {
+            display: flex;
+            align-items: center;
+        }
+        .radio-option input {
+            margin-right: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="logo">
+                <h1>TerraFusion</h1>
+                <h2>Professional</h2>
+            </div>
+            <ul class="menu">
+                <li>Dashboard</li>
+                <li>Properties</li>
+                <li>Appraisals</li>
+                <li class="active">New Appraisal</li>
+                <li>Comparables</li>
+                <li>Valuation Calculator</li>
+                <li>Market Analysis</li>
+            </ul>
+        </div>
+        <div class="content">
+            <a href="#" class="back-link">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+                Back to Appraisals
+            </a>
+            
+            <div class="header">
+                <div class="header-left">
+                    <h1>New Appraisal</h1>
+                    <p>Create a detailed property appraisal report</p>
+                </div>
+                <div class="header-right">
+                    <button>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                        Save Draft
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Property Selection -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><span class="icon icon-property">P</span> Select Property</h2>
+                </div>
+                <div class="form-group">
+                    <label for="property" class="required">Property</label>
+                    <select id="property" class="form-control">
+                        <option value="">-- Select a property --</option>
+                        <option value="1">123 Main Street, Austin, TX 78701</option>
+                        <option value="2">456 Oak Avenue, Austin, TX 78704</option>
+                        <option value="3">789 Elm Drive, Austin, TX 78745</option>
+                        <option value="4">101 Pine Road, Austin, TX 78735</option>
+                    </select>
+                    <div class="form-hint">Choose an existing property or create a new one</div>
+                </div>
+                
+                <div class="property-info">
+                    <div class="property-info-header">
+                        <div class="icon">📍</div>
+                        <div>
+                            <div style="font-weight: 500; margin-bottom: 4px;">123 Main Street</div>
+                            <div style="font-size: 14px; color: #6b7280;">Austin, TX 78701</div>
+                        </div>
+                    </div>
+                    
+                    <div class="property-info-details">
+                        <div class="property-info-item">
+                            <div class="property-info-label">Type:</div>
+                            <div class="property-info-value">Single Family</div>
+                        </div>
+                        <div class="property-info-item">
+                            <div class="property-info-label">Size:</div>
+                            <div class="property-info-value">2,450 sq.ft.</div>
+                        </div>
+                        <div class="property-info-item">
+                            <div class="property-info-label">Bedrooms:</div>
+                            <div class="property-info-value">3</div>
+                        </div>
+                        <div class="property-info-item">
+                            <div class="property-info-label">Bathrooms:</div>
+                            <div class="property-info-value">2.5</div>
+                        </div>
+                        <div class="property-info-item">
+                            <div class="property-info-label">Year Built:</div>
+                            <div class="property-info-value">2005</div>
+                        </div>
+                        <div class="property-info-item">
+                            <div class="property-info-label">Lot Size:</div>
+                            <div class="property-info-value">8,500 sq.ft.</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="btn btn-secondary" style="width: auto; display: inline-flex; align-items: center;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                    Add New Property
+                </button>
+            </div>
+            
+            <!-- Appraisal Purpose -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><span class="icon icon-purpose">A</span> Appraisal Purpose & Dates</h2>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="purpose" class="required">Appraisal Purpose</label>
+                        <select id="purpose" class="form-control">
+                            <option value="">-- Select purpose --</option>
+                            <option value="purchase">Purchase Financing</option>
+                            <option value="refinance">Refinance</option>
+                            <option value="home_equity">Home Equity</option>
+                            <option value="estate">Estate Planning</option>
+                            <option value="divorce">Divorce Settlement</option>
+                            <option value="tax">Tax Assessment Appeal</option>
+                            <option value="insurance">Insurance Valuation</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="appraisalType" class="required">Report Type</label>
+                        <select id="appraisalType" class="form-control">
+                            <option value="">-- Select type --</option>
+                            <option value="form1004">Uniform Residential (Form 1004)</option>
+                            <option value="form1073">Individual Condo Unit (Form 1073)</option>
+                            <option value="form1025">Small Residential Income (Form 1025)</option>
+                            <option value="deskReview">Desktop Review</option>
+                            <option value="fieldReview">Field Review</option>
+                            <option value="narrative">Narrative Report</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="inspectionDate" class="required">Inspection Date</label>
+                        <input type="date" id="inspectionDate" class="form-control">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="effectiveDate" class="required">Effective Date</label>
+                        <input type="date" id="effectiveDate" class="form-control">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="intendedUse">Intended Use</label>
+                    <input type="text" id="intendedUse" class="form-control" placeholder="e.g., 'To determine market value for refinancing purposes'">
+                </div>
+            </div>
+            
+            <!-- Client Information -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><span class="icon icon-client">C</span> Client Information</h2>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="clientName" class="required">Client Name</label>
+                        <input type="text" id="clientName" class="form-control" placeholder="Full name of client">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="clientEmail">Client Email</label>
+                        <input type="email" id="clientEmail" class="form-control" placeholder="client@example.com">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="clientPhone">Client Phone</label>
+                        <input type="tel" id="clientPhone" class="form-control" placeholder="(555) 123-4567">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="lenderName">Lender Name</label>
+                        <input type="text" id="lenderName" class="form-control" placeholder="Name of lending institution (if applicable)">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="loanNumber">Loan/File Number</label>
+                    <input type="text" id="loanNumber" class="form-control" placeholder="Loan or file reference number">
+                </div>
+            </div>
+            
+            <!-- Valuation Approach -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><span class="icon icon-approach">V</span> Valuation Approach</h2>
+                </div>
+                
+                <div class="form-group">
+                    <label>Valuation Methods to Apply</label>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="checkbox" id="salesComp" checked>
+                            <label for="salesComp">Sales Comparison</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="checkbox" id="costApproach">
+                            <label for="costApproach">Cost Approach</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="checkbox" id="incomeApproach">
+                            <label for="incomeApproach">Income Approach</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="scopeOfWork">Scope of Work</label>
+                    <textarea id="scopeOfWork" class="form-control" placeholder="Describe the scope of work for this appraisal..."></textarea>
+                    <div class="form-hint">Outline the specific tasks performed during the appraisal process</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="additionalNotes">Additional Notes</label>
+                    <textarea id="additionalNotes" class="form-control" placeholder="Any additional information or instructions..."></textarea>
+                </div>
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn btn-secondary">Cancel</button>
+                <button class="btn btn-secondary">Save as Draft</button>
+                <button class="btn btn-primary">Create Appraisal</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
