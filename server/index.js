@@ -373,6 +373,17 @@ app.get('/api/market-analysis', (req, res) => {
   res.json(marketData);
 });
 
+// Serve static files from the React app build directory
+app.use(express.static(path.join(__dirname, '../client/dist')));
+
+// Handle React routing, return all requests to React app
+app.get('*', (req, res) => {
+  if (req.path.startsWith('/api')) {
+    return res.status(404).send('API endpoint not found');
+  }
+  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+});
+
 // Start the server
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`TerraFusionProfessional server is running on port ${PORT}`);
