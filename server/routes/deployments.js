@@ -1,182 +1,218 @@
 const express = require('express');
 const router = express.Router();
 
-// GET /api/deployments - List all deployments
-router.get('/', async (req, res) => {
-  try {
-    // Mock data for now - will be replaced with actual DB calls
-    const deployments = [
-      {
-        id: 1,
-        name: 'Production API',
-        status: 'active',
-        version: 'v1.2.5',
-        environment: 'production',
-        lastDeployed: '2023-01-15T08:30:00Z',
-        deployedBy: 'jenkins-pipeline',
-        health: {
-          status: 'healthy',
-          uptime: '15d 7h 23m',
-          responseTime: 85,
-          errorRate: 0.02
-        }
+// Mock data for deployments
+const deployments = [
+  {
+    id: '1',
+    name: 'API Gateway Update',
+    description: 'Update to API Gateway v1.2.3',
+    status: 'completed',
+    environment: 'production',
+    initiatedBy: 'jenkins-ci',
+    startTime: '2025-05-19T15:30:00Z',
+    endTime: '2025-05-19T15:45:00Z',
+    duration: '15m',
+    version: 'v1.2.3',
+    services: ['api-gateway'],
+    configuration: {
+      replicas: 3,
+      resources: {
+        cpu: '500m',
+        memory: '1Gi'
       },
-      {
-        id: 2,
-        name: 'Staging API',
-        status: 'active',
-        version: 'v1.3.0-rc2',
-        environment: 'staging',
-        lastDeployed: '2023-01-20T10:15:00Z',
-        deployedBy: 'jenkins-pipeline',
-        health: {
-          status: 'degraded',
-          uptime: '5d 12h 40m',
-          responseTime: 120,
-          errorRate: 0.15
-        }
-      },
-      {
-        id: 3,
-        name: 'User Portal Frontend',
-        status: 'active',
-        version: 'v2.1.0',
-        environment: 'production',
-        lastDeployed: '2023-01-18T14:45:00Z',
-        deployedBy: 'manual-release',
-        health: {
-          status: 'healthy',
-          uptime: '7d 5h 12m',
-          responseTime: 95,
-          errorRate: 0.01
-        }
+      autoscaling: {
+        enabled: true,
+        minReplicas: 2,
+        maxReplicas: 5,
+        targetCPUUtilization: 80
       }
-    ];
-    
-    res.json(deployments);
-  } catch (error) {
-    console.error('Error fetching deployments:', error);
-    res.status(500).json({ error: 'Failed to fetch deployments' });
-  }
-});
-
-// GET /api/deployments/:id - Get deployment details
-router.get('/:id', async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    
-    // Mock data - will be replaced with DB lookup
-    const deployment = {
-      id,
-      name: 'Production API',
-      status: 'active',
-      version: 'v1.2.5',
-      environment: 'production',
-      lastDeployed: '2023-01-15T08:30:00Z',
-      deployedBy: 'jenkins-pipeline',
-      health: {
-        status: 'healthy',
-        uptime: '15d 7h 23m',
-        responseTime: 85,
-        errorRate: 0.02
-      },
-      history: [
-        { 
-          version: 'v1.2.5', 
-          deployedAt: '2023-01-15T08:30:00Z',
-          status: 'success',
-          duration: '3m 45s'
-        },
-        { 
-          version: 'v1.2.4', 
-          deployedAt: '2023-01-10T14:15:00Z',
-          status: 'success',
-          duration: '4m 10s'
-        },
-        { 
-          version: 'v1.2.3', 
-          deployedAt: '2023-01-05T10:30:00Z',
-          status: 'failed',
-          duration: '2m 55s'
-        }
-      ],
-      config: {
-        replicas: 3,
-        resources: {
-          cpu: '500m',
-          memory: '1Gi'
-        },
-        autoscaling: {
-          enabled: true,
-          minReplicas: 2,
-          maxReplicas: 5,
-          targetCPU: 75
-        }
-      }
-    };
-    
-    res.json(deployment);
-  } catch (error) {
-    console.error(`Error fetching deployment ${req.params.id}:`, error);
-    res.status(500).json({ error: 'Failed to fetch deployment details' });
-  }
-});
-
-// POST /api/deployments - Create new deployment
-router.post('/', async (req, res) => {
-  try {
-    const newDeployment = req.body;
-    
-    // Validation would happen here
-    if (!newDeployment.name || !newDeployment.version) {
-      return res.status(400).json({ error: 'Name and version are required' });
     }
-    
-    // Mock response - would normally save to DB and return
-    res.status(201).json({
-      id: 4,
-      ...newDeployment,
-      status: 'pending',
-      createdAt: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error('Error creating deployment:', error);
-    res.status(500).json({ error: 'Failed to create deployment' });
+  },
+  {
+    id: '2',
+    name: 'Payment Processor Update',
+    description: 'Deployment of Payment Processor v2.1.0',
+    status: 'failed',
+    environment: 'staging',
+    initiatedBy: 'maria.dev',
+    startTime: '2025-05-19T14:00:00Z',
+    endTime: '2025-05-19T14:15:00Z',
+    duration: '15m',
+    failureReason: 'Integration tests failed',
+    version: 'v2.1.0',
+    services: ['payment-processor'],
+    configuration: {
+      replicas: 2,
+      resources: {
+        cpu: '250m',
+        memory: '512Mi'
+      },
+      autoscaling: {
+        enabled: false
+      }
+    }
+  },
+  {
+    id: '3',
+    name: 'User Service Update',
+    description: 'Deployment of User Service v3.0.1',
+    status: 'in-progress',
+    environment: 'development',
+    initiatedBy: 'alex.ops',
+    startTime: '2025-05-19T14:40:00Z',
+    version: 'v3.0.1',
+    services: ['user-service'],
+    configuration: {
+      replicas: 1,
+      resources: {
+        cpu: '250m',
+        memory: '512Mi'
+      },
+      autoscaling: {
+        enabled: false
+      }
+    }
+  },
+  {
+    id: '4',
+    name: 'Database Migration',
+    description: 'Migration of user data to new schema',
+    status: 'scheduled',
+    environment: 'production',
+    initiatedBy: 'john.dba',
+    scheduledTime: '2025-05-20T02:00:00Z',
+    version: 'v2.0.0',
+    services: ['user-database'],
+    configuration: {
+      backup: true,
+      rollbackPlan: 'Restore from snapshot if migration fails',
+      downtime: '30m'
+    }
   }
+];
+
+// GET all deployments
+router.get('/', (req, res) => {
+  // Extract query parameters for filtering
+  const { status, environment, service } = req.query;
+  
+  let filteredDeployments = [...deployments];
+  
+  // Apply filters if provided
+  if (status) {
+    filteredDeployments = filteredDeployments.filter(d => d.status === status);
+  }
+  
+  if (environment) {
+    filteredDeployments = filteredDeployments.filter(d => d.environment === environment);
+  }
+  
+  if (service) {
+    filteredDeployments = filteredDeployments.filter(d => d.services.includes(service));
+  }
+  
+  res.json(filteredDeployments);
 });
 
-// PUT /api/deployments/:id - Update deployment
-router.put('/:id', async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    const updates = req.body;
-    
-    // Mock response - would normally update in DB
-    res.json({
-      id,
-      ...updates,
-      updatedAt: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error(`Error updating deployment ${req.params.id}:`, error);
-    res.status(500).json({ error: 'Failed to update deployment' });
+// GET a specific deployment
+router.get('/:id', (req, res) => {
+  const deployment = deployments.find(d => d.id === req.params.id);
+  
+  if (!deployment) {
+    return res.status(404).json({ message: 'Deployment not found' });
   }
+  
+  res.json(deployment);
 });
 
-// DELETE /api/deployments/:id - Delete deployment
-router.delete('/:id', async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    
-    // Mock success - would normally delete from DB
-    res.json({ 
-      success: true, 
-      message: `Deployment ${id} has been deleted` 
-    });
-  } catch (error) {
-    console.error(`Error deleting deployment ${req.params.id}:`, error);
-    res.status(500).json({ error: 'Failed to delete deployment' });
+// POST create a new deployment
+router.post('/', (req, res) => {
+  // In a real app, validate request body using schema validation
+  const newDeployment = {
+    id: (deployments.length + 1).toString(),
+    ...req.body,
+    startTime: new Date().toISOString(),
+    status: 'pending'
+  };
+  
+  deployments.push(newDeployment);
+  res.status(201).json(newDeployment);
+});
+
+// PUT update an existing deployment
+router.put('/:id', (req, res) => {
+  const deploymentIndex = deployments.findIndex(d => d.id === req.params.id);
+  
+  if (deploymentIndex === -1) {
+    return res.status(404).json({ message: 'Deployment not found' });
   }
+  
+  // Update the deployment
+  deployments[deploymentIndex] = {
+    ...deployments[deploymentIndex],
+    ...req.body
+  };
+  
+  res.json(deployments[deploymentIndex]);
+});
+
+// DELETE a deployment
+router.delete('/:id', (req, res) => {
+  const deploymentIndex = deployments.findIndex(d => d.id === req.params.id);
+  
+  if (deploymentIndex === -1) {
+    return res.status(404).json({ message: 'Deployment not found' });
+  }
+  
+  // Remove the deployment
+  deployments.splice(deploymentIndex, 1);
+  
+  res.status(204).send();
+});
+
+// PUT update deployment configuration
+router.put('/:id/config', (req, res) => {
+  const deploymentIndex = deployments.findIndex(d => d.id === req.params.id);
+  
+  if (deploymentIndex === -1) {
+    return res.status(404).json({ message: 'Deployment not found' });
+  }
+  
+  // Update the configuration
+  deployments[deploymentIndex].configuration = {
+    ...deployments[deploymentIndex].configuration,
+    ...req.body
+  };
+  
+  res.json(deployments[deploymentIndex]);
+});
+
+// POST to trigger a rollback for a deployment
+router.post('/:id/rollback', (req, res) => {
+  const deployment = deployments.find(d => d.id === req.params.id);
+  
+  if (!deployment) {
+    return res.status(404).json({ message: 'Deployment not found' });
+  }
+  
+  // Create a new rollback deployment
+  const rollbackDeployment = {
+    id: (deployments.length + 1).toString(),
+    name: `Rollback: ${deployment.name}`,
+    description: `Rollback of ${deployment.name} to previous version`,
+    status: 'in-progress',
+    environment: deployment.environment,
+    initiatedBy: req.body.initiatedBy || 'system',
+    startTime: new Date().toISOString(),
+    version: deployment.version, // Previous version
+    services: deployment.services,
+    configuration: deployment.configuration,
+    rollbackOf: deployment.id
+  };
+  
+  deployments.push(rollbackDeployment);
+  res.status(201).json(rollbackDeployment);
 });
 
 module.exports = router;

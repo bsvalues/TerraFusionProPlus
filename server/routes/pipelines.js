@@ -1,321 +1,351 @@
 const express = require('express');
 const router = express.Router();
 
-// GET /api/pipelines - List all pipelines
-router.get('/', async (req, res) => {
-  try {
-    // Mock pipeline data - would be replaced with actual DB calls
-    const pipelines = [
+// Mock data for pipelines
+const pipelines = [
+  {
+    id: '1',
+    name: 'API Gateway CI/CD',
+    description: 'Continuous integration and deployment pipeline for API Gateway service',
+    repository: 'github.com/terrafusion/api-gateway',
+    branch: 'main',
+    type: 'deployment',
+    stages: [
       {
-        id: 1,
-        name: 'Production Release',
-        status: 'active',
-        lastRun: '2023-01-20T15:30:45Z',
-        lastRunStatus: 'success',
-        stages: [
-          {
-            name: 'Build',
-            status: 'success',
-            duration: '2m 15s'
-          },
-          {
-            name: 'Test',
-            status: 'success',
-            duration: '5m 30s'
-          },
-          {
-            name: 'Deploy',
-            status: 'success',
-            duration: '3m 45s'
-          }
-        ],
-        triggers: ['push:main', 'schedule:daily']
+        name: 'Build',
+        status: 'completed',
+        startTime: '2025-05-19T15:00:00Z',
+        endTime: '2025-05-19T15:05:00Z',
+        duration: '5m',
+        steps: [
+          { name: 'Checkout', status: 'completed', duration: '10s' },
+          { name: 'Test', status: 'completed', duration: '2m' },
+          { name: 'Build Image', status: 'completed', duration: '2m 50s' }
+        ]
       },
       {
-        id: 2,
-        name: 'Feature Branch Integration',
-        status: 'active',
-        lastRun: '2023-01-20T14:15:30Z',
-        lastRunStatus: 'failed',
-        stages: [
-          {
-            name: 'Build',
-            status: 'success',
-            duration: '1m 50s'
-          },
-          {
-            name: 'Test',
-            status: 'failed',
-            duration: '4m 20s'
-          },
-          {
-            name: 'Deploy',
-            status: 'skipped',
-            duration: '-'
-          }
-        ],
-        triggers: ['push:feature/*', 'pull_request']
+        name: 'Deploy to Staging',
+        status: 'completed',
+        startTime: '2025-05-19T15:05:00Z',
+        endTime: '2025-05-19T15:15:00Z',
+        duration: '10m',
+        steps: [
+          { name: 'Push Image', status: 'completed', duration: '1m' },
+          { name: 'Update Manifest', status: 'completed', duration: '30s' },
+          { name: 'Apply Changes', status: 'completed', duration: '8m 30s' }
+        ]
       },
       {
-        id: 3,
-        name: 'Nightly Database Backup',
-        status: 'active',
-        lastRun: '2023-01-21T01:00:00Z',
-        lastRunStatus: 'success',
-        stages: [
-          {
-            name: 'Backup',
-            status: 'success',
-            duration: '10m 25s'
-          },
-          {
-            name: 'Verify',
-            status: 'success',
-            duration: '2m 10s'
-          },
-          {
-            name: 'Archive',
-            status: 'success',
-            duration: '5m 15s'
-          }
+        name: 'Integration Tests',
+        status: 'completed',
+        startTime: '2025-05-19T15:15:00Z',
+        endTime: '2025-05-19T15:20:00Z',
+        duration: '5m',
+        steps: [
+          { name: 'API Tests', status: 'completed', duration: '3m' },
+          { name: 'Performance Check', status: 'completed', duration: '2m' }
+        ]
+      },
+      {
+        name: 'Deploy to Production',
+        status: 'completed',
+        startTime: '2025-05-19T15:30:00Z',
+        endTime: '2025-05-19T15:45:00Z',
+        duration: '15m',
+        steps: [
+          { name: 'Approval', status: 'completed', duration: '5m' },
+          { name: 'Push Image', status: 'completed', duration: '1m' },
+          { name: 'Update Manifest', status: 'completed', duration: '30s' },
+          { name: 'Apply Changes', status: 'completed', duration: '8m 30s' }
         ],
-        triggers: ['schedule:nightly']
+        approvers: ['john.admin', 'maria.dev']
       }
-    ];
-    
-    res.json(pipelines);
-  } catch (error) {
-    console.error('Error fetching pipelines:', error);
-    res.status(500).json({ error: 'Failed to fetch pipelines' });
-  }
-});
-
-// GET /api/pipelines/:id - Get pipeline details
-router.get('/:id', async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    
-    // Mock pipeline detail data - would be replaced with DB lookup
-    const pipeline = {
-      id,
-      name: 'Production Release',
-      description: 'Main production deployment pipeline for API services',
-      status: 'active',
-      lastRun: '2023-01-20T15:30:45Z',
-      lastRunStatus: 'success',
-      stages: [
-        {
-          name: 'Build',
-          status: 'success',
-          duration: '2m 15s',
-          steps: [
-            { name: 'Checkout', status: 'success', duration: '5s' },
-            { name: 'Install Dependencies', status: 'success', duration: '45s' },
-            { name: 'Compile', status: 'success', duration: '1m 25s' }
-          ]
-        },
-        {
-          name: 'Test',
-          status: 'success',
-          duration: '5m 30s',
-          steps: [
-            { name: 'Unit Tests', status: 'success', duration: '1m 20s' },
-            { name: 'Integration Tests', status: 'success', duration: '3m 45s' },
-            { name: 'Code Coverage', status: 'success', duration: '25s' }
-          ]
-        },
-        {
-          name: 'Deploy',
-          status: 'success',
-          duration: '3m 45s',
-          steps: [
-            { name: 'Create Artifacts', status: 'success', duration: '45s' },
-            { name: 'Deploy to Production', status: 'success', duration: '2m 30s' },
-            { name: 'Smoke Tests', status: 'success', duration: '30s' }
-          ]
-        }
-      ],
-      triggers: ['push:main', 'schedule:daily'],
-      history: [
-        {
-          runId: 'run-123',
-          startTime: '2023-01-20T15:30:45Z',
-          endTime: '2023-01-20T15:42:15Z',
-          status: 'success',
-          commit: {
-            id: 'abc123',
-            message: 'Fix API rate limiting',
-            author: 'jane.doe@example.com'
-          }
-        },
-        {
-          runId: 'run-122',
-          startTime: '2023-01-19T10:15:30Z',
-          endTime: '2023-01-19T10:28:10Z',
-          status: 'success',
-          commit: {
-            id: 'def456',
-            message: 'Add new dashboard features',
-            author: 'john.smith@example.com'
-          }
-        },
-        {
-          runId: 'run-121',
-          startTime: '2023-01-18T14:22:15Z',
-          endTime: '2023-01-18T14:30:45Z',
-          status: 'failed',
-          commit: {
-            id: 'ghi789',
-            message: 'Refactor authentication system',
-            author: 'jane.doe@example.com'
-          }
-        }
-      ],
-      config: {
-        timeout: 3600,
-        retryAttempts: 2,
-        environment: {
-          NODE_ENV: 'production',
-          API_VERSION: 'v1.2.5'
-        }
-      }
-    };
-    
-    res.json(pipeline);
-  } catch (error) {
-    console.error(`Error fetching pipeline ${req.params.id}:`, error);
-    res.status(500).json({ error: 'Failed to fetch pipeline details' });
-  }
-});
-
-// POST /api/pipelines - Create new pipeline
-router.post('/', async (req, res) => {
-  try {
-    const newPipeline = req.body;
-    
-    // Validation would happen here
-    if (!newPipeline.name) {
-      return res.status(400).json({ error: 'Pipeline name is required' });
-    }
-    
-    // Mock response - would normally save to DB and return
-    res.status(201).json({
-      id: 4,
-      ...newPipeline,
-      status: 'active',
-      createdAt: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error('Error creating pipeline:', error);
-    res.status(500).json({ error: 'Failed to create pipeline' });
-  }
-});
-
-// PUT /api/pipelines/:id - Update pipeline
-router.put('/:id', async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    const updates = req.body;
-    
-    // Mock response - would normally update in DB
-    res.json({
-      id,
-      ...updates,
-      updatedAt: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error(`Error updating pipeline ${req.params.id}:`, error);
-    res.status(500).json({ error: 'Failed to update pipeline' });
-  }
-});
-
-// POST /api/pipelines/:id/run - Trigger pipeline run
-router.post('/:id/run', async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    
-    // Mock response - would normally trigger the pipeline in the CI/CD system
-    res.json({
-      success: true,
-      message: `Pipeline ${id} has been triggered`,
-      runId: `run-${Date.now()}`,
-      startTime: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error(`Error triggering pipeline ${req.params.id}:`, error);
-    res.status(500).json({ error: 'Failed to trigger pipeline' });
-  }
-});
-
-// GET /api/pipelines/:id/runs - Get pipeline run history
-router.get('/:id/runs', async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    
-    // Mock pipeline runs data - would be replaced with DB lookup
-    const runs = [
+    ],
+    status: 'completed',
+    lastRun: '2025-05-19T15:45:00Z',
+    averageDuration: '35m',
+    successRate: 92
+  },
+  {
+    id: '2',
+    name: 'Payment Processor CI/CD',
+    description: 'Continuous integration and deployment pipeline for Payment Processor service',
+    repository: 'github.com/terrafusion/payment-processor',
+    branch: 'main',
+    type: 'deployment',
+    stages: [
       {
-        runId: 'run-123',
-        pipelineId: id,
-        startTime: '2023-01-20T15:30:45Z',
-        endTime: '2023-01-20T15:42:15Z',
-        status: 'success',
-        duration: '11m 30s',
-        commit: {
-          id: 'abc123',
-          message: 'Fix API rate limiting',
-          author: 'jane.doe@example.com'
-        }
+        name: 'Build',
+        status: 'completed',
+        startTime: '2025-05-19T13:30:00Z',
+        endTime: '2025-05-19T13:35:00Z',
+        duration: '5m',
+        steps: [
+          { name: 'Checkout', status: 'completed', duration: '10s' },
+          { name: 'Test', status: 'completed', duration: '2m' },
+          { name: 'Build Image', status: 'completed', duration: '2m 50s' }
+        ]
       },
       {
-        runId: 'run-122',
-        pipelineId: id,
-        startTime: '2023-01-19T10:15:30Z',
-        endTime: '2023-01-19T10:28:10Z',
-        status: 'success',
-        duration: '12m 40s',
-        commit: {
-          id: 'def456',
-          message: 'Add new dashboard features',
-          author: 'john.smith@example.com'
-        }
+        name: 'Deploy to Staging',
+        status: 'completed',
+        startTime: '2025-05-19T13:35:00Z',
+        endTime: '2025-05-19T13:45:00Z',
+        duration: '10m',
+        steps: [
+          { name: 'Push Image', status: 'completed', duration: '1m' },
+          { name: 'Update Manifest', status: 'completed', duration: '30s' },
+          { name: 'Apply Changes', status: 'completed', duration: '8m 30s' }
+        ]
       },
       {
-        runId: 'run-121',
-        pipelineId: id,
-        startTime: '2023-01-18T14:22:15Z',
-        endTime: '2023-01-18T14:30:45Z',
+        name: 'Integration Tests',
         status: 'failed',
-        duration: '8m 30s',
-        commit: {
-          id: 'ghi789',
-          message: 'Refactor authentication system',
-          author: 'jane.doe@example.com'
-        }
+        startTime: '2025-05-19T13:45:00Z',
+        endTime: '2025-05-19T14:00:00Z',
+        duration: '15m',
+        steps: [
+          { name: 'API Tests', status: 'completed', duration: '3m' },
+          { name: 'Transaction Tests', status: 'failed', duration: '12m', error: 'Timeout waiting for database response' }
+        ]
+      },
+      {
+        name: 'Deploy to Production',
+        status: 'not_started'
       }
-    ];
-    
-    res.json(runs);
-  } catch (error) {
-    console.error(`Error fetching runs for pipeline ${req.params.id}:`, error);
-    res.status(500).json({ error: 'Failed to fetch pipeline runs' });
+    ],
+    status: 'failed',
+    lastRun: '2025-05-19T14:00:00Z',
+    averageDuration: '40m',
+    successRate: 78
+  },
+  {
+    id: '3',
+    name: 'User Service CI/CD',
+    description: 'Continuous integration and deployment pipeline for User Service',
+    repository: 'github.com/terrafusion/user-service',
+    branch: 'main',
+    type: 'deployment',
+    stages: [
+      {
+        name: 'Build',
+        status: 'completed',
+        startTime: '2025-05-19T14:00:00Z',
+        endTime: '2025-05-19T14:10:00Z',
+        duration: '10m',
+        steps: [
+          { name: 'Checkout', status: 'completed', duration: '10s' },
+          { name: 'Test', status: 'completed', duration: '5m' },
+          { name: 'Build Image', status: 'completed', duration: '4m 50s' }
+        ]
+      },
+      {
+        name: 'Deploy to Dev',
+        status: 'in_progress',
+        startTime: '2025-05-19T14:10:00Z',
+        steps: [
+          { name: 'Push Image', status: 'completed', duration: '1m' },
+          { name: 'Update Manifest', status: 'completed', duration: '30s' },
+          { name: 'Apply Changes', status: 'in_progress' }
+        ]
+      },
+      {
+        name: 'Integration Tests',
+        status: 'not_started'
+      },
+      {
+        name: 'Deploy to Staging',
+        status: 'not_started'
+      }
+    ],
+    status: 'in_progress',
+    lastRun: '2025-05-19T14:00:00Z',
+    averageDuration: '45m',
+    successRate: 88
   }
+];
+
+// GET all pipelines
+router.get('/', (req, res) => {
+  // Extract query parameters for filtering
+  const { status, type } = req.query;
+  
+  let filteredPipelines = [...pipelines];
+  
+  // Apply filters if provided
+  if (status) {
+    filteredPipelines = filteredPipelines.filter(p => p.status === status);
+  }
+  
+  if (type) {
+    filteredPipelines = filteredPipelines.filter(p => p.type === type);
+  }
+  
+  res.json(filteredPipelines);
 });
 
-// DELETE /api/pipelines/:id - Delete pipeline
-router.delete('/:id', async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    
-    // Mock success - would normally delete from DB
-    res.json({ 
-      success: true, 
-      message: `Pipeline ${id} has been deleted` 
-    });
-  } catch (error) {
-    console.error(`Error deleting pipeline ${req.params.id}:`, error);
-    res.status(500).json({ error: 'Failed to delete pipeline' });
+// GET a specific pipeline
+router.get('/:id', (req, res) => {
+  const pipeline = pipelines.find(p => p.id === req.params.id);
+  
+  if (!pipeline) {
+    return res.status(404).json({ message: 'Pipeline not found' });
   }
+  
+  res.json(pipeline);
+});
+
+// POST create a new pipeline
+router.post('/', (req, res) => {
+  // In a real app, validate request body using schema validation
+  const newPipeline = {
+    id: (pipelines.length + 1).toString(),
+    ...req.body,
+    status: 'created',
+    stages: req.body.stages || []
+  };
+  
+  pipelines.push(newPipeline);
+  res.status(201).json(newPipeline);
+});
+
+// PUT update an existing pipeline
+router.put('/:id', (req, res) => {
+  const pipelineIndex = pipelines.findIndex(p => p.id === req.params.id);
+  
+  if (pipelineIndex === -1) {
+    return res.status(404).json({ message: 'Pipeline not found' });
+  }
+  
+  // Update the pipeline
+  pipelines[pipelineIndex] = {
+    ...pipelines[pipelineIndex],
+    ...req.body
+  };
+  
+  res.json(pipelines[pipelineIndex]);
+});
+
+// DELETE a pipeline
+router.delete('/:id', (req, res) => {
+  const pipelineIndex = pipelines.findIndex(p => p.id === req.params.id);
+  
+  if (pipelineIndex === -1) {
+    return res.status(404).json({ message: 'Pipeline not found' });
+  }
+  
+  // Remove the pipeline
+  pipelines.splice(pipelineIndex, 1);
+  
+  res.status(204).send();
+});
+
+// GET pipeline status
+router.get('/:id/status', (req, res) => {
+  const pipeline = pipelines.find(p => p.id === req.params.id);
+  
+  if (!pipeline) {
+    return res.status(404).json({ message: 'Pipeline not found' });
+  }
+  
+  // Return status summary
+  const statusSummary = {
+    id: pipeline.id,
+    name: pipeline.name,
+    status: pipeline.status,
+    lastRun: pipeline.lastRun,
+    currentStage: pipeline.stages.find(stage => stage.status === 'in_progress')?.name,
+    stages: pipeline.stages.map(stage => ({
+      name: stage.name,
+      status: stage.status
+    }))
+  };
+  
+  res.json(statusSummary);
+});
+
+// POST trigger a pipeline
+router.post('/:id/trigger', (req, res) => {
+  const pipeline = pipelines.find(p => p.id === req.params.id);
+  
+  if (!pipeline) {
+    return res.status(404).json({ message: 'Pipeline not found' });
+  }
+  
+  // Set pipeline to in_progress
+  pipeline.status = 'in_progress';
+  pipeline.lastRun = new Date().toISOString();
+  
+  // Reset stages
+  pipeline.stages.forEach((stage, index) => {
+    if (index === 0) {
+      stage.status = 'in_progress';
+      stage.startTime = new Date().toISOString();
+      stage.endTime = null;
+      
+      // Reset steps
+      if (stage.steps) {
+        stage.steps.forEach((step, stepIndex) => {
+          if (stepIndex === 0) {
+            step.status = 'in_progress';
+          } else {
+            step.status = 'not_started';
+          }
+          step.duration = null;
+        });
+      }
+    } else {
+      stage.status = 'not_started';
+      stage.startTime = null;
+      stage.endTime = null;
+      
+      // Reset steps
+      if (stage.steps) {
+        stage.steps.forEach(step => {
+          step.status = 'not_started';
+          step.duration = null;
+        });
+      }
+    }
+  });
+  
+  res.json(pipeline);
+});
+
+// GET pipeline metrics summary
+router.get('/metrics/summary', (req, res) => {
+  // Calculate metrics based on pipeline data
+  const totalPipelines = pipelines.length;
+  const activePipelines = pipelines.filter(p => p.status === 'in_progress').length;
+  const successfulPipelines = pipelines.filter(p => p.status === 'completed').length;
+  const failedPipelines = pipelines.filter(p => p.status === 'failed').length;
+  
+  // Calculate average success rate
+  const avgSuccessRate = pipelines.reduce((sum, p) => sum + (p.successRate || 0), 0) / totalPipelines;
+  
+  // Calculate average duration
+  const avgDuration = pipelines.reduce((sum, p) => {
+    // Parse the duration string (e.g. "35m") to minutes
+    const durationMatch = (p.averageDuration || '0m').match(/(\d+)m/);
+    return sum + (durationMatch ? parseInt(durationMatch[1]) : 0);
+  }, 0) / totalPipelines;
+  
+  const metrics = {
+    totalPipelines,
+    activePipelines,
+    successfulPipelines,
+    failedPipelines,
+    avgSuccessRate,
+    avgDuration: `${Math.round(avgDuration)}m`,
+    recentRuns: pipelines.map(p => ({
+      id: p.id,
+      name: p.name,
+      status: p.status,
+      lastRun: p.lastRun
+    })).sort((a, b) => new Date(b.lastRun) - new Date(a.lastRun)).slice(0, 5)
+  };
+  
+  res.json(metrics);
 });
 
 module.exports = router;

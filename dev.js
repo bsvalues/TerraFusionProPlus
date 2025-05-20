@@ -1,84 +1,44 @@
-// Development server runner for TerraFusionProfessional DevOps platform
 const { spawn } = require('child_process');
 const path = require('path');
 
-console.log('Starting TerraFusionProfessional DevOps platform...');
-console.log('- Backend will be available at: http://localhost:3000/api');
-console.log('- Frontend will be available at: http://localhost:5000');
+// Define paths to package directories
+const clientPath = path.join(__dirname, 'packages/client');
+const serverPath = path.join(__dirname, 'packages/server');
 
-// Build shared package first
-console.log('Building shared package...');
-const buildShared = spawn('npx', ['tsc'], {
-  cwd: path.join(__dirname, 'packages/shared'),
-  stdio: 'inherit'
-});
-
-buildShared.on('exit', (code) => {
-  if (code !== 0) {
-    console.error('Failed to build shared package');
-    process.exit(1);
-  }
-
-  console.log('Successfully built shared package');
+// Helper function to spawn a process and pipe output
+function spawnProcess(command, args, options, name) {
+  const proc = spawn(command, args, options);
   
-  // Start the Express server
-  let server = spawn('node', ['packages/server/src/index.js'], {
-    stdio: 'inherit',
-    env: { ...process.env, PORT: 3000 }
+  proc.stdout.on('data', (data) => {
+    console.log(`[${name}] ${data.toString().trim()}`);
   });
-
-  // Give the server a moment to start up
-  setTimeout(() => {
-    // Start the Vite client development server
-    let client = spawn('npx', ['vite', '--port', '5000', '--host', '0.0.0.0'], {
-      cwd: path.join(__dirname, 'packages/client'),
-      stdio: 'inherit'
-    });
-
-    // Handle client errors
-    client.on('error', (err) => {
-      console.error('Client error:', err);
-    });
-
-    // Handle client exits
-    client.on('exit', (code) => {
-      console.log(`Client process exited with code ${code}`);
-      if (code !== 0 && code !== null) {
-        console.error('Client process crashed, restarting...');
-        setTimeout(() => {
-          client = spawn('npx', ['vite', '--port', '5000', '--host', '0.0.0.0'], {
-            cwd: path.join(__dirname, 'packages/client'),
-            stdio: 'inherit'
-          });
-        }, 1000);
-      }
-    });
-
-    // Handle process termination
-    process.on('SIGINT', () => {
-      console.log('Shutting down...');
-      server.kill('SIGINT');
-      client.kill('SIGINT');
-      process.exit(0);
-    });
-  }, 2000);
-
-  // Handle server errors
-  server.on('error', (err) => {
-    console.error('Server error:', err);
+  
+  proc.stderr.on('data', (data) => {
+    console.error(`[${name}] ${data.toString().trim()}`);
   });
-
-  // Handle server exits
-  server.on('exit', (code) => {
-    console.log(`Server process exited with code ${code}`);
-    if (code !== 0 && code !== null) {
-      console.error('Server process crashed, restarting...');
-      setTimeout(() => {
-        server = spawn('node', ['packages/server/src/index.js'], {
-          stdio: 'inherit',
-          env: { ...process.env, PORT: 3000 }
-        });
-      }, 1000);
-    }
+  
+  proc.on('close', (code) => {
+    console.log(`[${name}] Process exited with code ${code}`);
   });
+  
+  return proc;
+}
+
+// Start client dev server (Vite)
+console.log('Starting client development server...');
+const clientProc = spawnProcess('npm', ['run', 'dev'], { cwd: clientPath }, 'CLIENT');
+
+// Start server with nodemon
+console.log('Starting server...');
+const serverProc = spawnProcess('npm', ['run', 'dev'], { cwd: serverPath }, 'SERVER');
+
+// Handle process termination
+process.on('SIGINT', () => {
+  console.log('Shutting down development servers...');
+  clientProc.kill();
+  serverProc.kill();
+  process.exit(0);
 });
+
+console.log('\nTerraFusionProfessional development environment running');
+console.log('Press Ctrl+C to stop all processes\n');
