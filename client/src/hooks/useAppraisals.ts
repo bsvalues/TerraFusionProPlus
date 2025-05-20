@@ -1,85 +1,95 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { queryClient, apiRequest } from '../lib/queryClient';
 import { Appraisal, InsertAppraisal } from '../types';
+import { queryClient, apiRequest } from '../lib/queryClient';
 
+// API endpoints
 const APPRAISALS_ENDPOINT = '/api/appraisals';
 
+// Get all appraisals
 export function useAppraisals() {
   return useQuery({
-    queryKey: ['appraisals'],
-    queryFn: () => apiRequest<Appraisal[]>({ url: APPRAISALS_ENDPOINT }),
+    queryKey: [APPRAISALS_ENDPOINT],
   });
 }
 
-export function useAppraisal(id: number) {
+// Get a single appraisal by ID
+export function useAppraisal(id: number, options = {}) {
   return useQuery({
-    queryKey: ['appraisals', id],
-    queryFn: () => apiRequest<Appraisal>({ url: `${APPRAISALS_ENDPOINT}/${id}` }),
-    enabled: !!id,
+    queryKey: [`${APPRAISALS_ENDPOINT}/${id}`],
+    enabled: id > 0,
+    ...options,
   });
 }
 
-export function useAppraisalsByProperty(propertyId: number) {
+// Get appraisals by property ID
+export function useAppraisalsByProperty(propertyId: number, options = {}) {
   return useQuery({
-    queryKey: ['appraisals', { property_id: propertyId }],
-    queryFn: () => 
-      apiRequest<Appraisal[]>({ 
-        url: `${APPRAISALS_ENDPOINT}?property_id=${propertyId}` 
-      }),
-    enabled: !!propertyId,
+    queryKey: [`${APPRAISALS_ENDPOINT}/property/${propertyId}`],
+    enabled: propertyId > 0,
+    ...options,
   });
 }
 
-export function useAppraisalsByAppraiser(appraiserId: number) {
+// Get appraisals by appraiser ID
+export function useAppraisalsByAppraiser(appraiserId: number, options = {}) {
   return useQuery({
-    queryKey: ['appraisals', { appraiser_id: appraiserId }],
-    queryFn: () => 
-      apiRequest<Appraisal[]>({ 
-        url: `${APPRAISALS_ENDPOINT}?appraiser_id=${appraiserId}` 
-      }),
-    enabled: !!appraiserId,
+    queryKey: [`${APPRAISALS_ENDPOINT}/appraiser/${appraiserId}`],
+    enabled: appraiserId > 0,
+    ...options,
   });
 }
 
+// Create a new appraisal
 export function useCreateAppraisal() {
   return useMutation({
     mutationFn: (data: InsertAppraisal) => {
-      return apiRequest<Appraisal>({
-        url: APPRAISALS_ENDPOINT,
+      return apiRequest<Appraisal>(APPRAISALS_ENDPOINT, {
         method: 'POST',
-        body: data,
+        body: JSON.stringify(data),
       });
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['appraisals'] });
-      queryClient.invalidateQueries({ 
-        queryKey: ['appraisals', { property_id: data.property_id }] 
-      });
-      queryClient.invalidateQueries({ 
-        queryKey: ['appraisals', { appraiser_id: data.appraiser_id }] 
-      });
+      queryClient.invalidateQueries({ queryKey: [APPRAISALS_ENDPOINT] });
+      if (data.property_id) {
+        queryClient.invalidateQueries({ 
+          queryKey: [`${APPRAISALS_ENDPOINT}/property/${data.property_id}`] 
+        });
+      }
     },
   });
 }
 
+// Update an existing appraisal
 export function useUpdateAppraisal() {
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<InsertAppraisal> }) => {
-      return apiRequest<Appraisal>({
-        url: `${APPRAISALS_ENDPOINT}/${id}`,
+    mutationFn: ({ id, data }: { id: number; data: Partial<Appraisal> }) => {
+      return apiRequest<Appraisal>(`${APPRAISALS_ENDPOINT}/${id}`, {
         method: 'PUT',
-        body: data,
+        body: JSON.stringify(data),
       });
     },
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['appraisals'] });
-      queryClient.invalidateQueries({ queryKey: ['appraisals', variables.id] });
-      queryClient.invalidateQueries({ 
-        queryKey: ['appraisals', { property_id: data.property_id }] 
+    onSuccess: (data, { id }) => {
+      queryClient.invalidateQueries({ queryKey: [APPRAISALS_ENDPOINT] });
+      queryClient.invalidateQueries({ queryKey: [`${APPRAISALS_ENDPOINT}/${id}`] });
+      if (data.property_id) {
+        queryClient.invalidateQueries({ 
+          queryKey: [`${APPRAISALS_ENDPOINT}/property/${data.property_id}`] 
+        });
+      }
+    },
+  });
+}
+
+// Delete an appraisal
+export function useDeleteAppraisal() {
+  return useMutation({
+    mutationFn: (id: number) => {
+      return apiRequest(`${APPRAISALS_ENDPOINT}/${id}`, {
+        method: 'DELETE',
       });
-      queryClient.invalidateQueries({ 
-        queryKey: ['appraisals', { appraiser_id: data.appraiser_id }] 
-      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [APPRAISALS_ENDPOINT] });
     },
   });
 }

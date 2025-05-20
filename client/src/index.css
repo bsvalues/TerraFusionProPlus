@@ -1,200 +1,242 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* TerraFusionProfessional Real Estate Appraisal Platform Theme */
 :root {
-  --primary-color: #1e40af;
-  --primary-dark: #1e3a8a;
-  --primary-light: #3b82f6;
-  --secondary-color: #10b981;
-  --accent-color: #f59e0b;
-  --text-dark: #1f2937;
-  --text-light: #f9fafb;
-  --background-light: #f9fafb;
-  --background-dark: #111827;
-  --success-color: #10b981;
-  --warning-color: #f59e0b;
-  --danger-color: #ef4444;
-  --info-color: #3b82f6;
+  --primary: #3b82f6;
+  --primary-dark: #2563eb;
+  --secondary: #10b981;
+  --secondary-dark: #059669;
+  --gray-light: #f3f4f6;
+  --gray: #e5e7eb;
+  --gray-dark: #9ca3af;
+  --text: #1f2937;
+  --text-light: #6b7280;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background-color: var(--background-light);
-  color: var(--text-dark);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  color: var(--text);
+  line-height: 1.5;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+/* Custom Utility Classes */
+.text-primary {
+  color: var(--primary);
 }
 
-/* ===== TerraFusionProfessional UI Components ===== */
+.bg-primary {
+  background-color: var(--primary);
+}
 
-/* Text and Headers */
-.gradient-heading {
-  background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
+.hover\:bg-primary\/90:hover {
+  background-color: rgba(59, 130, 246, 0.9);
+}
+
+.text-secondary {
+  color: var(--secondary);
+}
+
+.bg-secondary {
+  background-color: var(--secondary);
+}
+
+.hover\:bg-secondary\/90:hover {
+  background-color: rgba(16, 185, 129, 0.9);
+}
+
+/* Custom Components */
+.card {
+  @apply bg-white rounded-lg shadow-md overflow-hidden;
+}
+
+.btn {
+  @apply px-4 py-2 rounded-md transition-colors;
+}
+
+.btn-primary {
+  @apply bg-primary text-white hover:bg-primary/90;
+}
+
+.btn-secondary {
+  @apply bg-secondary text-white hover:bg-secondary/90;
+}
+
+.btn-outline {
+  @apply border border-gray-300 hover:bg-gray-50;
+}
+
+.input {
+  @apply w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50;
+}
+
+.select {
+  @apply w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50;
+}
+
+.textarea {
+  @apply w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50;
+}
+
+.badge {
+  @apply px-2 py-1 text-xs font-semibold rounded-full;
+}
+
+.badge-primary {
+  @apply bg-primary/10 text-primary;
+}
+
+.badge-secondary {
+  @apply bg-secondary/10 text-secondary;
+}
+
+/* Table Styles */
+.table-container {
+  @apply overflow-x-auto;
+}
+
+.table {
+  @apply min-w-full divide-y divide-gray-200;
+}
+
+.table thead {
+  @apply bg-gray-50;
+}
+
+.table th {
+  @apply px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+}
+
+.table tbody {
+  @apply bg-white divide-y divide-gray-200;
+}
+
+.table td {
+  @apply px-6 py-4 whitespace-nowrap text-sm;
+}
+
+/* Sidebar Navigation */
+.nav-link {
+  @apply flex items-center px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100 hover:text-primary transition-colors;
+}
+
+.nav-link.active {
+  @apply bg-primary/10 text-primary;
+}
+
+/* Form Styles */
+.form-group {
+  @apply mb-4;
+}
+
+.form-label {
+  @apply block text-sm font-medium mb-1;
+}
+
+.form-helper {
+  @apply mt-1 text-xs text-gray-500;
+}
+
+.form-error {
+  @apply mt-1 text-xs text-red-500;
+}
+
+/* Custom Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.4s ease-out;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--gray-light);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gray-dark);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #888;
+}
+
+/* Charts customization */
+.recharts-tooltip-cursor {
+  stroke: var(--primary) !important;
+  stroke-width: 1 !important;
+  stroke-opacity: 0.2 !important;
+}
+
+.recharts-default-tooltip {
+  border-radius: 4px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Utility helpers */
+.text-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gradient-text {
+  background: linear-gradient(to right, var(--primary), var(--secondary));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   color: transparent;
 }
 
-/* Layout Elements */
-.sidebar {
-  background: linear-gradient(to bottom, var(--primary-color), var(--primary-dark));
+/* Progress bar */
+.progress-bar {
+  @apply w-full bg-gray-200 rounded-full h-2.5;
 }
 
-/* Property Cards */
-.property-card {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.property-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-}
-
-/* Appraisal UI */
-.appraisal-form-container {
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  border-radius: 8px;
-  background-color: white;
-}
-
-.appraisal-status-badge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  text-transform: uppercase;
-}
-
-.status-draft {
-  background-color: #e5e7eb;
-  color: #4b5563;
-}
-
-.status-in-progress {
-  background-color: #dbeafe;
-  color: #1e40af;
-}
-
-.status-pending-review {
-  background-color: #fff7ed;
-  color: #c2410c;
-}
-
-.status-completed {
-  background-color: #dcfce7;
-  color: #15803d;
-}
-
-/* Market Data Visualization */
-.market-data-card {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
-}
-
-.chart-container {
-  height: 300px;
-  position: relative;
-}
-
-/* Comparable Properties */
-.comparable-property-row {
-  transition: background-color 0.2s ease;
-}
-
-.comparable-property-row:hover {
-  background-color: #f1f5f9;
-}
-
-.comparable-adjustment {
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  background-color: #f1f5f9;
-  font-size: 0.875rem;
-  display: inline-block;
-  margin-right: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.comparable-adjustment.positive {
-  background-color: #dcfce7;
-  color: #15803d;
-}
-
-.comparable-adjustment.negative {
-  background-color: #fee2e2;
-  color: #b91c1c;
-}
-
-/* Form Components */
-.form-input {
-  @apply w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
-}
-
-.form-label {
-  @apply block text-sm font-medium text-gray-700 mb-1;
-}
-
-.form-button {
-  @apply px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
-}
-
-.form-button-secondary {
-  @apply px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
-}
-
-.form-button-success {
-  @apply px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2;
-}
-
-.form-button-danger {
-  @apply px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2;
-}
-
-/* Dashboard Cards */
-.dashboard-card {
-  @apply bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-300;
-}
-
-.dashboard-stat {
-  @apply text-2xl font-bold;
-}
-
-.dashboard-stat-label {
-  @apply text-sm text-gray-500;
-}
-
-/* Data Tables */
-.data-table {
-  @apply min-w-full divide-y divide-gray-200;
-}
-
-.data-table thead {
-  @apply bg-gray-50;
-}
-
-.data-table th {
-  @apply px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
-}
-
-.data-table tbody {
-  @apply bg-white divide-y divide-gray-200;
-}
-
-.data-table td {
-  @apply px-6 py-4 whitespace-nowrap;
+.progress-bar-fill {
+  @apply bg-primary h-2.5 rounded-full;
 }

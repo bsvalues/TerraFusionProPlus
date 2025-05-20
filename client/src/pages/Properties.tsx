@@ -1,219 +1,320 @@
-import React, { useState } from 'react';
-import { PlusCircle, Search, Filter, ChevronDown, Building2 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { Property } from '../types';
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { useProperties, useCreateProperty } from '../hooks/useProperties';
+import { Property, InsertProperty } from '../types';
+import { format } from 'date-fns';
+
+// Property type options for dropdown
+const PROPERTY_TYPES = [
+  'Single Family',
+  'Condo',
+  'Multi-Family',
+  'Commercial',
+  'Land',
+  'Industrial',
+  'Special Purpose'
+];
 
 const Properties = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [selectedPropertyTypes, setSelectedPropertyTypes] = useState<string[]>([]);
-  const [selectedStates, setSelectedStates] = useState<string[]>([]);
-
-  // Fetch properties from API
-  const { data: properties, isLoading, isError } = useQuery({
-    queryKey: ['/api/properties'],
-    retry: 1,
+  const { data: properties = [], isLoading, error } = useProperties();
+  const createPropertyMutation = useCreateProperty();
+  
+  // State for new property form
+  const [showForm, setShowForm] = useState(false);
+  const [newProperty, setNewProperty] = useState<Partial<InsertProperty>>({
+    address: '',
+    city: '',
+    state: '',
+    zip_code: '',
+    property_type: 'Single Family',
+    year_built: new Date().getFullYear() - 10,
+    square_feet: 0,
+    bedrooms: 0,
+    bathrooms: 0,
+    lot_size: 0
   });
-
-  // Filter properties based on search term and filters
-  const filteredProperties = properties?.filter((property: Property) => {
-    const matchesSearch = 
-      !searchTerm || 
+  
+  // State for search and filtering
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState('');
+  
+  // Filter properties based on search term and property type
+  const filteredProperties = properties.filter(property => {
+    const matchesSearch = !searchTerm || 
       property.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
       property.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
       property.state.toLowerCase().includes(searchTerm.toLowerCase()) ||
       property.zip_code.toLowerCase().includes(searchTerm.toLowerCase());
       
-    const matchesPropertyType = 
-      selectedPropertyTypes.length === 0 || 
-      selectedPropertyTypes.includes(property.property_type);
-      
-    const matchesState = 
-      selectedStates.length === 0 || 
-      selectedStates.includes(property.state);
-      
-    return matchesSearch && matchesPropertyType && matchesState;
+    const matchesType = !filterType || property.property_type === filterType;
+    
+    return matchesSearch && matchesType;
   });
-
-  // Toggle property type selection
-  const togglePropertyType = (type: string) => {
-    if (selectedPropertyTypes.includes(type)) {
-      setSelectedPropertyTypes(selectedPropertyTypes.filter(t => t !== type));
+  
+  // Handle input changes for new property form
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    
+    // Handle numeric inputs
+    if (['year_built', 'square_feet', 'bedrooms', 'bathrooms', 'lot_size'].includes(name)) {
+      setNewProperty(prev => ({
+        ...prev,
+        [name]: value === '' ? '' : Number(value)
+      }));
     } else {
-      setSelectedPropertyTypes([...selectedPropertyTypes, type]);
+      setNewProperty(prev => ({
+        ...prev,
+        [name]: value
+      }));
     }
   };
-
-  // Toggle state selection
-  const toggleState = (state: string) => {
-    if (selectedStates.includes(state)) {
-      setSelectedStates(selectedStates.filter(s => s !== state));
-    } else {
-      setSelectedStates([...selectedStates, state]);
+  
+  // Handle property creation
+  const handleCreateProperty = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Form validation
+    if (!newProperty.address || !newProperty.city || !newProperty.state || !newProperty.zip_code) {
+      alert('Please fill out all required fields');
+      return;
     }
+    
+    // Create new property
+    createPropertyMutation.mutate(newProperty as InsertProperty, {
+      onSuccess: () => {
+        // Reset form and hide it
+        setNewProperty({
+          address: '',
+          city: '',
+          state: '',
+          zip_code: '',
+          property_type: 'Single Family',
+          year_built: new Date().getFullYear() - 10,
+          square_feet: 0,
+          bedrooms: 0,
+          bathrooms: 0,
+          lot_size: 0
+        });
+        setShowForm(false);
+      },
+      onError: (error) => {
+        console.error('Error creating property:', error);
+        alert('Failed to create property. Please try again.');
+      }
+    });
   };
-
-  // Property type options (could be fetched from API in the future)
-  const propertyTypes = [
-    'Single Family',
-    'Condo',
-    'Multi-Family',
-    'Townhouse',
-    'Land',
-    'Commercial'
-  ];
-
-  // State options (could be fetched from API in the future)
-  const states = ['CA', 'NY', 'TX', 'FL', 'IL', 'PA', 'OH', 'GA', 'NC', 'MI'];
-
+  
+  if (isLoading) return <div className="p-8">Loading properties...</div>;
+  
+  if (error) return <div className="p-8 text-red-500">Error loading properties: {(error as Error).message}</div>;
+  
   return (
-    <div>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold gradient-heading">Properties</h1>
-          <p className="text-gray-600 mt-1">Manage your property database</p>
-        </div>
-        <button className="mt-4 sm:mt-0 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center">
-          <PlusCircle size={18} className="mr-2" />
-          Add New Property
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-primary">Properties</h1>
+        <button 
+          onClick={() => setShowForm(!showForm)} 
+          className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
+        >
+          {showForm ? 'Cancel' : 'Add Property'}
         </button>
       </div>
-
-      {/* Search and filters */}
-      <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="relative flex-grow">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search size={18} className="text-gray-400" />
-            </div>
-            <input
-              type="text"
-              placeholder="Search properties by address, city, or zip code..."
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <div className="relative">
-            <button
-              onClick={() => setFilterOpen(!filterOpen)}
-              className="flex items-center px-4 py-2 border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:outline-none"
-            >
-              <Filter size={18} className="mr-2 text-gray-500" />
-              Filters
-              <ChevronDown size={18} className="ml-2 text-gray-500" />
-            </button>
-            
-            {filterOpen && (
-              <div className="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg z-10 p-4">
-                <div className="mb-4">
-                  <h3 className="font-semibold mb-2">Property Type</h3>
-                  <div className="space-y-2">
-                    {propertyTypes.map(type => (
-                      <div key={type} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          id={`type-${type}`}
-                          checked={selectedPropertyTypes.includes(type)}
-                          onChange={() => togglePropertyType(type)}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                        />
-                        <label htmlFor={`type-${type}`} className="ml-2 text-sm text-gray-700">
-                          {type}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                <div>
-                  <h3 className="font-semibold mb-2">State</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    {states.map(state => (
-                      <div key={state} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          id={`state-${state}`}
-                          checked={selectedStates.includes(state)}
-                          onChange={() => toggleState(state)}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                        />
-                        <label htmlFor={`state-${state}`} className="ml-2 text-sm text-gray-700">
-                          {state}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+      
+      {/* Search and Filter */}
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <div className="flex-1">
+          <input
+            type="text"
+            placeholder="Search properties..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded-md"
+          />
+        </div>
+        <div className="w-full md:w-64">
+          <select
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded-md"
+          >
+            <option value="">All Property Types</option>
+            {PROPERTY_TYPES.map(type => (
+              <option key={type} value={type}>{type}</option>
+            ))}
+          </select>
         </div>
       </div>
-
-      {/* Properties grid */}
-      {isLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      
+      {/* New Property Form */}
+      {showForm && (
+        <div className="bg-gray-50 p-6 rounded-lg mb-6 border border-gray-200">
+          <h2 className="text-xl font-semibold mb-4">Add New Property</h2>
+          <form onSubmit={handleCreateProperty} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Address *</label>
+              <input
+                type="text"
+                name="address"
+                value={newProperty.address}
+                onChange={handleInputChange}
+                required
+                className="w-full p-2 border border-gray-300 rounded-md"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">City *</label>
+              <input
+                type="text"
+                name="city"
+                value={newProperty.city}
+                onChange={handleInputChange}
+                required
+                className="w-full p-2 border border-gray-300 rounded-md"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">State *</label>
+              <input
+                type="text"
+                name="state"
+                value={newProperty.state}
+                onChange={handleInputChange}
+                required
+                className="w-full p-2 border border-gray-300 rounded-md"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">ZIP Code *</label>
+              <input
+                type="text"
+                name="zip_code"
+                value={newProperty.zip_code}
+                onChange={handleInputChange}
+                required
+                className="w-full p-2 border border-gray-300 rounded-md"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Property Type</label>
+              <select
+                name="property_type"
+                value={newProperty.property_type}
+                onChange={handleInputChange}
+                className="w-full p-2 border border-gray-300 rounded-md"
+              >
+                {PROPERTY_TYPES.map(type => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Year Built</label>
+              <input
+                type="number"
+                name="year_built"
+                value={newProperty.year_built}
+                onChange={handleInputChange}
+                className="w-full p-2 border border-gray-300 rounded-md"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Square Feet</label>
+              <input
+                type="number"
+                name="square_feet"
+                value={newProperty.square_feet}
+                onChange={handleInputChange}
+                className="w-full p-2 border border-gray-300 rounded-md"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Bedrooms</label>
+              <input
+                type="number"
+                name="bedrooms"
+                value={newProperty.bedrooms}
+                onChange={handleInputChange}
+                className="w-full p-2 border border-gray-300 rounded-md"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Bathrooms</label>
+              <input
+                type="number"
+                name="bathrooms"
+                value={newProperty.bathrooms}
+                onChange={handleInputChange}
+                step="0.5"
+                className="w-full p-2 border border-gray-300 rounded-md"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Lot Size (sq ft)</label>
+              <input
+                type="number"
+                name="lot_size"
+                value={newProperty.lot_size}
+                onChange={handleInputChange}
+                className="w-full p-2 border border-gray-300 rounded-md"
+              />
+            </div>
+            <div className="md:col-span-2 mt-4">
+              <button
+                type="submit"
+                className="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors"
+                disabled={createPropertyMutation.isPending}
+              >
+                {createPropertyMutation.isPending ? 'Creating...' : 'Create Property'}
+              </button>
+            </div>
+          </form>
         </div>
-      ) : isError ? (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-          Error loading properties. Please try again later.
-        </div>
-      ) : filteredProperties?.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-md p-8 text-center">
-          <Building2 size={48} className="mx-auto text-gray-400 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-700 mb-2">No properties found</h3>
-          <p className="text-gray-600 mb-4">
-            {searchTerm || selectedPropertyTypes.length > 0 || selectedStates.length > 0
-              ? "No properties match your search criteria. Try adjusting your filters."
-              : "There are no properties in the database yet. Add your first property to get started."}
-          </p>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 inline-flex items-center">
-            <PlusCircle size={18} className="mr-2" />
-            Add New Property
-          </button>
+      )}
+      
+      {/* Properties List */}
+      {filteredProperties.length === 0 ? (
+        <div className="text-center py-8">
+          <p className="text-gray-500">No properties found. Try adjusting your search or create a new property.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProperties?.map((property: Property) => (
-            <div key={property.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-              {/* Property image (placeholder) */}
+          {filteredProperties.map((property) => (
+            <Link 
+              to={`/properties/${property.id}`}
+              key={property.id}
+              className="block bg-white rounded-lg shadow overflow-hidden hover:shadow-md transition-shadow"
+            >
               <div className="h-48 bg-gray-200 flex items-center justify-center">
-                <Building2 size={48} className="text-gray-400" />
+                <div className="text-5xl text-gray-400">{property.property_type === 'Commercial' ? '🏢' : '🏠'}</div>
               </div>
-              
-              {/* Property details */}
-              <div className="p-5">
-                <h3 className="text-lg font-semibold text-gray-800 mb-1">{property.address}</h3>
-                <p className="text-gray-600 mb-3">
-                  {property.city}, {property.state} {property.zip_code}
-                </p>
-                
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div>
-                    <span className="text-xs text-gray-500">Property Type</span>
-                    <p className="font-medium">{property.property_type}</p>
+              <div className="p-4">
+                <h3 className="font-semibold text-lg mb-1">{property.address}</h3>
+                <p className="text-gray-600 mb-2">{property.city}, {property.state} {property.zip_code}</p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                  <div className="flex items-center">
+                    <span className="font-medium mr-1">Type:</span> {property.property_type}
                   </div>
-                  <div>
-                    <span className="text-xs text-gray-500">Year Built</span>
-                    <p className="font-medium">{property.year_built}</p>
+                  <div className="flex items-center">
+                    <span className="font-medium mr-1">Year:</span> {property.year_built}
                   </div>
-                  <div>
-                    <span className="text-xs text-gray-500">Square Feet</span>
-                    <p className="font-medium">{property.square_feet.toLocaleString()}</p>
+                  <div className="flex items-center">
+                    <span className="font-medium mr-1">Sqft:</span> {property.square_feet.toLocaleString()}
                   </div>
-                  <div>
-                    <span className="text-xs text-gray-500">Bed/Bath</span>
-                    <p className="font-medium">{property.bedrooms} bed / {property.bathrooms} bath</p>
+                  <div className="flex items-center">
+                    <span className="font-medium mr-1">Beds:</span> {property.bedrooms}
+                  </div>
+                  <div className="flex items-center">
+                    <span className="font-medium mr-1">Baths:</span> {property.bathrooms}
+                  </div>
+                  <div className="flex items-center">
+                    <span className="font-medium mr-1">Lot:</span> {property.lot_size ? property.lot_size.toLocaleString() : 'N/A'}
                   </div>
                 </div>
-                
-                <button className="w-full px-4 py-2 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors">
-                  View Property Details
-                </button>
+                <div className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500">
+                  Added on {format(new Date(property.created_at), 'MMM d, yyyy')}
+                </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}
