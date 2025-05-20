@@ -261,13 +261,13 @@ const ValuationCalculatorComponent = () => {
   }, [selectedPropertyId, properties]);
   
   // Handler for property selection change
-  const handlePropertyChange = (e: ChangeEvent<HTMLSelectElement>) => {
+  const handlePropertyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const id = parseInt(e.target.value);
     setSelectedPropertyId(id);
   };
   
   // Handler for property field changes
-  const handlePropertyInputChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handlePropertyInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     
     setSubjectProperty(prev => ({

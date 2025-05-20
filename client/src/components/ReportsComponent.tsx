@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { formatCurrency, formatDate } from '../lib/utils';
 
 // Define interfaces for our data structures
-interface Report {
+type Report = {
   id: number;
   name: string;
   property: {
@@ -15,14 +15,14 @@ interface Report {
   type: string;
 }
 
-interface ReportTemplate {
+type ReportTemplate = {
   id: number;
   name: string;
   description: string;
   isSelected: boolean;
 }
 
-interface ReportOption {
+type ReportOption = {
   id: string;
   name: string;
   description?: string;
