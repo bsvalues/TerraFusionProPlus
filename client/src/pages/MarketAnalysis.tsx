@@ -1,202 +1,194 @@
 import { useState } from 'react';
 import { 
-  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, 
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer 
+  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import { 
   usePriceTrends, 
   useDaysOnMarketTrends, 
   useSalesVolumeTrends,
   usePropertyTypeDistribution,
-  useNeighborhoodPrices
+  useNeighborhoodPrices 
 } from '../hooks/useMarketData';
 
-// Available locations for market data
+// Location options
 const LOCATIONS = [
   'San Francisco',
   'Oakland',
   'San Jose',
-  'All Bay Area'
+  'Berkeley',
+  'Palo Alto'
 ];
 
-// Color schemes for charts
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
+// Colors for charts
+const COLORS = [
+  '#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', 
+  '#82ca9d', '#ffc658', '#8dd1e1', '#a4de6c', '#d0ed57'
+];
+
+// Price format helper
+const formatPrice = (price: number) => {
+  return price.toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0
+  });
+};
 
 const MarketAnalysis = () => {
-  // State for filters
-  const [selectedLocation, setSelectedLocation] = useState('San Francisco');
-  const [selectedYear, setSelectedYear] = useState<number | 'all'>('all');
+  const [selectedLocation, setSelectedLocation] = useState(LOCATIONS[0]);
+  const [year, setYear] = useState(2025); // Default to current year
   
-  // Fetch market data from hooks
-  const { data: priceTrends = [], isLoading: priceTrendsLoading } = usePriceTrends(selectedLocation);
-  const { data: domTrends = [], isLoading: domTrendsLoading } = useDaysOnMarketTrends(selectedLocation);
-  const { data: salesTrends = [], isLoading: salesTrendsLoading } = useSalesVolumeTrends(selectedLocation);
-  const { data: propertyTypeDistribution = [], isLoading: propertyTypeLoading } = usePropertyTypeDistribution();
-  const { data: neighborhoodPrices = [], isLoading: neighborhoodLoading } = useNeighborhoodPrices();
+  // Fetch market data for selected location
+  const { data: priceTrends = [], isLoading: isLoadingPrices } = usePriceTrends(selectedLocation);
+  const { data: domTrends = [], isLoading: isLoadingDOM } = useDaysOnMarketTrends(selectedLocation);
+  const { data: salesTrends = [], isLoading: isLoadingSales } = useSalesVolumeTrends(selectedLocation);
+  const { data: propertyTypes = [], isLoading: isLoadingTypes } = usePropertyTypeDistribution();
+  const { data: neighborhoods = [], isLoading: isLoadingNeighborhoods } = useNeighborhoodPrices();
   
-  // Get available years from price trends for filtering
-  const availableYears = [...new Set(priceTrends.map(item => item.year))].sort();
+  // Filter data by selected year
+  const filteredPriceTrends = priceTrends.filter(item => item.year === year);
+  const filteredDomTrends = domTrends.filter(item => item.year === year);
+  const filteredSalesTrends = salesTrends.filter(item => item.year === year);
   
-  // Filter data by selected year if not 'all'
-  const filteredPriceTrends = selectedYear === 'all' 
-    ? priceTrends 
-    : priceTrends.filter(item => item.year === selectedYear);
-    
-  const filteredDomTrends = selectedYear === 'all' 
-    ? domTrends 
-    : domTrends.filter(item => item.year === selectedYear);
-    
-  const filteredSalesTrends = selectedYear === 'all' 
-    ? salesTrends 
-    : salesTrends.filter(item => item.year === selectedYear);
-  
-  // Calculate custom metrics
-  const averagePrice = priceTrends.length
-    ? Math.round(priceTrends.reduce((sum, item) => sum + item.value, 0) / priceTrends.length)
-    : 0;
-    
-  const averageDaysOnMarket = domTrends.length
-    ? Math.round(domTrends.reduce((sum, item) => sum + item.days, 0) / domTrends.length)
-    : 0;
-    
-  const totalSales = salesTrends.length
-    ? salesTrends.reduce((sum, item) => sum + item.sales, 0)
-    : 0;
-    
-  // Calculate price per square foot for property types
-  const pricePerSqFt = 850; // Example value, would be calculated from actual data
-  
-  // Custom tooltip formatter functions
-  const formatPriceTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-2 border border-gray-200 shadow-sm text-sm">
-          <p className="font-medium">{`${label} ${payload[0].payload.year}`}</p>
-          <p className="text-primary">{`Price: $${payload[0].value.toLocaleString()}`}</p>
-        </div>
-      );
-    }
-    return null;
+  // Calculate averages and changes
+  const calculateAveragePrice = () => {
+    if (filteredPriceTrends.length === 0) return 0;
+    return filteredPriceTrends.reduce((sum, item) => sum + item.value, 0) / filteredPriceTrends.length;
   };
   
-  const formatDomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-2 border border-gray-200 shadow-sm text-sm">
-          <p className="font-medium">{`${label} ${payload[0].payload.year}`}</p>
-          <p className="text-primary">{`Days on Market: ${payload[0].value}`}</p>
-        </div>
-      );
-    }
-    return null;
+  const calculateAverageDom = () => {
+    if (filteredDomTrends.length === 0) return 0;
+    return filteredDomTrends.reduce((sum, item) => sum + item.days, 0) / filteredDomTrends.length;
   };
   
-  const formatSalesTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-2 border border-gray-200 shadow-sm text-sm">
-          <p className="font-medium">{`${label} ${payload[0].payload.year}`}</p>
-          <p className="text-primary">{`Sales: ${payload[0].value}`}</p>
-        </div>
-      );
-    }
-    return null;
+  const calculateTotalSales = () => {
+    if (filteredSalesTrends.length === 0) return 0;
+    return filteredSalesTrends.reduce((sum, item) => sum + item.sales, 0);
   };
   
-  // Loading states
-  const isLoading = priceTrendsLoading || domTrendsLoading || salesTrendsLoading || 
-                    propertyTypeLoading || neighborhoodLoading;
-                    
+  const averagePrice = calculateAveragePrice();
+  const averageDom = calculateAverageDom();
+  const totalSales = calculateTotalSales();
+  
+  // Calculate year-over-year changes
+  const prevYearPriceTrends = priceTrends.filter(item => item.year === year - 1);
+  const prevYearAvgPrice = prevYearPriceTrends.length ? 
+    prevYearPriceTrends.reduce((sum, item) => sum + item.value, 0) / prevYearPriceTrends.length : 0;
+  
+  const prevYearDomTrends = domTrends.filter(item => item.year === year - 1);
+  const prevYearAvgDom = prevYearDomTrends.length ? 
+    prevYearDomTrends.reduce((sum, item) => sum + item.days, 0) / prevYearDomTrends.length : 0;
+  
+  const prevYearSalesTrends = salesTrends.filter(item => item.year === year - 1);
+  const prevYearTotalSales = prevYearSalesTrends.length ? 
+    prevYearSalesTrends.reduce((sum, item) => sum + item.sales, 0) : 0;
+  
+  const priceChange = prevYearAvgPrice ? ((averagePrice - prevYearAvgPrice) / prevYearAvgPrice) * 100 : 0;
+  const domChange = prevYearAvgDom ? ((averageDom - prevYearAvgDom) / prevYearAvgDom) * 100 : 0;
+  const salesChange = prevYearTotalSales ? ((totalSales - prevYearTotalSales) / prevYearTotalSales) * 100 : 0;
+
+  // Loading state
+  const isLoading = isLoadingPrices || isLoadingDOM || isLoadingSales || isLoadingTypes || isLoadingNeighborhoods;
+  
   if (isLoading) {
-    return <div className="p-8">Loading market data...</div>;
+    return <div className="p-8 flex justify-center items-center">Loading market data...</div>;
   }
   
   return (
     <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6 text-primary">Real Estate Market Analysis</h1>
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">Market Analysis</h1>
+        <p className="text-gray-600">
+          Comprehensive real estate market insights and trends for informed appraisal decisions.
+        </p>
+      </div>
       
-      {/* Filters */}
-      <div className="mb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div>
-          <label className="block text-sm font-medium mb-2">Location</label>
-          <select
-            value={selectedLocation}
-            onChange={(e) => setSelectedLocation(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-md"
-          >
-            {LOCATIONS.map(location => (
-              <option key={location} value={location}>{location}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-2">Year</label>
-          <select
-            value={selectedYear.toString()}
-            onChange={(e) => setSelectedYear(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
-            className="w-full p-2 border border-gray-300 rounded-md"
-          >
-            <option value="all">All Years</option>
-            {availableYears.map(year => (
-              <option key={year} value={year.toString()}>{year}</option>
-            ))}
-          </select>
+      {/* Controls */}
+      <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Location</label>
+            <select
+              value={selectedLocation}
+              onChange={(e) => setSelectedLocation(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md"
+            >
+              {LOCATIONS.map(location => (
+                <option key={location} value={location}>{location}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Year</label>
+            <select
+              value={year}
+              onChange={(e) => setYear(Number(e.target.value))}
+              className="w-full p-2 border border-gray-300 rounded-md"
+            >
+              <option value={2024}>2024</option>
+              <option value={2025}>2025</option>
+            </select>
+          </div>
         </div>
       </div>
       
-      {/* Market Overview Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold mb-2 text-gray-700">Median Price</h3>
-          <p className="text-3xl font-bold text-primary">${averagePrice.toLocaleString()}</p>
-          <p className="text-sm text-gray-500 mt-2">Average for selected period</p>
+      {/* Summary Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="bg-white rounded-lg shadow-md p-4">
+          <h3 className="text-lg font-semibold mb-2 text-gray-800">Average Home Price</h3>
+          <p className="text-3xl font-bold text-primary mb-1">{formatPrice(averagePrice)}</p>
+          <div className={`flex items-center text-sm ${priceChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <span className="mr-1">{priceChange >= 0 ? '↑' : '↓'}</span>
+            <span>{Math.abs(priceChange).toFixed(1)}% from last year</span>
+          </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold mb-2 text-gray-700">Days on Market</h3>
-          <p className="text-3xl font-bold text-primary">{averageDaysOnMarket}</p>
-          <p className="text-sm text-gray-500 mt-2">Average for selected period</p>
+        <div className="bg-white rounded-lg shadow-md p-4">
+          <h3 className="text-lg font-semibold mb-2 text-gray-800">Average Days on Market</h3>
+          <p className="text-3xl font-bold text-primary mb-1">{Math.round(averageDom)} days</p>
+          <div className={`flex items-center text-sm ${domChange <= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <span className="mr-1">{domChange <= 0 ? '↓' : '↑'}</span>
+            <span>{Math.abs(domChange).toFixed(1)}% from last year</span>
+          </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold mb-2 text-gray-700">Total Sales</h3>
-          <p className="text-3xl font-bold text-primary">{totalSales.toLocaleString()}</p>
-          <p className="text-sm text-gray-500 mt-2">Sum for selected period</p>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold mb-2 text-gray-700">Price per Sq Ft</h3>
-          <p className="text-3xl font-bold text-primary">${pricePerSqFt}</p>
-          <p className="text-sm text-gray-500 mt-2">Average for selected location</p>
+        <div className="bg-white rounded-lg shadow-md p-4">
+          <h3 className="text-lg font-semibold mb-2 text-gray-800">Total Sales</h3>
+          <p className="text-3xl font-bold text-primary mb-1">{totalSales.toLocaleString()}</p>
+          <div className={`flex items-center text-sm ${salesChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <span className="mr-1">{salesChange >= 0 ? '↑' : '↓'}</span>
+            <span>{Math.abs(salesChange).toFixed(1)}% from last year</span>
+          </div>
         </div>
       </div>
       
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        {/* Price Trends Chart */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-6">Median Price Trends</h2>
+      {/* Price Trends Chart */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div className="bg-white rounded-lg shadow-md p-4">
+          <h3 className="text-lg font-semibold mb-4 text-gray-800">Price Trends</h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={filteredPriceTrends}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-              >
+              <LineChart data={filteredPriceTrends}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis 
-                  domain={['auto', 'auto']}
-                  tickFormatter={(value) => `$${(value/1000)}k`}
+                  tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+                  domain={['dataMin - 50000', 'dataMax + 50000']}
                 />
-                <Tooltip content={formatPriceTooltip} />
+                <Tooltip 
+                  formatter={(value) => formatPrice(Number(value))}
+                  labelFormatter={(label) => `Month: ${label}`}
+                />
                 <Legend />
-                <Line 
-                  type="monotone" 
-                  dataKey="value" 
-                  name="Median Price" 
-                  stroke="#0088FE" 
-                  activeDot={{ r: 8 }} 
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  name="Home Price"
+                  stroke="#0088FE"
                   strokeWidth={2}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -204,44 +196,53 @@ const MarketAnalysis = () => {
         </div>
         
         {/* Days on Market Chart */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-6">Days on Market Trends</h2>
+        <div className="bg-white rounded-lg shadow-md p-4">
+          <h3 className="text-lg font-semibold mb-4 text-gray-800">Days on Market</h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={filteredDomTrends}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-              >
+              <LineChart data={filteredDomTrends}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip content={formatDomTooltip} />
-                <Line 
-                  type="monotone" 
-                  dataKey="days" 
-                  name="Days on Market" 
-                  stroke="#00C49F" 
-                  activeDot={{ r: 8 }} 
+                <YAxis 
+                  domain={['dataMin - 5', 'dataMax + 5']}
+                  label={{ value: 'Days', angle: -90, position: 'insideLeft' }}
+                />
+                <Tooltip 
+                  formatter={(value) => [`${value} days`, 'Average DOM']}
+                  labelFormatter={(label) => `Month: ${label}`}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="days"
+                  name="Days on Market"
+                  stroke="#00C49F"
                   strokeWidth={2}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
                 />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </div>
-        
+      </div>
+      
+      {/* Sales Volume and Property Types */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Sales Volume Chart */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-6">Sales Volume Trends</h2>
+        <div className="bg-white rounded-lg shadow-md p-4">
+          <h3 className="text-lg font-semibold mb-4 text-gray-800">Sales Volume</h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={filteredSalesTrends}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-              >
+              <BarChart data={filteredSalesTrends}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip content={formatSalesTooltip} />
+                <YAxis 
+                  domain={['dataMin - 20', 'dataMax + 20']}
+                />
+                <Tooltip 
+                  formatter={(value) => [`${value} sales`, 'Volume']}
+                  labelFormatter={(label) => `Month: ${label}`}
+                />
                 <Bar 
                   dataKey="sales" 
                   name="Sales Volume" 
@@ -252,28 +253,29 @@ const MarketAnalysis = () => {
           </div>
         </div>
         
-        {/* Property Type Distribution Chart */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-6">Property Type Distribution</h2>
+        {/* Property Types Distribution */}
+        <div className="bg-white rounded-lg shadow-md p-4">
+          <h3 className="text-lg font-semibold mb-4 text-gray-800">Property Types</h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={propertyTypeDistribution}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={true}
-                  outerRadius={80}
-                  fill="#8884d8"
+                  data={propertyTypes}
                   dataKey="value"
                   nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  fill="#8884d8"
                   label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                 >
-                  {propertyTypeDistribution.map((entry, index) => (
+                  {propertyTypes.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip 
+                  formatter={(value, name, props) => [`${value}%`, props.payload.name]}
+                />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
@@ -282,103 +284,79 @@ const MarketAnalysis = () => {
       </div>
       
       {/* Neighborhood Price Comparison */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-6">Neighborhood Price Comparison</h2>
+      <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+        <h3 className="text-lg font-semibold mb-4 text-gray-800">Neighborhood Price Comparison</h3>
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
+          <table className="min-w-full bg-white">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Neighborhood
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Median Price
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Price per Sq Ft
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Comparison
-                </th>
+                <th className="py-3 px-4 text-left font-medium">Neighborhood</th>
+                <th className="py-3 px-4 text-right font-medium">Median Price</th>
+                <th className="py-3 px-4 text-right font-medium">Price/sqft</th>
+                <th className="py-3 px-4 text-right font-medium">vs. City Average</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {neighborhoodPrices.map((neighborhood, index) => (
-                <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {neighborhood.name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    ${neighborhood.medianPrice.toLocaleString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    ${neighborhood.pricePerSqft}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <div className="flex items-center">
-                      <div 
-                        className={`h-2.5 w-full rounded-full ${
-                          neighborhood.medianPrice > averagePrice ? 'bg-green-200' : 'bg-red-200'
-                        }`}
-                      >
-                        <div 
-                          className={`h-2.5 rounded-full ${
-                            neighborhood.medianPrice > averagePrice ? 'bg-green-500' : 'bg-red-500'
-                          }`} 
-                          style={{ 
-                            width: `${Math.min(
-                              Math.abs((neighborhood.medianPrice / averagePrice) * 100 - 100), 
-                              100
-                            )}%` 
-                          }}
-                        ></div>
-                      </div>
-                      <span className="ml-2 text-xs font-medium">
-                        {neighborhood.medianPrice > averagePrice ? '+' : '-'}
-                        {Math.abs(Math.round((neighborhood.medianPrice / averagePrice) * 100 - 100))}%
-                      </span>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+            <tbody className="divide-y divide-gray-200">
+              {neighborhoods.map((neighborhood, index) => {
+                const priceDiff = ((neighborhood.medianPrice - averagePrice) / averagePrice) * 100;
+                
+                return (
+                  <tr key={index} className="hover:bg-gray-50">
+                    <td className="py-3 px-4 font-medium">{neighborhood.name}</td>
+                    <td className="py-3 px-4 text-right">{formatPrice(neighborhood.medianPrice)}</td>
+                    <td className="py-3 px-4 text-right">${neighborhood.pricePerSqft}/sqft</td>
+                    <td className={`py-3 px-4 text-right ${priceDiff >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {priceDiff >= 0 ? '+' : ''}{priceDiff.toFixed(1)}%
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       </div>
       
       {/* Market Insights */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-semibold mb-4">Market Insights</h2>
-        <div className="prose max-w-none">
-          <p>
-            The real estate market in {selectedLocation} shows 
-            {priceTrends.length > 1 && priceTrends[priceTrends.length - 1].value > priceTrends[0].value 
-              ? ' an upward trend in prices' 
-              : ' a stable or slightly declining price trend'} 
-            over the analyzed period. 
-            {domTrends.length > 1 && domTrends[domTrends.length - 1].days < domTrends[0].days 
-              ? ' Properties are selling faster than in previous periods,' 
-              : ' The average time to sell properties has increased,'} 
-            which indicates 
-            {domTrends.length > 1 && domTrends[domTrends.length - 1].days < domTrends[0].days 
-              ? ' strong demand in the market.' 
-              : ' some softening in market demand.'}
-          </p>
+      <div className="bg-white rounded-lg shadow-md p-4">
+        <h3 className="text-lg font-semibold mb-4 text-gray-800">Market Insights</h3>
+        <div className="space-y-4">
+          <div>
+            <h4 className="font-medium text-primary">Price Trends Analysis</h4>
+            <p className="text-gray-700 mt-1">
+              {priceChange > 5 
+                ? `${selectedLocation} is experiencing strong price growth (${priceChange.toFixed(1)}%), indicating a seller's market. Appraisers should consider recent comparable sales carefully as values may be rising rapidly.`
+                : priceChange < -5
+                ? `${selectedLocation} is seeing significant price decreases (${priceChange.toFixed(1)}%), indicating a buyer's market. Appraisers should account for this downward trend in valuations.`
+                : `${selectedLocation} prices are relatively stable (${priceChange > 0 ? '+' : ''}${priceChange.toFixed(1)}%). Current comparable sales should provide reliable valuation data.`
+              }
+            </p>
+          </div>
           
-          <p className="mt-4">
-            {propertyTypeDistribution.length > 0 &&
-              `${propertyTypeDistribution[0].name} properties represent the largest segment of the market at approximately ${propertyTypeDistribution[0].value}% of all sales.`}
-            {neighborhoodPrices.length > 0 &&
-              ` The ${neighborhoodPrices.reduce((prev, current) => (prev.medianPrice > current.medianPrice) ? prev : current).name} area commands the highest median price at $${neighborhoodPrices.reduce((prev, current) => (prev.medianPrice > current.medianPrice) ? prev : current).medianPrice.toLocaleString()}.`}
-          </p>
+          <div>
+            <h4 className="font-medium text-primary">Inventory & Days on Market</h4>
+            <p className="text-gray-700 mt-1">
+              {averageDom < 20
+                ? `Properties are selling quickly (${Math.round(averageDom)} days on average), suggesting high demand and limited inventory. Appraisers should consider this market pressure when evaluating comparable sales.`
+                : averageDom > 60
+                ? `Extended days on market (${Math.round(averageDom)} days on average) indicate a slower market with ample inventory. Appraisers should carefully analyze price reductions and concessions.`
+                : `The market shows balanced inventory levels with properties selling in an average of ${Math.round(averageDom)} days. This provides good comparable data for appraisals.`
+              }
+            </p>
+          </div>
           
-          <p className="mt-4">
-            Based on these market indicators, appraisers should consider 
-            {priceTrends.length > 1 && priceTrends[priceTrends.length - 1].value > priceTrends[0].value 
-              ? ' recent comparable sales more heavily than older ones due to the rising price trend.' 
-              : ' a wider range of comparable sales to account for market stability or slight declines.'}
-            {" Neighborhood-specific adjustments are crucial, given the significant price variations between areas."}
-          </p>
+          <div>
+            <h4 className="font-medium text-primary">Neighborhood Analysis</h4>
+            <p className="text-gray-700 mt-1">
+              {`The ${neighborhoods[0].name} area commands the highest prices at ${formatPrice(neighborhoods[0].medianPrice)}, while ${neighborhoods[neighborhoods.length-1].name} shows more affordable options at ${formatPrice(neighborhoods[neighborhoods.length-1].medianPrice)}. Appraisers should adjust comparable sales based on these neighborhood value differentials.`}
+            </p>
+          </div>
+          
+          <div>
+            <h4 className="font-medium text-primary">Property Type Considerations</h4>
+            <p className="text-gray-700 mt-1">
+              {`${propertyTypes[0].name} properties represent the largest market segment (${propertyTypes[0].value}%), followed by ${propertyTypes[1].name} (${propertyTypes[1].value}%). When appraising less common property types, consider limited comparable data and potential market liquidity factors.`}
+            </p>
+          </div>
         </div>
       </div>
     </div>
