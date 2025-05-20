@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   BarChart, 
   Bar, 
@@ -15,38 +15,40 @@ import {
   ResponsiveContainer 
 } from 'recharts';
 import { formatCurrency, formatNumber } from '../lib/utils';
+import { useQuery } from '@tanstack/react-query';
+import { marketDataApi } from '../api';
 
 // Define interfaces for data structures
-interface PriceTrendDataPoint {
+type PriceTrendDataPoint = {
   month: string;
   value: number;
   year: number;
 }
 
-interface DomTrendDataPoint {
+type DomTrendDataPoint = {
   month: string;
   days: number;
   year: number;
 }
 
-interface SalesTrendDataPoint {
+type SalesTrendDataPoint = {
   month: string;
   sales: number;
   year: number;
 }
 
-interface PropertyTypeDataPoint {
+type PropertyTypeDataPoint = {
   name: string;
   value: number;
 }
 
-interface NeighborhoodPriceDataPoint {
+type NeighborhoodPriceDataPoint = {
   name: string;
   medianPrice: number;
   pricePerSqft: number;
 }
 
-interface MarketData {
+type MarketData = {
   priceTrends: PriceTrendDataPoint[];
   domTrends: DomTrendDataPoint[];
   salesTrends: SalesTrendDataPoint[];
@@ -59,15 +61,76 @@ interface MarketData {
   };
 }
 
-interface CustomTooltipProps {
+type CustomTooltipProps = {
   active?: boolean;
   payload?: any[];
   label?: string;
 }
 
 const MarketAnalysisComponent = () => {
-  const [timeframe, setTimeframe] = useState<string>('12');
-  const marketData = generateMarketData();
+  const [timeframe, setTimeframe] = useState('12');
+  const [location, setLocation] = useState('Austin, TX');
+  const [marketData, setMarketData] = useState<MarketData | null>(null);
+  
+  // Fetch market data from API
+  const { data: priceTrendsData, isLoading: isPriceTrendsLoading } = 
+    useQuery({ 
+      queryKey: ['market-data/price-trends', location],
+      queryFn: () => marketDataApi.getPriceTrends(location)
+    });
+  
+  const { data: domTrendsData, isLoading: isDomTrendsLoading } = 
+    useQuery({
+      queryKey: ['market-data/dom-trends', location],
+      queryFn: () => marketDataApi.getDaysOnMarketTrends(location)
+    });
+  
+  const { data: salesTrendsData, isLoading: isSalesTrendsLoading } = 
+    useQuery({
+      queryKey: ['market-data/sales-trends', location],
+      queryFn: () => marketDataApi.getSalesVolumeTrends(location)
+    });
+  
+  const { data: propertyTypesData, isLoading: isPropertyTypesLoading } = 
+    useQuery({
+      queryKey: ['market-data/property-types', location],
+      queryFn: () => marketDataApi.getPropertyTypeDistribution(location)
+    });
+  
+  const { data: neighborhoodPricesData, isLoading: isNeighborhoodPricesLoading } = 
+    useQuery({
+      queryKey: ['market-data/neighborhood-prices', location],
+      queryFn: () => marketDataApi.getNeighborhoodPrices(location)
+    });
+  
+  // Combine all market data
+  useEffect(() => {
+    // Once all data is loaded, combine into a single market data object
+    if (
+      priceTrendsData && 
+      domTrendsData && 
+      salesTrendsData && 
+      propertyTypesData && 
+      neighborhoodPricesData
+    ) {
+      setMarketData({
+        priceTrends: priceTrendsData,
+        domTrends: domTrendsData,
+        salesTrends: salesTrendsData,
+        propertyTypes: propertyTypesData,
+        neighborhoodPrices: neighborhoodPricesData,
+        medianPrices: {
+          currentYear: 950000,
+          previousYear: 880000,
+          percentChange: 7.9
+        }
+      });
+    }
+  }, [priceTrendsData, domTrendsData, salesTrendsData, propertyTypesData, neighborhoodPricesData]);
+  
+  // Use fallback data while loading
+  const isLoading = isPriceTrendsLoading || isDomTrendsLoading || isSalesTrendsLoading || 
+                   isPropertyTypesLoading || isNeighborhoodPricesLoading;
   
   // Custom tooltip component for charts
   const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {

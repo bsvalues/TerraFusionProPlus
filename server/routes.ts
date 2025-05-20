@@ -156,4 +156,105 @@ router.get('/comparables/:id', async (req, res) => {
   }
 });
 
+// Market Data routes
+router.get('/market-data/price-trends', (req, res) => {
+  const location = req.query.location as string;
+  
+  // Generate sample price trend data
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const currentYear = new Date().getFullYear();
+  
+  let basePrice = 450; // Starting price per sq ft
+  const priceTrends = months.map((month, index) => {
+    // Add some randomness to price change
+    const change = Math.random() * 10 - 3; // Random value between -3 and 7
+    basePrice += change;
+    
+    return {
+      month,
+      value: Math.round(basePrice),
+      year: currentYear
+    };
+  });
+  
+  res.json(priceTrends);
+});
+
+router.get('/market-data/dom-trends', (req, res) => {
+  const location = req.query.location as string;
+  
+  // Generate sample days on market trend data
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const currentYear = new Date().getFullYear();
+  
+  let baseDays = 35; // Starting days on market
+  const domTrends = months.map((month, index) => {
+    // Add some randomness to DOM change
+    const change = Math.random() * 4 - 2; // Random value between -2 and 2
+    baseDays += change;
+    
+    return {
+      month,
+      days: Math.round(baseDays),
+      year: currentYear
+    };
+  });
+  
+  res.json(domTrends);
+});
+
+router.get('/market-data/sales-trends', (req, res) => {
+  const location = req.query.location as string;
+  
+  // Generate sample sales trend data with seasonal pattern
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const currentYear = new Date().getFullYear();
+  
+  // Sales volume typically follows seasonal pattern
+  const seasonalPattern = [0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.2, 1.1, 1.0, 0.9, 0.8];
+  const baseSales = 100;
+  
+  const salesTrends = months.map((month, index) => {
+    // Apply seasonal pattern + randomness
+    const sales = Math.round(baseSales * seasonalPattern[index] * (1 + (Math.random() * 0.2 - 0.1)));
+    
+    return {
+      month,
+      sales,
+      year: currentYear
+    };
+  });
+  
+  res.json(salesTrends);
+});
+
+router.get('/market-data/property-types', (req, res) => {
+  const location = req.query.location as string;
+  
+  // Property type distribution data
+  const propertyTypes = [
+    { name: 'Single Family', value: 65 },
+    { name: 'Condo', value: 18 },
+    { name: 'Multi-Family', value: 10 },
+    { name: 'Townhouse', value: 7 }
+  ];
+  
+  res.json(propertyTypes);
+});
+
+router.get('/market-data/neighborhood-prices', (req, res) => {
+  const location = req.query.location as string;
+  
+  // Neighborhood price data
+  const neighborhoodPrices = [
+    { name: 'Downtown', medianPrice: 625000, pricePerSqft: 450 },
+    { name: 'North End', medianPrice: 875000, pricePerSqft: 520 },
+    { name: 'South Side', medianPrice: 425000, pricePerSqft: 320 },
+    { name: 'Westview', medianPrice: 750000, pricePerSqft: 480 },
+    { name: 'Eastside', medianPrice: 580000, pricePerSqft: 410 }
+  ];
+  
+  res.json(neighborhoodPrices);
+});
+
 export default router;

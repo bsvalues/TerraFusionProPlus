@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { formatCurrency, formatNumber, formatDate } from '../lib/utils';
-import { Property, Appraisal, Comparable } from '../../shared/schema';
+import { useQuery } from '@tanstack/react-query';
+import { propertyApi, appraisalApi, comparableApi } from '../api';
 
 // Icons
 import { 
