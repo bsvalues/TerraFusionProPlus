@@ -258,7 +258,7 @@ const MarketAnalysisComponent = () => {
           <h2 className="text-lg font-medium mb-4">Price Per Square Foot Trends</h2>
           <div className="h-80">
             <div style={{ width: '100%', height: '100%' }}>
-              <ResponsiveContainer>
+              <ResponsiveContainer width="100%" height="100%">
                 {(marketData?.priceTrends || priceTrendsData) && (
                   <LineChart
                     data={marketData?.priceTrends || priceTrendsData || []}
@@ -294,7 +294,7 @@ const MarketAnalysisComponent = () => {
             <h2 className="text-lg font-medium mb-4">Days on Market Trends</h2>
             <div className="h-64">
               <div style={{ width: '100%', height: '100%' }}>
-                <ResponsiveContainer>
+                <ResponsiveContainer width="100%" height="100%">
                   {(marketData?.domTrends || domTrendsData) && (
                     <LineChart
                       data={marketData?.domTrends || domTrendsData || []}
@@ -325,7 +325,7 @@ const MarketAnalysisComponent = () => {
             <h2 className="text-lg font-medium mb-4">Monthly Sales Volume</h2>
             <div className="h-64">
               <div style={{ width: '100%', height: '100%' }}>
-                <ResponsiveContainer>
+                <ResponsiveContainer width="100%" height="100%">
                   {(marketData?.salesTrends || salesTrendsData) && (
                     <BarChart
                       data={marketData?.salesTrends || salesTrendsData || []}
@@ -358,7 +358,7 @@ const MarketAnalysisComponent = () => {
             <h2 className="text-lg font-medium mb-4">Property Types Distribution</h2>
             <div className="h-64 flex items-center justify-center">
               <div style={{ width: '100%', height: '100%' }}>
-                <ResponsiveContainer>
+                <ResponsiveContainer width="100%" height="100%">
                   {(marketData?.propertyTypes || propertyTypesData) && (
                     <PieChart>
                       <Pie
