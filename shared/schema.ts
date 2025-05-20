@@ -1,206 +1,169 @@
-import { sql } from "drizzle-orm";
-import { createInsertSchema } from "drizzle-zod";
-import { integer, pgTable, serial, text, timestamp, boolean, numeric, jsonb } from "drizzle-orm/pg-core";
-import { z } from "zod";
+import { pgTable, serial, varchar, integer, decimal, timestamp, boolean, json, text } from 'drizzle-orm/pg-core';
+import { createInsertSchema } from 'drizzle-zod';
+import { z } from 'zod';
 
-// Users table
+// Users table definition
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  email: text("email").notNull().unique(),
-  passwordHash: text("password_hash").notNull(),
-  firstName: text("first_name"),
-  lastName: text("last_name"),
-  role: text("role").notNull().default("appraiser"),
-  licenseNumber: text("license_number"),
-  company: text("company"),
-  createdAt: timestamp("created_at").defaultNow(),
-  phone: text("phone"),
-  profileImage: text("profile_image"),
-  lastLogin: timestamp("last_login"),
-  status: text("status").default("active"),
-  preferences: jsonb("preferences"),
+  username: varchar("username", { length: 100 }).notNull().unique(),
+  firstName: varchar("first_name", { length: 100 }).notNull(),
+  lastName: varchar("last_name", { length: 100 }).notNull(),
+  email: varchar("email", { length: 100 }).notNull().unique(),
+  password: varchar("password", { length: 255 }).notNull(),
+  role: varchar("role", { length: 50 }).notNull().default("appraiser"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow()
 });
 
-// Properties table
+// Properties table definition
 export const properties = pgTable("properties", {
   id: serial("id").primaryKey(),
-  address: text("address").notNull(),
-  city: text("city").notNull(),
-  state: text("state").notNull(),
-  zipCode: text("zip_code").notNull(),
-  propertyType: text("property_type").notNull(),
-  yearBuilt: integer("year_built"),
-  squareFeet: numeric("square_feet"),
-  bedrooms: numeric("bedrooms"),
-  bathrooms: numeric("bathrooms"),
-  lotSize: numeric("lot_size"),
+  address: varchar("address", { length: 255 }).notNull(),
+  city: varchar("city", { length: 100 }).notNull(),
+  state: varchar("state", { length: 50 }).notNull(),
+  zip_code: varchar("zip_code", { length: 20 }).notNull(),
+  property_type: varchar("property_type", { length: 50 }).notNull(),
+  year_built: integer("year_built").notNull(),
+  square_feet: integer("square_feet").notNull(),
+  bedrooms: decimal("bedrooms", { precision: 3, scale: 1 }).notNull(),
+  bathrooms: decimal("bathrooms", { precision: 3, scale: 1 }).notNull(),
+  lot_size: integer("lot_size").notNull(),
   description: text("description"),
-  lastSalePrice: numeric("last_sale_price"),
-  lastSaleDate: timestamp("last_sale_date"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  createdBy: integer("created_by").references(() => users.id),
-  parcelNumber: text("parcel_number"),
-  zoning: text("zoning"),
-  lotUnit: text("lot_unit"), // acres, sq.ft., etc.
-  latitude: numeric("latitude", { precision: 10, scale: 6 }),
-  longitude: numeric("longitude", { precision: 10, scale: 6 }),
-  features: jsonb("features"), // JSON object for property features
-  legalDescription: text("legal_description"),
-  condition: text("condition"), // Excellent, Good, Average, Fair, Poor
-  taxAssessment: numeric("tax_assessment"),
-  neighborhood: text("neighborhood"),
-  floodZone: text("flood_zone"),
-  propertyTaxes: numeric("property_taxes"),
+  created_at: timestamp("created_at").notNull().defaultNow(),
+  updated_at: timestamp("updated_at").notNull().defaultNow(),
+  parcel_number: varchar("parcel_number", { length: 50 }),
+  zoning: varchar("zoning", { length: 50 }),
+  lot_unit: varchar("lot_unit", { length: 20 }),
+  latitude: decimal("latitude", { precision: 10, scale: 6 }),
+  longitude: decimal("longitude", { precision: 10, scale: 6 }),
+  features: json("features")
 });
 
-// Appraisals table
+// Appraisals table definition
 export const appraisals = pgTable("appraisals", {
   id: serial("id").primaryKey(),
   propertyId: integer("property_id").notNull().references(() => properties.id),
   appraiserId: integer("appraiser_id").notNull().references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow(),
+  status: varchar("status", { length: 50 }).notNull().default("Draft"),
+  purpose: varchar("purpose", { length: 100 }).notNull(),
+  marketValue: integer("market_value"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
   completedAt: timestamp("completed_at"),
-  status: text("status").notNull().default("draft"), // draft, in_progress, completed, reviewed
-  purpose: text("purpose"), // Refinance, Purchase, etc.
-  marketValue: numeric("market_value"),
-  valuationMethod: text("valuation_method"), // Sales Comparison, Income, Cost
   inspectionDate: timestamp("inspection_date"),
   effectiveDate: timestamp("effective_date"),
-  reportUrl: text("report_url"),
-  clientId: integer("client_id"),
-  clientName: text("client_name"),
-  clientEmail: text("client_email"),
-  clientPhone: text("client_phone"),
-  reportType: text("report_type"), // Full, Limited, Hybrid
-  adjustments: jsonb("adjustments"), // JSON object for adjustments data
-  intendedUse: text("intended_use"),
+  reportType: varchar("report_type", { length: 50 }),
+  clientName: varchar("client_name", { length: 100 }),
+  clientEmail: varchar("client_email", { length: 100 }),
+  clientPhone: varchar("client_phone", { length: 50 }),
+  lenderName: varchar("lender_name", { length: 100 }),
+  loanNumber: varchar("loan_number", { length: 50 }),
+  intendedUse: varchar("intended_use", { length: 255 }),
+  valuationMethod: varchar("valuation_method", { length: 50 }),
   scopeOfWork: text("scope_of_work"),
-  lenderName: text("lender_name"),
-  loanNumber: text("loan_number"),
-  notes: text("notes"),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  notes: text("notes")
 });
 
-// Comparables table
+// Comparables table definition
 export const comparables = pgTable("comparables", {
   id: serial("id").primaryKey(),
   appraisalId: integer("appraisal_id").notNull().references(() => appraisals.id),
-  address: text("address").notNull(),
-  city: text("city").notNull(),
-  state: text("state").notNull(),
-  zipCode: text("zip_code").notNull(),
-  salePrice: numeric("sale_price"),
-  saleDate: timestamp("sale_date"),
-  squareFeet: numeric("square_feet"),
-  bedrooms: numeric("bedrooms"),
-  bathrooms: numeric("bathrooms"),
+  address: varchar("address", { length: 255 }).notNull(),
+  city: varchar("city", { length: 100 }).notNull(),
+  state: varchar("state", { length: 50 }).notNull(),
+  zipCode: varchar("zip_code", { length: 20 }).notNull(),
+  salePrice: integer("sale_price").notNull(),
+  saleDate: timestamp("sale_date").notNull(),
+  squareFeet: integer("square_feet").notNull(),
+  bedrooms: decimal("bedrooms", { precision: 3, scale: 1 }),
+  bathrooms: decimal("bathrooms", { precision: 3, scale: 1 }),
   yearBuilt: integer("year_built"),
-  adjustmentDetails: jsonb("adjustment_details"), // Structured adjustment data as JSON
-  adjustedPrice: numeric("adjusted_price"),
-  createdAt: timestamp("created_at").defaultNow(),
-  lotSize: numeric("lot_size"),
-  distance: numeric("distance"), // Distance from subject property
-  propertyType: text("property_type"),
-  latitude: numeric("latitude", { precision: 10, scale: 6 }),
-  longitude: numeric("longitude", { precision: 10, scale: 6 }),
-  condition: text("condition"),
+  propertyType: varchar("property_type", { length: 50 }).notNull(),
+  lotSize: integer("lot_size"),
+  condition: varchar("condition", { length: 50 }),
   daysOnMarket: integer("days_on_market"),
-  source: text("source"), // MLS, Public Records, etc.
-  imageUrl: text("image_url"),
-  proximityScore: numeric("proximity_score"), // Calculated score based on location
-  similarityScore: numeric("similarity_score"), // Calculated score based on property features
-  updatedAt: timestamp("updated_at").defaultNow(),
+  source: varchar("source", { length: 100 }),
+  adjustedPrice: integer("adjusted_price"),
+  adjustmentNotes: text("adjustment_notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow()
 });
 
-// Adjustments table for tracking specific adjustments to comparables
+// Adjustments table definition
 export const adjustments = pgTable("adjustments", {
   id: serial("id").primaryKey(),
   comparableId: integer("comparable_id").notNull().references(() => comparables.id),
-  category: text("category").notNull(), // Location, Size, Quality, Age, etc.
-  description: text("description").notNull(),
-  amount: numeric("amount").notNull(),
-  percentage: boolean("percentage").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  adjustmentType: text("adjustment_type"), // Addition, Subtraction
+  category: varchar("category", { length: 50 }).notNull(),
+  description: varchar("description", { length: 255 }).notNull(),
+  amount: integer("amount").notNull(),
+  isPercentage: boolean("is_percentage").notNull().default(false),
   notes: text("notes"),
-  calculationMethod: text("calculation_method"), // Manual, Automated
+  createdAt: timestamp("created_at").notNull().defaultNow()
 });
 
-// Attachments for storing files related to properties and appraisals
+// Attachments table definition
 export const attachments = pgTable("attachments", {
   id: serial("id").primaryKey(),
-  fileName: text("file_name").notNull(),
-  fileType: text("file_type").notNull(),
-  fileSize: integer("file_size").notNull(),
-  fileUrl: text("file_url").notNull(),
   propertyId: integer("property_id").references(() => properties.id),
   appraisalId: integer("appraisal_id").references(() => appraisals.id),
-  uploadedBy: integer("uploaded_by").references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow(),
+  fileName: varchar("file_name", { length: 255 }).notNull(),
+  fileType: varchar("file_type", { length: 50 }).notNull(),
+  fileSize: integer("file_size").notNull(),
+  fileUrl: varchar("file_url", { length: 255 }).notNull(),
+  uploadedBy: integer("uploaded_by").notNull().references(() => users.id),
+  category: varchar("category", { length: 50 }),
   description: text("description"),
-  attachmentType: text("attachment_type"), // Photo, Document, Map, etc.
-  tags: jsonb("tags"), // Array of tags
+  uploadDate: timestamp("upload_date").notNull().defaultNow()
 });
 
-// Market data for real estate market analysis
+// Market data table definition
 export const marketData = pgTable("market_data", {
   id: serial("id").primaryKey(),
-  regionId: text("region_id").notNull(), // City, Zip, Neighborhood ID
-  regionType: text("region_type").notNull(), // City, Zip, Neighborhood
-  dataPoint: text("data_point").notNull(), // Median Price, Avg Price per SqFt, etc.
-  value: numeric("value").notNull(),
-  period: timestamp("period").notNull(), // The month/quarter/year this data represents
-  propertyType: text("property_type"), // Single Family, Condo, etc.
-  createdAt: timestamp("created_at").defaultNow(),
-  source: text("source"), // Where the data came from
-  confidenceScore: numeric("confidence_score"), // How reliable the data is
+  location: varchar("location", { length: 100 }).notNull(),
+  dataType: varchar("data_type", { length: 50 }).notNull(),
+  time: varchar("time", { length: 50 }).notNull(),
+  value: decimal("value", { precision: 12, scale: 2 }).notNull(),
+  comparisonValue: decimal("comparison_value", { precision: 12, scale: 2 }),
+  percentChange: decimal("percent_change", { precision: 6, scale: 2 }),
+  source: varchar("source", { length: 100 }),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow()
 });
 
-// Insert schemas
+// Create insert schemas with zod
 export const insertUserSchema = createInsertSchema(users, {
   email: z.string().email(),
-  passwordHash: z.string().min(8),
-}).omit({ id: true, createdAt: true, lastLogin: true });
+  password: z.string().min(8)
+});
 
 export const insertPropertySchema = createInsertSchema(properties).omit({ 
-  id: true, 
-  createdAt: true,
-  updatedAt: true 
+  created_at: true,
+  updated_at: true
 });
 
 export const insertAppraisalSchema = createInsertSchema(appraisals).omit({ 
-  id: true, 
-  createdAt: true, 
-  completedAt: true,
-  updatedAt: true
+  createdAt: true,
+  completedAt: true
 });
 
 export const insertComparableSchema = createInsertSchema(comparables).omit({ 
-  id: true, 
-  createdAt: true,
-  updatedAt: true
+  createdAt: true
 });
 
 export const insertAdjustmentSchema = createInsertSchema(adjustments).omit({
-  id: true,
+  createdAt: true
+});
+
+export const insertAttachmentSchema = createInsertSchema(attachments).omit({
+  uploadDate: true
+});
+
+export const insertMarketDataSchema = createInsertSchema(marketData).omit({
   createdAt: true,
   updatedAt: true
 });
 
-export const insertAttachmentSchema = createInsertSchema(attachments).omit({
-  id: true,
-  createdAt: true
-});
-
-export const insertMarketDataSchema = createInsertSchema(marketData).omit({
-  id: true,
-  createdAt: true
-});
-
-// Type definitions
+// Export types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 

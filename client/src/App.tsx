@@ -12,8 +12,15 @@ import {
   Database,
   PlusCircle,
   ChevronDown,
-  Search
+  Search,
+  ClipboardList
 } from 'lucide-react';
+
+// Import our new React components
+import PropertyDetailComponent from './components/PropertyDetailComponent';
+import MarketAnalysisComponent from './components/MarketAnalysisComponent';
+import ValuationCalculatorComponent from './components/ValuationCalculatorComponent';
+import ReportsComponent from './components/ReportsComponent';
 
 // Simple dashboard home component
 const Dashboard = () => {
