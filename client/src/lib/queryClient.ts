@@ -1,11 +1,25 @@
 import { QueryClient } from '@tanstack/react-query';
+import { apiFetch } from '../api';
 
-// API request function that handles basic fetch operations
-export const apiRequest = async <T>(
-  url: string,
-  method: 'GET' | 'POST' | 'PATCH' | 'DELETE' = 'GET',
-  data?: any
-): Promise<T> => {
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+// Helper for making API requests
+export const apiRequest = async ({ 
+  endpoint, 
+  method = 'GET', 
+  data = undefined,
+}: {
+  endpoint: string;
+  method?: string;
+  data?: any;
+}) => {
   const options: RequestInit = {
     method,
     headers: {
@@ -17,31 +31,5 @@ export const apiRequest = async <T>(
     options.body = JSON.stringify(data);
   }
 
-  const response = await fetch(url, options);
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(
-      errorData.error || `API request failed with status ${response.status}`
-    );
-  }
-
-  return response.json();
+  return apiFetch(endpoint, options);
 };
-
-// Default fetcher for QueryClient
-const defaultFetcher = async <T>(url: string): Promise<T> => {
-  return apiRequest<T>(url);
-};
-
-// Create and configure query client
-export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      queryFn: ({ queryKey }) => defaultFetcher(queryKey[0] as string),
-      retry: 1,
-      refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    },
-  },
-});
