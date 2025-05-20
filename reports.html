@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TerraFusion Professional - Reports</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f7fa;
+        }
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(to bottom, #1e3a8a, #2563eb);
+            color: white;
+            padding: 20px 0;
+        }
+        .logo {
+            padding: 0 20px 20px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+        .logo h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .logo h2 {
+            margin: 0;
+            font-size: 16px;
+            opacity: 0.8;
+        }
+        .menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .menu li {
+            padding: 12px 20px;
+            cursor: pointer;
+        }
+        .menu li:hover, .menu li.active {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .menu li.active {
+            border-left: 3px solid white;
+        }
+        .content {
+            flex: 1;
+            padding: 30px;
+        }
+        .header {
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .header-left h1 {
+            margin: 0;
+            font-size: 28px;
+            background: linear-gradient(to right, #3b82f6, #2563eb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .header-left p {
+            margin: 5px 0 0 0;
+            color: #6b7280;
+        }
+        .generate-btn {
+            padding: 10px 16px;
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+        .generate-btn:hover {
+            background-color: #2563eb;
+        }
+        .generate-btn svg {
+            margin-right: 8px;
+        }
+        .filters {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .search-box {
+            position: relative;
+            flex-grow: 1;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 10px 10px 10px 36px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .search-box svg {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+        }
+        .filter-select {
+            padding: 10px 36px 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            background-color: white;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 16px;
+            appearance: none;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        .card-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card-header h2 {
+            margin: 0;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+        }
+        .card-header h2 .icon {
+            margin-right: 8px;
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        .icon-reports {
+            background-color: #dbeafe;
+            color: #3b82f6;
+        }
+        .icon-templates {
+            background-color: #dcfce7;
+            color: #22c55e;
+        }
+        .icon-settings {
+            background-color: #f3e8ff;
+            color: #a855f7;
+        }
+        .tab-nav {
+            display: flex;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .tab {
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #6b7280;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+        .tab.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+        .tab:hover {
+            color: #111827;
+        }
+        .card-body {
+            padding: 20px;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table th {
+            text-align: left;
+            padding: 12px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #6b7280;
+            background-color: #f9fafb;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+        }
+        .table tr:last-child td {
+            border-bottom: none;
+        }
+        .table tr:hover {
+            background-color: #f9fafb;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .badge-final {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        .badge-draft {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+        .badge-inreview {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        .badge-archived {
+            background-color: #f3f4f6;
+            color: #4b5563;
+        }
+        .report-cell {
+            display: flex;
+            align-items: center;
+        }
+        .report-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background-color: #f3f4f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            color: #6b7280;
+        }
+        .report-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .report-name {
+            font-weight: 500;
+            color: #111827;
+        }
+        .report-property {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 3px;
+        }
+        .actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+        .action-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            border: 1px solid #d1d5db;
+            background-color: white;
+            color: #374151;
+        }
+        .action-btn:hover {
+            background-color: #f9fafb;
+        }
+        .action-btn svg {
+            width: 14px;
+            height: 14px;
+            margin-right: 6px;
+        }
+        .action-btn.download-btn {
+            color: #3b82f6;
+            border-color: #93c5fd;
+            background-color: #eff6ff;
+        }
+        .action-btn.download-btn:hover {
+            background-color: #dbeafe;
+        }
+        .pagination {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 12px 16px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .page-info {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        .page-btns {
+            display: flex;
+            margin-left: 16px;
+        }
+        .page-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border: 1px solid #d1d5db;
+            background-color: white;
+            color: #374151;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .page-btn:hover {
+            background-color: #f9fafb;
+        }
+        .page-btn.active {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border-color: #93c5fd;
+        }
+        .page-btn:first-child {
+            border-top-left-radius: 6px;
+            border-bottom-left-radius: 6px;
+        }
+        .page-btn:last-child {
+            border-top-right-radius: 6px;
+            border-bottom-right-radius: 6px;
+        }
+        .page-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .template-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+            cursor: pointer;
+            position: relative;
+        }
+        .template-card:hover {
+            border-color: #93c5fd;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .template-card.selected {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+        .template-card.selected::after {
+            content: "";
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 16px;
+            height: 16px;
+            background-color: #3b82f6;
+            border-radius: 50%;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M5 13l4 4L19 7' /%3E%3C/svg%3E");
+            background-size: 75%;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        .template-preview {
+            height: 120px;
+            background-color: #f9fafb;
+            padding: 10px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+        }
+        .template-preview-line {
+            height: 8px;
+            background-color: #e5e7eb;
+            border-radius: 4px;
+            margin-bottom: 6px;
+        }
+        .template-preview-line:nth-child(1) {
+            width: 80%;
+        }
+        .template-preview-line:nth-child(2) {
+            width: 90%;
+        }
+        .template-preview-line:nth-child(3) {
+            width: 60%;
+        }
+        .template-preview-line:nth-child(4) {
+            width: 75%;
+        }
+        .template-preview-line:nth-child(5) {
+            width: 85%;
+        }
+        .template-preview-line:nth-child(6) {
+            width: 70%;
+        }
+        .template-info {
+            padding: 12px;
+        }
+        .template-name {
+            font-weight: 500;
+            color: #111827;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+        .template-details {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        .option-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .option-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            background-color: #f9fafb;
+        }
+        .option-header {
+            font-weight: 500;
+            color: #111827;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .option-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .option-select {
+            flex-grow: 1;
+            padding: 8px 28px 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            background-color: white;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 16px;
+            appearance: none;
+        }
+        .option-toggle {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+        .toggle-input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #e5e7eb;
+            transition: .4s;
+            border-radius: 10px;
+        }
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        .toggle-input:checked + .toggle-slider {
+            background-color: #3b82f6;
+        }
+        .toggle-input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
+        .report-preview {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 24px;
+        }
+        .preview-header {
+            background-color: #f9fafb;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .preview-title {
+            font-weight: 500;
+            font-size: 14px;
+            color: #111827;
+        }
+        .preview-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .preview-action {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            background-color: white;
+            border: 1px solid #d1d5db;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #6b7280;
+        }
+        .preview-action:hover {
+            background-color: #f3f4f6;
+            color: #111827;
+        }
+        .preview-action svg {
+            width: 14px;
+            height: 14px;
+        }
+        .preview-body {
+            padding: 20px;
+            height: 400px;
+            overflow-y: auto;
+            background-color: white;
+        }
+        .report-section {
+            margin-bottom: 24px;
+        }
+        .section-header {
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 12px;
+            font-size: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .section-content {
+            font-size: 14px;
+            color: #374151;
+            line-height: 1.6;
+        }
+        .property-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .property-field {
+            margin-bottom: 8px;
+        }
+        .field-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 2px;
+        }
+        .field-value {
+            font-weight: 500;
+            color: #111827;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="logo">
+                <h1>TerraFusion</h1>
+                <h2>Professional</h2>
+            </div>
+            <ul class="menu">
+                <li>Dashboard</li>
+                <li>Properties</li>
+                <li>Appraisals</li>
+                <li>New Appraisal</li>
+                <li>Comparables</li>
+                <li>Valuation Calculator</li>
+                <li>Market Analysis</li>
+                <li>Team Management</li>
+                <li class="active">Reports</li>
+                <li>Settings</li>
+            </ul>
+        </div>
+        <div class="content">
+            <div class="header">
+                <div class="header-left">
+                    <h1>Reports</h1>
+                    <p>Generate and manage appraisal reports</p>
+                </div>
+                <div class="header-right">
+                    <a href="#" class="generate-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+                        Generate New Report
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2><span class="icon icon-reports">R</span> Recent Reports</h2>
+                </div>
+                
+                <div class="filters" style="padding: 20px 20px 0 20px;">
+                    <div class="search-box">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <input type="text" placeholder="Search reports...">
+                    </div>
+                    
+                    <select class="filter-select">
+                        <option value="all">All Report Types</option>
+                        <option value="form1004">Form 1004</option>
+                        <option value="form1073">Form 1073</option>
+                        <option value="form1025">Form 1025</option>
+                        <option value="narrative">Narrative</option>
+                    </select>
+                    
+                    <select class="filter-select">
+                        <option value="all">All Statuses</option>
+                        <option value="final">Final</option>
+                        <option value="draft">Draft</option>
+                        <option value="inreview">In Review</option>
+                        <option value="archived">Archived</option>
+                    </select>
+                </div>
+                
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Report</th>
+                                <th>Created By</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Type</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="report-cell">
+                                        <div class="report-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                                        </div>
+                                        <div class="report-info">
+                                            <div class="report-name">123 Main Street Appraisal</div>
+                                            <div class="report-property">Residential Form 1004</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>John Doe</td>
+                                <td>May 18, 2025</td>
+                                <td><span class="badge badge-final">Final</span></td>
+                                <td>Form 1004</td>
+                                <td>
+                                    <div class="actions">
+                                        <button class="action-btn">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                            View
+                                        </button>
+                                        <button class="action-btn download-btn">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                            PDF
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="report-cell">
+                                        <div class="report-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                                        </div>
+                                        <div class="report-info">
+                                            <div class="report-name">456 Oak Avenue Appraisal</div>
+                                            <div class="report-property">Condo Form 1073</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>Jane Smith</td>
+                                <td>May 15, 2025</td>
+                                <td><span class="badge badge-inreview">In Review</span></td>
+                                <td>Form 1073</td>
+                                <td>
+                                    <div class="actions">
+                                        <button class="action-btn">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                            View
+                                        </button>
+                                        <button class="action-btn download-btn">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                            PDF
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="report-cell">
+                                        <div class="report-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                                        </div>
+                                        <div class="report-info">
+                                            <div class="report-name">789 Elm Drive Appraisal</div>
+                                            <div class="report-property">Residential Form 1004</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>Robert Johnson</td>
+                                <td>May 10, 2025</td>
+                                <td><span class="badge badge-draft">Draft</span></td>
+                                <td>Form 1004</td>
+                                <td>
+                                    <div class="actions">
+                                        <button class="action-btn">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                            Edit
+                                        </button>
+                                        <button class="action-btn download-btn">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                            PDF
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="report-cell">
+                                        <div class="report-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                                        </div>
+                                        <div class="report-info">
+                                            <div class="report-name">101 Pine Road Appraisal</div>
+                                            <div class="report-property">Income Form 1025</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>Emily Wilson</td>
+                                <td>May 5, 2025</td>
+                                <td><span class="badge badge-final">Final</span></td>
+                                <td>Form 1025</td>
+                                <td>
+                                    <div class="actions">
+                                        <button class="action-btn">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                            View
+                                        </button>
+                                        <button class="action-btn download-btn">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                            PDF
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="report-cell">
+                                        <div class="report-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                                        </div>
+                                        <div class="report-info">
+                                            <div class="report-name">555 Maple Street Appraisal</div>
+                                            <div class="report-property">Narrative Report</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>John Doe</td>
+                                <td>May 1, 2025</td>
+                                <td><span class="badge badge-archived">Archived</span></td>
+                                <td>Narrative</td>
+                                <td>
+                                    <div class="actions">
+                                        <button class="action-btn">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                            View
+                                        </button>
+                                        <button class="action-btn download-btn">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                            PDF
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="pagination">
+                        <div class="page-info">
+                            Showing 1 to 5 of 15 reports
+                        </div>
+                        <div class="page-btns">
+                            <button class="page-btn">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                            </button>
+                            <button class="page-btn active">1</button>
+                            <button class="page-btn">2</button>
+                            <button class="page-btn">3</button>
+                            <button class="page-btn">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2><span class="icon icon-templates">T</span> Report Templates</h2>
+                </div>
+                <div class="card-body">
+                    <div class="template-grid">
+                        <div class="template-card selected">
+                            <div class="template-preview">
+                                <div class="template-preview-line"></div>
+                                <div class="template-preview-line"></div>
+                                <div class="template-preview-line"></div>
+                                <div class="template-preview-line"></div>
+                                <div class="template-preview-line"></div>
+                                <div class="template-preview-line"></div>
+                            </div>
+                            <div class="template-info">
+                                <div class="template-name">Uniform Residential (1004)</div>
+                                <div class="template-details">Standard FNMA form</div>
+                            </div>
+                        </div>
+                        
+                        <div class="template-card">
+                            <div class="template-preview">
+                                <div class="template-preview-line"></div>
+                                <div class="template-preview-line"></div>
+                                <div class="template-preview-line"></div>
+                                <div class="template-preview-line"></div>
+                                <div class="template-preview-line"></div>
+                                <div class="template-preview-line"></div>
+                            </div>
+                            <div class="template-info">
+                                <div class="template-name">Individual Condo (1073)</div>
+                                <div class="template-details">Condominium form</div>
+                            </div>
+                        </div>
+                        
+                        <div class="template-card">
+                            <div class="template-preview">
+                                <div class="template-preview-line"></div>
+                                <div class="template-preview-line"></div>
+                                <div class="template-preview-line"></div>
+                                <div class="template-preview-line"></div>
+                                <div class="template-preview-line"></div>
+                                <div class="template-preview-line"></div>
+                            </div>
+                            <div class="template-info">
+                                <div class="template-name">Small Income (1025)</div>
+                                <div class="template-details">For 2-4 unit properties</div>
+                            </div>
+                        </div>
+                        
+                        <div class="template-card">
+                            <div class="template-preview">
+                                <div class="template-preview-line"></div>
+                                <div class="template-preview-line"></div>
+                                <div class="template-preview-line"></div>
+                                <div class="template-preview-line"></div>
+                                <div class="template-preview-line"></div>
+                                <div class="template-preview-line"></div>
+                            </div>
+                            <div class="template-info">
+                                <div class="template-name">Narrative Report</div>
+                                <div class="template-details">Customizable format</div>
+                            </div>
+                        </div>
+                        
+                        <div class="template-card">
+                            <div class="template-preview">
+                                <div class="template-preview-line"></div>
+                                <div class="template-preview-line"></div>
+                                <div class="template-preview-line"></div>
+                                <div class="template-preview-line"></div>
+                                <div class="template-preview-line"></div>
+                                <div class="template-preview-line"></div>
+                            </div>
+                            <div class="template-info">
+                                <div class="template-name">Desktop Appraisal</div>
+                                <div class="template-details">Form 1004 Desktop</div>
+                            </div>
+                        </div>
+                        
+                        <div class="template-card">
+                            <div class="template-preview">
+                                <div class="template-preview-line"></div>
+                                <div class="template-preview-line"></div>
+                                <div class="template-preview-line"></div>
+                                <div class="template-preview-line"></div>
+                                <div class="template-preview-line"></div>
+                                <div class="template-preview-line"></div>
+                            </div>
+                            <div class="template-info">
+                                <div class="template-name">FHA Report</div>
+                                <div class="template-details">For FHA loans</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2><span class="icon icon-settings">S</span> Report Generation Settings</h2>
+                </div>
+                <div class="card-body">
+                    <div class="option-grid">
+                        <div class="option-card">
+                            <div class="option-header">Include Sections</div>
+                            <div class="option-controls">
+                                <select class="option-select">
+                                    <option>All Sections</option>
+                                    <option>Core Sections Only</option>
+                                    <option>Custom Selection</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="option-card">
+                            <div class="option-header">Comparable Properties</div>
+                            <div class="option-controls">
+                                <select class="option-select">
+                                    <option>Selected (3)</option>
+                                    <option>All (6)</option>
+                                    <option>Custom Range</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="option-card">
+                            <div class="option-header">Add Market Analysis</div>
+                            <div class="option-controls">
+                                <select class="option-select">
+                                    <option>Full Analysis</option>
+                                    <option>Summary Only</option>
+                                    <option>None</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="option-card">
+                            <div class="option-header">Include Property Photos</div>
+                            <div class="option-controls">
+                                <label class="option-toggle">
+                                    <input type="checkbox" class="toggle-input" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="option-card">
+                            <div class="option-header">Include Map</div>
+                            <div class="option-controls">
+                                <label class="option-toggle">
+                                    <input type="checkbox" class="toggle-input" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="option-card">
+                            <div class="option-header">Add Digital Signature</div>
+                            <div class="option-controls">
+                                <label class="option-toggle">
+                                    <input type="checkbox" class="toggle-input" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="report-preview">
+                        <div class="preview-header">
+                            <div class="preview-title">Report Preview</div>
+                            <div class="preview-actions">
+                                <div class="preview-action">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                </div>
+                                <div class="preview-action">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                                </div>
+                                <div class="preview-action">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="preview-body">
+                            <div class="report-section">
+                                <div class="section-header">
+                                    Uniform Residential Appraisal Report
+                                </div>
+                                <div class="section-content">
+                                    <div class="property-summary">
+                                        <div class="property-field">
+                                            <div class="field-label">File No.</div>
+                                            <div class="field-value">A-2025-042</div>
+                                        </div>
+                                        <div class="property-field">
+                                            <div class="field-label">Property Address</div>
+                                            <div class="field-value">123 Main Street</div>
+                                        </div>
+                                        <div class="property-field">
+                                            <div class="field-label">City</div>
+                                            <div class="field-value">Austin</div>
+                                        </div>
+                                        <div class="property-field">
+                                            <div class="field-label">State</div>
+                                            <div class="field-value">TX</div>
+                                        </div>
+                                        <div class="property-field">
+                                            <div class="field-label">Zip Code</div>
+                                            <div class="field-value">78701</div>
+                                        </div>
+                                        <div class="property-field">
+                                            <div class="field-label">County</div>
+                                            <div class="field-value">Travis</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="property-field">
+                                        <div class="field-label">Legal Description</div>
+                                        <div class="field-value">Lot 12, Block B, Austin Heights Addition</div>
+                                    </div>
+                                    
+                                    <div class="property-summary">
+                                        <div class="property-field">
+                                            <div class="field-label">Assessor's Parcel #</div>
+                                            <div class="field-value">10-4567-89</div>
+                                        </div>
+                                        <div class="property-field">
+                                            <div class="field-label">Tax Year</div>
+                                            <div class="field-value">2024</div>
+                                        </div>
+                                        <div class="property-field">
+                                            <div class="field-label">R.E. Taxes</div>
+                                            <div class="field-value">$12,450</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="report-section">
+                                <div class="section-header">
+                                    Subject Property Information
+                                </div>
+                                <div class="section-content">
+                                    <div class="property-summary">
+                                        <div class="property-field">
+                                            <div class="field-label">Property Type</div>
+                                            <div class="field-value">Single Family</div>
+                                        </div>
+                                        <div class="property-field">
+                                            <div class="field-label">Year Built</div>
+                                            <div class="field-value">2005</div>
+                                        </div>
+                                        <div class="property-field">
+                                            <div class="field-label">Square Feet</div>
+                                            <div class="field-value">2,450</div>
+                                        </div>
+                                        <div class="property-field">
+                                            <div class="field-label">Bedrooms</div>
+                                            <div class="field-value">3</div>
+                                        </div>
+                                        <div class="property-field">
+                                            <div class="field-label">Bathrooms</div>
+                                            <div class="field-value">2.5</div>
+                                        </div>
+                                        <div class="property-field">
+                                            <div class="field-label">Lot Size</div>
+                                            <div class="field-value">8,500 sq.ft.</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <p>The subject property is a well-maintained single-family residence in the Austin Heights neighborhood. The home features a modern design with brick and stone veneer exterior, and is situated on a level lot with mature landscaping.</p>
+                                    
+                                    <p>Interior features include hardwood floors throughout the main living areas, granite countertops in the kitchen, and stainless steel appliances. The property includes a 2-car attached garage, central heating and cooling, and has been well-maintained by the current owner.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="report-section">
+                                <div class="section-header">
+                                    Neighborhood Analysis
+                                </div>
+                                <div class="section-content">
+                                    <p>The subject property is located in an established residential neighborhood with good appeal and access to schools, shopping, and employment centers. The neighborhood consists primarily of single-family homes of similar age, quality, and appeal.</p>
+                                    
+                                    <p>Market conditions in the neighborhood are generally stable with moderate appreciation observed over the past 12 months. The average marketing time for properties in this area is approximately 30 days.</p>
+                                    
+                                    <div class="property-summary">
+                                        <div class="property-field">
+                                            <div class="field-label">Price Range</div>
+                                            <div class="field-value">$850,000 - $1,100,000</div>
+                                        </div>
+                                        <div class="property-field">
+                                            <div class="field-label">Age Range</div>
+                                            <div class="field-value">10 - 25 years</div>
+                                        </div>
+                                        <div class="property-field">
+                                            <div class="field-label">Predominant Price</div>
+                                            <div class="field-value">$950,000</div>
+                                        </div>
+                                        <div class="property-field">
+                                            <div class="field-label">Predominant Age</div>
+                                            <div class="field-value">18 years</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="report-section">
+                                <div class="section-header">
+                                    Valuation Summary
+                                </div>
+                                <div class="section-content">
+                                    <div class="property-summary">
+                                        <div class="property-field">
+                                            <div class="field-label">Sales Comparison Approach</div>
+                                            <div class="field-value">$975,000</div>
+                                        </div>
+                                        <div class="property-field">
+                                            <div class="field-label">Cost Approach</div>
+                                            <div class="field-value">$980,000</div>
+                                        </div>
+                                        <div class="property-field">
+                                            <div class="field-label">Income Approach</div>
+                                            <div class="field-value">Not Applicable</div>
+                                        </div>
+                                        <div class="property-field">
+                                            <div class="field-label">Final Value Opinion</div>
+                                            <div class="field-value">$975,000</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <p>Based on the data and analyses developed in this appraisal report, I have reconciled to a final opinion of value for the subject property as defined in the report, subject to the Assumptions and Limiting Conditions.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
