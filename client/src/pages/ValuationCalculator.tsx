@@ -649,4 +649,4 @@ const ValuationCalculator = () => {
   );
 };
 
-export { ValuationCalculator };
+export default ValuationCalculator;

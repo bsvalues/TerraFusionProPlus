@@ -1,6 +1,7 @@
 import { pgTable, serial, varchar, integer, decimal, timestamp, boolean, json, text } from 'drizzle-orm/pg-core';
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
+import { relations } from 'drizzle-orm';
 
 // Users table definition
 export const users = pgTable("users", {
@@ -15,6 +16,12 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow()
 });
+
+// Define user relations
+export const usersRelations = relations(users, ({ many }) => ({
+  appraisals: many(appraisals),
+  uploadedAttachments: many(attachments, { relationName: "uploader" })
+}));
 
 // Properties table definition
 export const properties = pgTable("properties", {
@@ -37,8 +44,19 @@ export const properties = pgTable("properties", {
   lot_unit: varchar("lot_unit", { length: 20 }),
   latitude: decimal("latitude", { precision: 10, scale: 6 }),
   longitude: decimal("longitude", { precision: 10, scale: 6 }),
-  features: json("features")
+  features: json("features"),
+  created_by: integer("created_by").references(() => users.id)
 });
+
+// Define property relations
+export const propertiesRelations = relations(properties, ({ many, one }) => ({
+  appraisals: many(appraisals),
+  creator: one(users, {
+    fields: [properties.created_by],
+    references: [users.id]
+  }),
+  attachments: many(attachments, { relationName: "property_attachments" })
+}));
 
 // Appraisals table definition
 export const appraisals = pgTable("appraisals", {
@@ -64,6 +82,20 @@ export const appraisals = pgTable("appraisals", {
   notes: text("notes")
 });
 
+// Define appraisal relations
+export const appraisalsRelations = relations(appraisals, ({ one, many }) => ({
+  property: one(properties, {
+    fields: [appraisals.propertyId],
+    references: [properties.id],
+  }),
+  appraiser: one(users, {
+    fields: [appraisals.appraiserId],
+    references: [users.id],
+  }),
+  comparables: many(comparables),
+  attachments: many(attachments, { relationName: "appraisal_attachments" })
+}));
+
 // Comparables table definition
 export const comparables = pgTable("comparables", {
   id: serial("id").primaryKey(),
@@ -88,6 +120,15 @@ export const comparables = pgTable("comparables", {
   createdAt: timestamp("created_at").notNull().defaultNow()
 });
 
+// Define comparables relations
+export const comparablesRelations = relations(comparables, ({ one, many }) => ({
+  appraisal: one(appraisals, {
+    fields: [comparables.appraisalId],
+    references: [appraisals.id]
+  }),
+  adjustments: many(adjustments)
+}));
+
 // Adjustments table definition
 export const adjustments = pgTable("adjustments", {
   id: serial("id").primaryKey(),
@@ -99,6 +140,14 @@ export const adjustments = pgTable("adjustments", {
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow()
 });
+
+// Define adjustment relations
+export const adjustmentsRelations = relations(adjustments, ({ one }) => ({
+  comparable: one(comparables, {
+    fields: [adjustments.comparableId],
+    references: [comparables.id]
+  })
+}));
 
 // Attachments table definition
 export const attachments = pgTable("attachments", {
