@@ -16,14 +16,17 @@ import {
   ClipboardList
 } from 'lucide-react';
 
-// Import our new React components
+// Import components and pages
 import PropertyDetailComponent from './components/PropertyDetailComponent';
-import MarketAnalysisComponent from './components/MarketAnalysisComponent';
-import ValuationCalculatorComponent from './components/ValuationCalculatorComponent';
-import ReportsComponent from './components/ReportsComponent';
+import DashboardComponent from './components/DashboardComponent';
+import Properties from './pages/Properties';
+import Appraisals from './pages/Appraisals';
+import ComparableForm from './pages/ComparableForm';
+import MarketAnalysis from './pages/MarketAnalysis';
+import ValuationCalculator from './pages/ValuationCalculator';
 
 // Simple dashboard home component
-const Dashboard = () => {
+const HomeDashboard = () => {
   return (
     <div>
       <div className="mb-6">
@@ -170,14 +173,18 @@ const App = () => {
   const renderContent = () => {
     switch (activePath) {
       case '/':
-        return <Dashboard />;
-      case '/market-analysis-new':
-        return <MarketAnalysisComponent />;
-      case '/valuation-calculator-new':
-        return <ValuationCalculatorComponent />;
-      case '/reports':
-        return <ReportsComponent />;
-      case '/property-detail-new':
+        return <HomeDashboard />;
+      case '/properties':
+        return <Properties />;
+      case '/appraisals':
+        return <Appraisals />;
+      case '/comparables/new':
+        return <ComparableForm />;
+      case '/market-analysis':
+        return <MarketAnalysis />;
+      case '/valuation-calculator':
+        return <ValuationCalculator />;
+      case '/property-detail':
         return <PropertyDetailComponent />;
       default:
         return (

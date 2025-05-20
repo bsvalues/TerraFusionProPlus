@@ -1,786 +1,652 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { 
-  Calculator, 
-  Building2, 
-  Home as HomeIcon, 
-  DollarSign,
-  ArrowRight,
-  PlusSquare,
-  MinusSquare,
-  Save,
-  RefreshCw,
-  FileText,
-  MapPin
-} from 'lucide-react';
+import React, { useState } from 'react';
+import { Calculator, DollarSign, HomeIcon, Building, User, Subtitles, ArrowRight } from 'lucide-react';
 
-// Interface for adjustment factors
-interface AdjustmentFactor {
-  name: string;
-  description: string;
-  adjustmentType: 'percentage' | 'fixed';
-  defaultValue: number;
-  rangeMin?: number;
-  rangeMax?: number;
-  step?: number;
-  enabled: boolean;
-  value: number;
-}
+// Valuation methods
+const valuationMethods = [
+  {
+    id: 'sales-comparison',
+    name: 'Sales Comparison Approach',
+    description: 'Values properties based on recent sales of similar properties in the area.',
+    formula: 'Base value of comparable properties with adjustments for differences',
+    best_for: 'Residential properties, condos, and vacant land in areas with sufficient similar recent sales'
+  },
+  {
+    id: 'income',
+    name: 'Income Approach',
+    description: 'Values properties based on the income they generate or could potentially generate.',
+    formula: 'Net Operating Income (NOI) ÷ Capitalization Rate',
+    best_for: 'Income-producing properties such as multi-family, commercial, or office buildings'
+  },
+  {
+    id: 'cost',
+    name: 'Cost Approach',
+    description: 'Values properties based on the cost to rebuild the structure plus the value of the land.',
+    formula: 'Land Value + (Construction Cost - Depreciation)',
+    best_for: 'New or unique properties with few comparables, special use properties, or buildings with significant improvements'
+  },
+  {
+    id: 'gross-rent-multiplier',
+    name: 'Gross Rent Multiplier',
+    description: 'A simple method that uses the relationship between a property\'s price and its gross rental income.',
+    formula: 'Gross Rent Multiplier (GRM) × Annual Gross Rental Income',
+    best_for: 'Rental properties, quick estimates, or preliminary analysis'
+  }
+];
 
-// Interface for subject property
-interface SubjectProperty {
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  propertyType: string;
-  squareFeet: number;
-  bedrooms: number;
-  bathrooms: number;
-  yearBuilt: number;
-  lotSize: number;
-  condition: string;
-  basePricePerSqFt: number;
-}
-
-export const ValuationCalculator = () => {
-  // State for the subject property
-  const [subjectProperty, setSubjectProperty] = useState<SubjectProperty>({
-    address: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    propertyType: 'Single Family',
-    squareFeet: 0,
-    bedrooms: 0,
-    bathrooms: 0,
-    yearBuilt: 0,
-    lotSize: 0,
-    condition: 'Average',
-    basePricePerSqFt: 350
+const ValuationCalculator = () => {
+  // State for form data
+  const [formData, setFormData] = useState({
+    propertyType: 'single-family',
+    squareFeet: '',
+    bedrooms: '',
+    bathrooms: '',
+    location: '',
+    yearBuilt: '',
+    lotSize: '',
+    qualityGrade: 'average',
+    rentalIncome: '',
+    operatingExpenses: '',
+    grm: '10',
+    constructionCost: '',
+    landValue: '',
+    depreciation: '',
+    selectedMethod: 'sales-comparison',
+    comparables: [
+      { value: '', adjustments: '0' },
+      { value: '', adjustments: '0' },
+      { value: '', adjustments: '0' }
+    ]
   });
-
-  // State for adjustment factors
-  const [adjustmentFactors, setAdjustmentFactors] = useState<AdjustmentFactor[]>([
-    {
-      name: 'Location Quality',
-      description: 'Adjustment based on the quality of the neighborhood and location',
-      adjustmentType: 'percentage',
-      defaultValue: 5,
-      rangeMin: -20,
-      rangeMax: 20,
-      step: 1,
-      enabled: true,
-      value: 5
-    },
-    {
-      name: 'Property Condition',
-      description: 'Adjustment based on the condition of the property',
-      adjustmentType: 'percentage',
-      defaultValue: 0,
-      rangeMin: -15,
-      rangeMax: 15,
-      step: 1,
-      enabled: true,
-      value: 0
-    },
-    {
-      name: 'Age Adjustment',
-      description: 'Adjustment based on the age of the property',
-      adjustmentType: 'percentage',
-      defaultValue: 0,
-      rangeMin: -10,
-      rangeMax: 5,
-      step: 0.5,
-      enabled: true,
-      value: 0
-    },
-    {
-      name: 'Lot Size Premium',
-      description: 'Adjustment for lot size differences',
-      adjustmentType: 'percentage',
-      defaultValue: 0,
-      rangeMin: -5,
-      rangeMax: 15,
-      step: 0.5,
-      enabled: true,
-      value: 0
-    },
-    {
-      name: 'Room Count Adjustment',
-      description: 'Adjustment for bedroom/bathroom differences',
-      adjustmentType: 'fixed',
-      defaultValue: 0,
-      rangeMin: -30000,
-      rangeMax: 50000,
-      step: 5000,
-      enabled: true,
-      value: 0
-    },
-    {
-      name: 'Quality of Construction',
-      description: 'Adjustment for construction quality differences',
-      adjustmentType: 'percentage',
-      defaultValue: 0,
-      rangeMin: -10,
-      rangeMax: 10,
-      step: 1,
-      enabled: false,
-      value: 0
-    },
-    {
-      name: 'Amenities Adjustment',
-      description: 'Adjustment for special amenities (pool, garage, etc.)',
-      adjustmentType: 'fixed',
-      defaultValue: 0,
-      rangeMin: -20000,
-      rangeMax: 50000,
-      step: 5000,
-      enabled: false,
-      value: 0
-    },
-    {
-      name: 'Market Trend Adjustment',
-      description: 'Adjustment for market trends over time',
-      adjustmentType: 'percentage',
-      defaultValue: 3,
-      rangeMin: -5,
-      rangeMax: 10,
-      step: 0.5,
-      enabled: true,
-      value: 3
-    }
-  ]);
-
-  // State for calculated values
-  const [baseValue, setBaseValue] = useState(0);
-  const [totalAdjustments, setTotalAdjustments] = useState(0);
-  const [finalValue, setFinalValue] = useState(0);
-  const [valuesHistory, setValuesHistory] = useState<number[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  // Sample properties for dropdown
-  const [availableProperties, setAvailableProperties] = useState([
-    { id: 1, address: '123 Main Street', city: 'Austin', state: 'TX', propertyType: 'Single Family', squareFeet: 2450 },
-    { id: 2, address: '456 Oak Avenue', city: 'Austin', state: 'TX', propertyType: 'Condo', squareFeet: 1200 },
-    { id: 3, address: '789 Elm Drive', city: 'Austin', state: 'TX', propertyType: 'Multi-Family', squareFeet: 3600 },
-    { id: 4, address: '101 Pine Road', city: 'Austin', state: 'TX', propertyType: 'Single Family', squareFeet: 3200 }
-  ]);
   
-  const [selectedPropertyId, setSelectedPropertyId] = useState<number | null>(null);
-
-  // Load property details when selected from dropdown
-  useEffect(() => {
-    if (selectedPropertyId) {
-      setLoading(true);
-      
-      // In a real app, fetch property details from API
-      // For now, use the sample data
-      const selectedProperty = availableProperties.find(p => p.id === selectedPropertyId);
-      
-      if (selectedProperty) {
-        // Simulate a delay for API call
-        setTimeout(() => {
-          setSubjectProperty({
-            ...subjectProperty,
-            address: selectedProperty.address,
-            city: selectedProperty.city,
-            state: selectedProperty.state,
-            propertyType: selectedProperty.propertyType,
-            squareFeet: selectedProperty.squareFeet,
-            // Add random data for the rest
-            bedrooms: Math.floor(Math.random() * 3) + 2, // 2-4 bedrooms
-            bathrooms: Math.floor(Math.random() * 2) + 1.5, // 1.5-3.5 bathrooms
-            yearBuilt: Math.floor(Math.random() * 30) + 1990, // 1990-2020
-            lotSize: Math.floor(Math.random() * 10000) + 5000, // 5000-15000 sq.ft.
-            condition: ['Poor', 'Fair', 'Average', 'Good', 'Excellent'][Math.floor(Math.random() * 5)],
-            basePricePerSqFt: Math.floor(Math.random() * 100) + 300 // $300-$400 per sq.ft.
-          });
-          
-          setLoading(false);
-        }, 500);
-      }
-    }
-  }, [selectedPropertyId]);
-
-  // Calculate valuation whenever inputs change
-  useEffect(() => {
-    calculateValuation();
-  }, [subjectProperty, adjustmentFactors]);
-
-  // Update the specific adjustment factor
-  const updateAdjustmentFactor = (index: number, updates: Partial<AdjustmentFactor>) => {
-    const newFactors = [...adjustmentFactors];
-    newFactors[index] = { ...newFactors[index], ...updates };
-    setAdjustmentFactors(newFactors);
-  };
-
-  // Handle property input changes
-  const handlePropertyChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  // State for calculation result
+  const [result, setResult] = useState<number | null>(null);
+  const [showResult, setShowResult] = useState(false);
+  
+  // Handle input change
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
     
-    // Handle numeric inputs
-    if (['squareFeet', 'bedrooms', 'bathrooms', 'yearBuilt', 'lotSize', 'basePricePerSqFt'].includes(name)) {
-      setSubjectProperty({
-        ...subjectProperty,
-        [name]: parseFloat(value) || 0
-      });
-    } else {
-      setSubjectProperty({
-        ...subjectProperty,
-        [name]: value
-      });
+    // Reset result when form changes
+    if (showResult) {
+      setShowResult(false);
     }
   };
-
-  // Calculate the property valuation
-  const calculateValuation = () => {
-    // Calculate base value from square footage and base price per sq ft
-    const base = subjectProperty.squareFeet * subjectProperty.basePricePerSqFt;
-    setBaseValue(base);
-    
-    // Calculate adjustments
-    let adjustmentAmount = 0;
-    
-    // Apply percentage adjustments first
-    let percentageAdjustment = 0;
-    adjustmentFactors.forEach(factor => {
-      if (factor.enabled) {
-        if (factor.adjustmentType === 'percentage') {
-          percentageAdjustment += factor.value;
-        }
-      }
+  
+  // Handle comparable change
+  const handleComparableChange = (index: number, field: string, value: string) => {
+    setFormData(prev => {
+      const newComparables = [...prev.comparables];
+      newComparables[index] = {
+        ...newComparables[index],
+        [field]: value
+      };
+      return {
+        ...prev,
+        comparables: newComparables
+      };
     });
     
-    // Apply percentage to base
-    adjustmentAmount += base * (percentageAdjustment / 100);
-    
-    // Apply fixed adjustments
-    adjustmentFactors.forEach(factor => {
-      if (factor.enabled) {
-        if (factor.adjustmentType === 'fixed') {
-          adjustmentAmount += factor.value;
-        }
-      }
-    });
-    
-    setTotalAdjustments(adjustmentAmount);
-    
-    // Calculate final value
-    const final = base + adjustmentAmount;
-    setFinalValue(final);
-    
-    // Add to history
-    setValuesHistory(prev => {
-      const newHistory = [...prev, final];
-      // Keep only last 5 values
-      if (newHistory.length > 5) {
-        return newHistory.slice(newHistory.length - 5);
-      }
-      return newHistory;
-    });
+    // Reset result when form changes
+    if (showResult) {
+      setShowResult(false);
+    }
   };
-
+  
+  // Calculate valuation based on selected method
+  const calculateValuation = () => {
+    let calculatedValue = 0;
+    
+    switch (formData.selectedMethod) {
+      case 'sales-comparison':
+        // Sales Comparison Approach
+        const comparableValues = formData.comparables
+          .filter(comp => comp.value)
+          .map(comp => ({
+            value: parseFloat(comp.value),
+            adjustments: parseFloat(comp.adjustments)
+          }));
+        
+        if (comparableValues.length === 0) {
+          alert('Please enter at least one comparable property value');
+          return;
+        }
+        
+        // Calculate adjusted values
+        const adjustedValues = comparableValues.map(comp => comp.value + comp.adjustments);
+        // Take the average of adjusted values
+        calculatedValue = adjustedValues.reduce((sum, val) => sum + val, 0) / adjustedValues.length;
+        break;
+        
+      case 'income':
+        // Income Approach
+        const rentalIncome = parseFloat(formData.rentalIncome);
+        const operatingExpenses = parseFloat(formData.operatingExpenses);
+        const capRate = 0.06; // 6% cap rate (could be variable)
+        
+        if (!rentalIncome) {
+          alert('Please enter rental income');
+          return;
+        }
+        
+        // Calculate NOI (Net Operating Income)
+        const noi = rentalIncome - (operatingExpenses || 0);
+        // Apply cap rate
+        calculatedValue = noi / capRate;
+        break;
+        
+      case 'cost':
+        // Cost Approach
+        const constructionCost = parseFloat(formData.constructionCost);
+        const landValue = parseFloat(formData.landValue);
+        const depreciation = parseFloat(formData.depreciation);
+        
+        if (!constructionCost || !landValue) {
+          alert('Please enter construction cost and land value');
+          return;
+        }
+        
+        // Apply cost approach formula
+        calculatedValue = landValue + (constructionCost - (depreciation || 0));
+        break;
+        
+      case 'gross-rent-multiplier':
+        // Gross Rent Multiplier
+        const annualRentalIncome = parseFloat(formData.rentalIncome);
+        const grm = parseFloat(formData.grm);
+        
+        if (!annualRentalIncome || !grm) {
+          alert('Please enter rental income and GRM');
+          return;
+        }
+        
+        // Apply GRM formula
+        calculatedValue = annualRentalIncome * grm;
+        break;
+    }
+    
+    setResult(calculatedValue);
+    setShowResult(true);
+  };
+  
   // Format currency
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(value);
   };
-
-  // Reset all values to defaults
-  const resetAdjustments = () => {
-    setAdjustmentFactors(adjustmentFactors.map(factor => ({
-      ...factor,
-      value: factor.defaultValue
-    })));
-  };
-
-  // Toggle an adjustment factor on/off
-  const toggleAdjustmentFactor = (index: number) => {
-    const newFactors = [...adjustmentFactors];
-    newFactors[index].enabled = !newFactors[index].enabled;
-    setAdjustmentFactors(newFactors);
-  };
-
-  // Save valuation (in a real app, would save to database)
-  const saveValuation = () => {
-    alert('Valuation saved successfully!');
-    // In a real app, would save to database and redirect to valuation report
-  };
-
-  // Get property icon based on type
-  const getPropertyIcon = (propertyType: string) => {
-    switch(propertyType.toLowerCase()) {
-      case 'single family':
-        return <HomeIcon size={20} className="text-blue-500" />;
-      case 'condo':
-        return <Building2 size={20} className="text-green-500" />;
-      case 'multi-family':
-        return <Building2 size={20} className="text-purple-500" />;
-      default:
-        return <Building2 size={20} className="text-gray-500" />;
-    }
-  };
-
-  return (
-    <div>
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold gradient-heading">Valuation Calculator</h1>
-          <p className="text-gray-600 mt-1">Calculate and adjust property valuations</p>
-        </div>
-        <div className="mt-4 md:mt-0 flex space-x-3">
-          <button
-            onClick={resetAdjustments}
-            className="flex items-center px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-          >
-            <RefreshCw size={18} className="mr-2 text-gray-600" />
-            Reset Adjustments
-          </button>
-          <button
-            onClick={saveValuation}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-          >
-            <Save size={18} className="mr-2" />
-            Save Valuation
-          </button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column - Property Information */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Property Selector */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold mb-4">Select Property</h2>
-            <div className="mb-4">
-              <label htmlFor="propertySelect" className="block text-sm font-medium text-gray-700 mb-1">
-                Choose an existing property
-              </label>
-              <select
-                id="propertySelect"
-                className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                value={selectedPropertyId || ''}
-                onChange={(e) => setSelectedPropertyId(e.target.value ? parseInt(e.target.value) : null)}
-              >
-                <option value="">-- Select a property --</option>
-                {availableProperties.map(property => (
-                  <option key={property.id} value={property.id}>
-                    {property.address}, {property.city} - {property.propertyType}
-                  </option>
-                ))}
-              </select>
-              <div className="mt-2 text-sm text-gray-500">
-                Select a property to auto-fill information or enter details manually below.
-              </div>
-            </div>
-          </div>
-
-          {/* Property Information Form */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center">
-              {getPropertyIcon(subjectProperty.propertyType)}
-              <span className="ml-2">Subject Property Information</span>
-            </h2>
-            
-            {loading ? (
-              <div className="flex justify-center items-center h-48">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-              </div>
-            ) : (
-              <div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+  
+  // Determine what fields to show based on selected method
+  const renderMethodFields = () => {
+    switch (formData.selectedMethod) {
+      case 'sales-comparison':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-3">Comparable Properties</h3>
+              <p className="text-gray-600 mb-4">
+                Enter the values of similar properties that have recently sold in the area, 
+                along with any adjustments needed to account for differences.
+              </p>
+              
+              {formData.comparables.map((comp, index) => (
+                <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 p-4 border border-gray-200 rounded-md">
                   <div>
-                    <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
-                      Address
-                    </label>
-                    <input
-                      type="text"
-                      id="address"
-                      name="address"
-                      value={subjectProperty.address}
-                      onChange={handlePropertyChange}
-                      className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                      placeholder="Enter property address"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
-                      City
-                    </label>
-                    <input
-                      type="text"
-                      id="city"
-                      name="city"
-                      value={subjectProperty.city}
-                      onChange={handlePropertyChange}
-                      className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                      placeholder="Enter city"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="propertyType" className="block text-sm font-medium text-gray-700 mb-1">
-                      Property Type
-                    </label>
-                    <select
-                      id="propertyType"
-                      name="propertyType"
-                      value={subjectProperty.propertyType}
-                      onChange={handlePropertyChange}
-                      className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    >
-                      <option value="Single Family">Single Family</option>
-                      <option value="Condo">Condo</option>
-                      <option value="Multi-Family">Multi-Family</option>
-                      <option value="Townhouse">Townhouse</option>
-                      <option value="Land">Land</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label htmlFor="condition" className="block text-sm font-medium text-gray-700 mb-1">
-                      Condition
-                    </label>
-                    <select
-                      id="condition"
-                      name="condition"
-                      value={subjectProperty.condition}
-                      onChange={handlePropertyChange}
-                      className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    >
-                      <option value="Poor">Poor</option>
-                      <option value="Fair">Fair</option>
-                      <option value="Average">Average</option>
-                      <option value="Good">Good</option>
-                      <option value="Excellent">Excellent</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                  <div>
-                    <label htmlFor="squareFeet" className="block text-sm font-medium text-gray-700 mb-1">
-                      Square Feet
-                    </label>
-                    <input
-                      type="number"
-                      id="squareFeet"
-                      name="squareFeet"
-                      value={subjectProperty.squareFeet || ''}
-                      onChange={handlePropertyChange}
-                      className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                      placeholder="0"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="bedrooms" className="block text-sm font-medium text-gray-700 mb-1">
-                      Bedrooms
-                    </label>
-                    <input
-                      type="number"
-                      id="bedrooms"
-                      name="bedrooms"
-                      value={subjectProperty.bedrooms || ''}
-                      onChange={handlePropertyChange}
-                      className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                      placeholder="0"
-                      step="0.5"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="bathrooms" className="block text-sm font-medium text-gray-700 mb-1">
-                      Bathrooms
-                    </label>
-                    <input
-                      type="number"
-                      id="bathrooms"
-                      name="bathrooms"
-                      value={subjectProperty.bathrooms || ''}
-                      onChange={handlePropertyChange}
-                      className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                      placeholder="0"
-                      step="0.5"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="yearBuilt" className="block text-sm font-medium text-gray-700 mb-1">
-                      Year Built
-                    </label>
-                    <input
-                      type="number"
-                      id="yearBuilt"
-                      name="yearBuilt"
-                      value={subjectProperty.yearBuilt || ''}
-                      onChange={handlePropertyChange}
-                      className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                      placeholder="0"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="lotSize" className="block text-sm font-medium text-gray-700 mb-1">
-                      Lot Size (sq.ft.)
-                    </label>
-                    <input
-                      type="number"
-                      id="lotSize"
-                      name="lotSize"
-                      value={subjectProperty.lotSize || ''}
-                      onChange={handlePropertyChange}
-                      className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                      placeholder="0"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="basePricePerSqFt" className="block text-sm font-medium text-gray-700 mb-1">
-                      Base Price Per Sq.Ft.
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Comparable {index + 1} Value
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500 sm:text-sm">$</span>
+                        <DollarSign size={16} className="text-gray-400" />
                       </div>
                       <input
-                        type="number"
-                        id="basePricePerSqFt"
-                        name="basePricePerSqFt"
-                        value={subjectProperty.basePricePerSqFt || ''}
-                        onChange={handlePropertyChange}
-                        className="w-full pl-7 border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                        placeholder="0"
+                        type="text"
+                        value={comp.value}
+                        onChange={(e) => handleComparableChange(index, 'value', e.target.value)}
+                        className="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        placeholder="500000"
                       />
                     </div>
                   </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Adjustment Factors */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold mb-4">Adjustment Factors</h2>
-            <div className="space-y-6">
-              {adjustmentFactors.map((factor, index) => (
-                <div key={index} className={`p-4 rounded-lg border ${factor.enabled ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-100'}`}>
-                  <div className="flex justify-between items-center mb-2">
-                    <div className="flex items-center">
-                      <button 
-                        onClick={() => toggleAdjustmentFactor(index)}
-                        className={`mr-2 ${factor.enabled ? 'text-blue-500 hover:text-blue-700' : 'text-gray-400 hover:text-gray-600'}`}
-                      >
-                        {factor.enabled ? <MinusSquare size={20} /> : <PlusSquare size={20} />}
-                      </button>
-                      <h3 className={`font-medium ${factor.enabled ? 'text-gray-800' : 'text-gray-500'}`}>{factor.name}</h3>
-                    </div>
-                    {factor.adjustmentType === 'percentage' ? (
-                      <span className={`text-sm font-medium px-2 py-1 rounded ${factor.enabled ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'}`}>
-                        Percentage
-                      </span>
-                    ) : (
-                      <span className={`text-sm font-medium px-2 py-1 rounded ${factor.enabled ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
-                        Fixed Amount
-                      </span>
-                    )}
-                  </div>
                   
-                  <p className={`text-sm mb-3 ${factor.enabled ? 'text-gray-600' : 'text-gray-400'}`}>
-                    {factor.description}
-                  </p>
-                  
-                  {factor.enabled && (
-                    <div className="flex items-center">
-                      <input
-                        type="range"
-                        min={factor.rangeMin}
-                        max={factor.rangeMax}
-                        step={factor.step}
-                        value={factor.value}
-                        onChange={(e) => updateAdjustmentFactor(index, { value: parseFloat(e.target.value) })}
-                        className="flex-1 mr-3"
-                      />
-                      <div className="relative">
-                        {factor.adjustmentType === 'percentage' ? (
-                          <div className="flex items-center">
-                            <input
-                              type="number"
-                              min={factor.rangeMin}
-                              max={factor.rangeMax}
-                              step={factor.step}
-                              value={factor.value}
-                              onChange={(e) => updateAdjustmentFactor(index, { value: parseFloat(e.target.value) || 0 })}
-                              className="w-20 border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 pr-7"
-                            />
-                            <span className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-500">
-                              %
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                              <span className="text-gray-500 sm:text-sm">$</span>
-                            </div>
-                            <input
-                              type="number"
-                              min={factor.rangeMin}
-                              max={factor.rangeMax}
-                              step={factor.step}
-                              value={factor.value}
-                              onChange={(e) => updateAdjustmentFactor(index, { value: parseFloat(e.target.value) || 0 })}
-                              className="w-28 pl-7 border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                            />
-                          </div>
-                        )}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Adjustments (+/-)
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <DollarSign size={16} className="text-gray-400" />
                       </div>
+                      <input
+                        type="text"
+                        value={comp.adjustments}
+                        onChange={(e) => handleComparableChange(index, 'adjustments', e.target.value)}
+                        className="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        placeholder="25000"
+                      />
                     </div>
-                  )}
+                  </div>
                 </div>
               ))}
             </div>
           </div>
-        </div>
-
-        {/* Right Column - Results and Summary */}
-        <div className="space-y-6">
-          {/* Valuation Summary */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="p-6 border-b border-gray-200 bg-blue-50">
-              <h2 className="text-xl font-semibold flex items-center text-blue-800">
-                <Calculator size={20} className="mr-2 text-blue-600" />
-                Valuation Summary
-              </h2>
+        );
+        
+      case 'income':
+        return (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Annual Rental Income
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <DollarSign size={16} className="text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    name="rentalIncome"
+                    value={formData.rentalIncome}
+                    onChange={handleInputChange}
+                    className="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="50000"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Annual Operating Expenses
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <DollarSign size={16} className="text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    name="operatingExpenses"
+                    value={formData.operatingExpenses}
+                    onChange={handleInputChange}
+                    className="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="10000"
+                  />
+                </div>
+              </div>
             </div>
-            <div className="p-6">
-              <div className="space-y-6">
-                <div className="flex justify-between items-center pb-4 border-b border-gray-100">
-                  <span className="text-gray-600">Base Value:</span>
-                  <span className="text-lg font-semibold">{formatCurrency(baseValue)}</span>
-                </div>
-                
-                <div className="flex justify-between items-center pb-4 border-b border-gray-100">
-                  <span className="text-gray-600">Adjustments:</span>
-                  <span className={`text-lg font-semibold ${totalAdjustments >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {totalAdjustments >= 0 ? '+' : ''}{formatCurrency(totalAdjustments)}
-                  </span>
-                </div>
-                
-                <div className="flex justify-between items-center pb-2">
-                  <span className="text-gray-700 font-medium">Estimated Value:</span>
-                  <span className="text-2xl font-bold text-blue-700">{formatCurrency(finalValue)}</span>
-                </div>
-                
-                <div className="text-sm text-gray-500 text-right">
-                  {subjectProperty.squareFeet > 0 && (
-                    <div>
-                      {formatCurrency(finalValue / subjectProperty.squareFeet)} per sq.ft.
-                    </div>
-                  )}
+            
+            <div className="bg-blue-50 p-4 rounded-md">
+              <h4 className="text-sm font-medium text-blue-700 mb-2">Income Approach Information</h4>
+              <p className="text-sm text-blue-600">
+                This calculation uses a 6% capitalization rate, which is typical for residential rental properties.
+                The formula is: (Annual Rental Income - Operating Expenses) ÷ 0.06
+              </p>
+            </div>
+          </div>
+        );
+        
+      case 'cost':
+        return (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Land Value
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <DollarSign size={16} className="text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    name="landValue"
+                    value={formData.landValue}
+                    onChange={handleInputChange}
+                    className="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="150000"
+                  />
                 </div>
               </div>
               
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <div className="flex justify-between mb-2">
-                  <h3 className="text-sm font-medium text-gray-700">Value History</h3>
-                  <button 
-                    onClick={calculateValuation}
-                    className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
-                  >
-                    <RefreshCw size={14} className="mr-1" />
-                    Recalculate
-                  </button>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Construction Cost
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <DollarSign size={16} className="text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    name="constructionCost"
+                    value={formData.constructionCost}
+                    onChange={handleInputChange}
+                    className="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="350000"
+                  />
                 </div>
-                
-                {valuesHistory.length > 0 ? (
-                  <div className="space-y-2">
-                    {valuesHistory.map((value, index) => (
-                      <div key={index} className={`text-sm p-2 rounded ${index === valuesHistory.length - 1 ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-600'}`}>
-                        {formatCurrency(value)}
-                        {index === valuesHistory.length - 1 && <span className="ml-2">(Current)</span>}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-sm text-gray-500 p-2">
-                    No previous calculations
-                  </div>
-                )}
               </div>
               
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <button
-                  onClick={saveValuation}
-                  className="w-full flex justify-center items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  <Save size={18} className="mr-2" />
-                  Save Valuation
-                </button>
-                
-                <Link
-                  to="/appraisals/new"
-                  className="w-full flex justify-center items-center px-4 py-2 mt-3 border border-blue-500 text-blue-600 rounded-md hover:bg-blue-50 transition-colors"
-                >
-                  <FileText size={18} className="mr-2" />
-                  Create New Appraisal
-                </Link>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Depreciation
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <DollarSign size={16} className="text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    name="depreciation"
+                    value={formData.depreciation}
+                    onChange={handleInputChange}
+                    className="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="50000"
+                  />
+                </div>
               </div>
             </div>
           </div>
-          
-          {/* Property Information */}
-          {subjectProperty.address && (
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-lg font-semibold mb-4">Property Summary</h2>
-              <div className="flex items-start mb-4">
-                <MapPin className="flex-shrink-0 text-red-500 mr-2 mt-1" size={16} />
-                <div>
-                  <h3 className="font-medium">{subjectProperty.address}</h3>
-                  <p className="text-sm text-gray-600">{subjectProperty.city}, {subjectProperty.state}</p>
+        );
+        
+      case 'gross-rent-multiplier':
+        return (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Annual Rental Income
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <DollarSign size={16} className="text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    name="rentalIncome"
+                    value={formData.rentalIncome}
+                    onChange={handleInputChange}
+                    className="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="36000"
+                  />
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Property Type:</span>
-                  <span className="font-medium">{subjectProperty.propertyType}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Square Feet:</span>
-                  <span className="font-medium">{subjectProperty.squareFeet?.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Bedrooms:</span>
-                  <span className="font-medium">{subjectProperty.bedrooms}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Bathrooms:</span>
-                  <span className="font-medium">{subjectProperty.bathrooms}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Year Built:</span>
-                  <span className="font-medium">{subjectProperty.yearBuilt}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Condition:</span>
-                  <span className="font-medium">{subjectProperty.condition}</span>
-                </div>
-              </div>
-              
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <Link 
-                  to={`/properties/${selectedPropertyId}`} 
-                  className="flex items-center text-blue-600 hover:text-blue-800 text-sm"
-                >
-                  <ArrowRight size={16} className="mr-1" />
-                  View Full Property Details
-                </Link>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Gross Rent Multiplier (GRM)
+                </label>
+                <input
+                  type="text"
+                  name="grm"
+                  value={formData.grm}
+                  onChange={handleInputChange}
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="10"
+                />
               </div>
             </div>
-          )}
+            
+            <div className="bg-blue-50 p-4 rounded-md">
+              <h4 className="text-sm font-medium text-blue-700 mb-2">GRM Information</h4>
+              <p className="text-sm text-blue-600">
+                Typical GRM values range from 8-12 depending on the location and property type. 
+                Higher values indicate higher property values relative to rental income.
+              </p>
+            </div>
+          </div>
+        );
+        
+      default:
+        return null;
+    }
+  };
+  
+  return (
+    <div>
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold gradient-heading">Property Valuation Calculator</h1>
+        <p className="text-gray-600 mt-1">
+          Estimate property values using different appraisal methods
+        </p>
+      </div>
+      
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold mb-4">Select Valuation Method</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {valuationMethods.map(method => (
+              <div key={method.id} className="relative">
+                <input
+                  type="radio"
+                  id={method.id}
+                  name="selectedMethod"
+                  value={method.id}
+                  className="peer absolute opacity-0 w-0 h-0"
+                  checked={formData.selectedMethod === method.id}
+                  onChange={handleInputChange}
+                />
+                <label
+                  htmlFor={method.id}
+                  className="block p-4 border rounded-lg peer-checked:border-blue-500 peer-checked:bg-blue-50 cursor-pointer transition-colors"
+                >
+                  <div className="flex justify-between">
+                    <h3 className="font-medium text-gray-900">{method.name}</h3>
+                    {formData.selectedMethod === method.id && (
+                      <div className="text-blue-500">
+                        <Calculator size={20} />
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1">{method.description}</p>
+                  <div className="mt-3 text-xs text-gray-500">
+                    <div><span className="font-medium">Formula:</span> {method.formula}</div>
+                    <div className="mt-1"><span className="font-medium">Best for:</span> {method.best_for}</div>
+                  </div>
+                </label>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold mb-4">Property Information</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Property Type
+              </label>
+              <select
+                name="propertyType"
+                value={formData.propertyType}
+                onChange={handleInputChange}
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              >
+                <option value="single-family">Single Family</option>
+                <option value="multi-family">Multi-Family</option>
+                <option value="condo">Condo</option>
+                <option value="commercial">Commercial</option>
+                <option value="land">Land</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Square Feet
+              </label>
+              <input
+                type="text"
+                name="squareFeet"
+                value={formData.squareFeet}
+                onChange={handleInputChange}
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                placeholder="2000"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Location (City, State)
+              </label>
+              <input
+                type="text"
+                name="location"
+                value={formData.location}
+                onChange={handleInputChange}
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                placeholder="Austin, TX"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Bedrooms
+              </label>
+              <input
+                type="text"
+                name="bedrooms"
+                value={formData.bedrooms}
+                onChange={handleInputChange}
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                placeholder="3"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Bathrooms
+              </label>
+              <input
+                type="text"
+                name="bathrooms"
+                value={formData.bathrooms}
+                onChange={handleInputChange}
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                placeholder="2"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Year Built
+              </label>
+              <input
+                type="text"
+                name="yearBuilt"
+                value={formData.yearBuilt}
+                onChange={handleInputChange}
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                placeholder="2000"
+              />
+            </div>
+          </div>
+        </div>
+        
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">Valuation Inputs</h2>
+          {renderMethodFields()}
+        </div>
+        
+        <div className="flex justify-center">
+          <button
+            onClick={calculateValuation}
+            className="px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
+            Calculate Property Value
+          </button>
+        </div>
+      </div>
+      
+      {showResult && result !== null && (
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h2 className="text-xl font-semibold mb-4">Valuation Result</h2>
+          
+          <div className="text-center">
+            <div className="text-4xl font-bold text-blue-700 mb-2">
+              {formatCurrency(result)}
+            </div>
+            <p className="text-gray-600">
+              Estimated property value using the {valuationMethods.find(m => m.id === formData.selectedMethod)?.name}
+            </p>
+          </div>
+          
+          <div className="mt-6 bg-blue-50 p-4 rounded-md">
+            <h3 className="text-sm font-medium text-blue-700 mb-2">Important Note</h3>
+            <p className="text-sm text-blue-600">
+              This is an estimated value for informational purposes only. Professional appraisals consider many additional factors and market conditions. Consult with a licensed appraiser for official valuations.
+            </p>
+          </div>
+        </div>
+      )}
+      
+      <div className="bg-gray-50 rounded-lg p-6">
+        <h2 className="text-xl font-semibold mb-4">Valuation Methodology Guide</h2>
+        
+        <div className="space-y-4">
+          <div className="flex items-start">
+            <div className="flex-shrink-0 p-1 bg-blue-100 rounded-md mr-3">
+              <HomeIcon size={20} className="text-blue-600" />
+            </div>
+            <div>
+              <h3 className="font-medium text-gray-900">Sales Comparison Approach</h3>
+              <p className="text-sm text-gray-600">
+                Best for residential properties in active markets with many comparable sales. 
+                This method values your property based on what similar properties in your area have recently sold for, 
+                with adjustments for differences in features.
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-start">
+            <div className="flex-shrink-0 p-1 bg-green-100 rounded-md mr-3">
+              <Building size={20} className="text-green-600" />
+            </div>
+            <div>
+              <h3 className="font-medium text-gray-900">Income Approach</h3>
+              <p className="text-sm text-gray-600">
+                Ideal for investment properties that generate income. 
+                This method determines value based on the property's ability to produce income, 
+                using the Net Operating Income (NOI) divided by the capitalization rate.
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-start">
+            <div className="flex-shrink-0 p-1 bg-amber-100 rounded-md mr-3">
+              <Building size={20} className="text-amber-600" />
+            </div>
+            <div>
+              <h3 className="font-medium text-gray-900">Cost Approach</h3>
+              <p className="text-sm text-gray-600">
+                Best for unique, newer properties, or those with few comparables.
+                This approach estimates what it would cost to rebuild the structure from scratch, 
+                plus the value of the land, minus depreciation.
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-start">
+            <div className="flex-shrink-0 p-1 bg-purple-100 rounded-md mr-3">
+              <Calculator size={20} className="text-purple-600" />
+            </div>
+            <div>
+              <h3 className="font-medium text-gray-900">Gross Rent Multiplier</h3>
+              <p className="text-sm text-gray-600">
+                A simpler method for rental properties that uses a multiplier applied to the annual rental income.
+                While less detailed than other approaches, it provides a quick estimate for investment properties.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 };
+
+export { ValuationCalculator };

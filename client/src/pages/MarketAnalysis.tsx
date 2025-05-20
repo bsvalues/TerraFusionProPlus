@@ -1,562 +1,593 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { LineChart, TrendingUp, TrendingDown, Calendar, DollarSign, Clock, Home as HomeIcon, Building2, Search, MapPin } from 'lucide-react';
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { 
-  LineChart as RechartsLineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  TooltipProps
+  LineChart, Line, BarChart, Bar, PieChart, Pie, AreaChart, Area,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  Cell
 } from 'recharts';
+import { 
+  Search, MapPin, TrendingUp, TrendingDown, Clock, DollarSign,
+  BarChart2, PieChart as PieChartIcon, Calendar 
+} from 'lucide-react';
 
-// Define interface for price trend data point
-interface PriceTrendDataPoint {
-  month: string;
-  value: number;
-  year: number;
-}
-
-// Define interface for days on market data point
-interface DomTrendDataPoint {
-  month: string;
-  days: number;
-  year: number;
-}
-
-// Define interface for sales trend data point
-interface SalesTrendDataPoint {
-  month: string;
-  sales: number;
-  year: number;
-}
-
-// Define interface for property type data point
-interface PropertyTypeDataPoint {
-  name: string;
-  value: number;
-}
-
-// Define interface for neighborhood price data point
-interface NeighborhoodPriceDataPoint {
-  name: string;
-  medianPrice: number;
-  pricePerSqft: number;
-}
-
-// Define interface for market data
-interface MarketData {
-  priceTrends: PriceTrendDataPoint[];
-  domTrends: DomTrendDataPoint[];
-  salesTrends: SalesTrendDataPoint[];
-  propertyTypes: PropertyTypeDataPoint[];
-  neighborhoodPrices: NeighborhoodPriceDataPoint[];
-  medianPrices: {
-    currentYear: number;
-    previousYear: number;
-    percentChange: number;
-  };
-}
-
-// Interface for custom legend props
-interface CustomLegendProps {
-  payload?: {
-    value: string;
-    color: string;
-  }[];
-}
-
-// Sample market data for now
-const generateMarketData = (): MarketData => {
-  // Price trends over last 12 months
-  const priceTrends: PriceTrendDataPoint[] = [];
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  let basePrice = 350; // Starting price per sq ft
-
-  for (let i = 11; i >= 0; i--) {
-    const month = new Date(currentYear, now.getMonth() - i, 1);
-    const monthName = month.toLocaleString('default', { month: 'short' });
-    
-    // Add some variation to create realistic data
-    const randomFactor = 1 + (Math.random() * 0.1 - 0.05); // -5% to +5% 
-    basePrice = basePrice * randomFactor;
-    
-    priceTrends.push({
-      month: monthName,
-      value: Math.round(basePrice),
-      year: month.getFullYear()
-    });
-  }
-
-  // Days on market trends
-  const domTrends: DomTrendDataPoint[] = [];
-  let baseDom = 45; // Starting days on market
-
-  for (let i = 11; i >= 0; i--) {
-    const month = new Date(currentYear, now.getMonth() - i, 1);
-    const monthName = month.toLocaleString('default', { month: 'short' });
-    
-    // Add some variation 
-    const randomFactor = 1 + (Math.random() * 0.2 - 0.1); // -10% to +10%
-    baseDom = Math.max(10, Math.round(baseDom * randomFactor)); // Ensure at least 10 days
-    
-    domTrends.push({
-      month: monthName,
-      days: baseDom,
-      year: month.getFullYear()
-    });
-  }
-
-  // Sales volume trends
-  const salesTrends: SalesTrendDataPoint[] = [];
-  let baseSales = 120; // Starting monthly sales
-
-  for (let i = 11; i >= 0; i--) {
-    const month = new Date(currentYear, now.getMonth() - i, 1);
-    const monthName = month.toLocaleString('default', { month: 'short' });
-    
-    // Add seasonal variation
-    let seasonalFactor = 1;
-    const monthNum = month.getMonth();
-    
-    // Spring/Summer usually have higher sales
-    if (monthNum >= 3 && monthNum <= 7) {
-      seasonalFactor = 1.2;
-    } 
-    // Winter usually has lower sales
-    else if (monthNum >= 11 || monthNum <= 1) {
-      seasonalFactor = 0.8;
-    }
-    
-    // Add some random variation
-    const randomFactor = 1 + (Math.random() * 0.2 - 0.1); // -10% to +10%
-    const sales = Math.round(baseSales * seasonalFactor * randomFactor);
-    
-    salesTrends.push({
-      month: monthName,
-      sales: sales,
-      year: month.getFullYear()
-    });
-  }
-  
-  // Property types distribution
-  const propertyTypes: PropertyTypeDataPoint[] = [
-    { name: 'Single Family', value: 65 },
-    { name: 'Condo', value: 18 },
-    { name: 'Multi-Family', value: 10 },
-    { name: 'Townhouse', value: 7 }
-  ];
-  
-  // Median prices by neighborhood
-  const neighborhoodPrices: NeighborhoodPriceDataPoint[] = [
-    { name: 'Downtown', medianPrice: 625000, pricePerSqft: 450 },
-    { name: 'North End', medianPrice: 875000, pricePerSqft: 520 },
-    { name: 'South Side', medianPrice: 425000, pricePerSqft: 320 },
-    { name: 'Westview', medianPrice: 750000, pricePerSqft: 480 },
-    { name: 'Eastside', medianPrice: 580000, pricePerSqft: 410 }
-  ];
-  
-  return {
-    priceTrends,
-    domTrends,
-    salesTrends,
-    propertyTypes,
-    neighborhoodPrices,
-    medianPrices: {
-      currentYear: 585000,
-      previousYear: 550000,
-      percentChange: 6.4
-    }
-  };
+// Utility function to format currency
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(value);
 };
 
-export const MarketAnalysis = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [selectedPropertyType, setSelectedPropertyType] = useState('all');
-  const [marketData, setMarketData] = useState<MarketData | null>(null);
-  const [selectedTimePeriod, setSelectedTimePeriod] = useState('12m');
+// Sample data for testing purposes
+// In a real application, this would be fetched from the API
+const samplePriceTrends = [
+  { month: 'Jan', value: 450000, year: 2023 },
+  { month: 'Feb', value: 455000, year: 2023 },
+  { month: 'Mar', value: 463000, year: 2023 },
+  { month: 'Apr', value: 472000, year: 2023 },
+  { month: 'May', value: 490000, year: 2023 },
+  { month: 'Jun', value: 505000, year: 2023 },
+  { month: 'Jul', value: 510000, year: 2023 },
+  { month: 'Aug', value: 515000, year: 2023 },
+  { month: 'Sep', value: 518000, year: 2023 },
+  { month: 'Oct', value: 520000, year: 2023 },
+  { month: 'Nov', value: 525000, year: 2023 },
+  { month: 'Dec', value: 528000, year: 2023 },
+  { month: 'Jan', value: 530000, year: 2024 },
+  { month: 'Feb', value: 545000, year: 2024 },
+  { month: 'Mar', value: 552000, year: 2024 },
+  { month: 'Apr', value: 560000, year: 2024 }
+];
+
+const sampleDomTrends = [
+  { month: 'Jan', days: 45, year: 2023 },
+  { month: 'Feb', days: 43, year: 2023 },
+  { month: 'Mar', days: 40, year: 2023 },
+  { month: 'Apr', days: 38, year: 2023 },
+  { month: 'May', days: 32, year: 2023 },
+  { month: 'Jun', days: 28, year: 2023 },
+  { month: 'Jul', days: 25, year: 2023 },
+  { month: 'Aug', days: 22, year: 2023 },
+  { month: 'Sep', days: 20, year: 2023 },
+  { month: 'Oct', days: 23, year: 2023 },
+  { month: 'Nov', days: 28, year: 2023 },
+  { month: 'Dec', days: 32, year: 2023 },
+  { month: 'Jan', days: 35, year: 2024 },
+  { month: 'Feb', days: 33, year: 2024 },
+  { month: 'Mar', days: 30, year: 2024 },
+  { month: 'Apr', days: 28, year: 2024 }
+];
+
+const sampleSalesTrends = [
+  { month: 'Jan', sales: 120, year: 2023 },
+  { month: 'Feb', sales: 135, year: 2023 },
+  { month: 'Mar', sales: 145, year: 2023 },
+  { month: 'Apr', sales: 160, year: 2023 },
+  { month: 'May', sales: 190, year: 2023 },
+  { month: 'Jun', sales: 210, year: 2023 },
+  { month: 'Jul', sales: 200, year: 2023 },
+  { month: 'Aug', sales: 195, year: 2023 },
+  { month: 'Sep', sales: 180, year: 2023 },
+  { month: 'Oct', sales: 175, year: 2023 },
+  { month: 'Nov', sales: 165, year: 2023 },
+  { month: 'Dec', sales: 155, year: 2023 },
+  { month: 'Jan', sales: 140, year: 2024 },
+  { month: 'Feb', sales: 150, year: 2024 },
+  { month: 'Mar', sales: 165, year: 2024 },
+  { month: 'Apr', sales: 185, year: 2024 }
+];
+
+const samplePropertyTypes = [
+  { name: 'Single Family', value: 65 },
+  { name: 'Condo', value: 15 },
+  { name: 'Townhouse', value: 10 },
+  { name: 'Multi-Family', value: 5 },
+  { name: 'Land', value: 3 },
+  { name: 'Commercial', value: 2 }
+];
+
+const sampleNeighborhoodPrices = [
+  { name: 'Downtown', medianPrice: 750000, pricePerSqft: 625 },
+  { name: 'North End', medianPrice: 850000, pricePerSqft: 710 },
+  { name: 'West Side', medianPrice: 620000, pricePerSqft: 520 },
+  { name: 'South Hills', medianPrice: 530000, pricePerSqft: 445 },
+  { name: 'Eastlake', medianPrice: 675000, pricePerSqft: 565 },
+  { name: 'Oak Ridge', medianPrice: 590000, pricePerSqft: 495 },
+  { name: 'Riverview', medianPrice: 705000, pricePerSqft: 590 }
+];
+
+const MarketAnalysis = () => {
+  const [selectedLocation, setSelectedLocation] = useState('Seattle, WA');
+  const [selectedTimeframe, setSelectedTimeframe] = useState('1-year');
+  
+  // Fetch market data
+  // In a real application, this would fetch data based on the selected location and timeframe
+  const { data: marketData, isLoading } = useQuery({
+    queryKey: ['/api/market-data', selectedLocation, selectedTimeframe],
+    retry: 1,
+    // Mock response for now
+    initialData: {
+      priceTrends: samplePriceTrends,
+      domTrends: sampleDomTrends,
+      salesTrends: sampleSalesTrends,
+      propertyTypes: samplePropertyTypes,
+      neighborhoodPrices: sampleNeighborhoodPrices
+    }
+  });
+  
+  // Location options (would be fetched from API in a real application)
+  const locationOptions = [
+    'Seattle, WA',
+    'Portland, OR',
+    'San Francisco, CA',
+    'Los Angeles, CA',
+    'New York, NY',
+    'Boston, MA',
+    'Chicago, IL',
+    'Austin, TX',
+    'Miami, FL'
+  ];
+  
+  // Timeframe options
+  const timeframeOptions = [
+    { value: '6-months', label: '6 Months' },
+    { value: '1-year', label: '1 Year' },
+    { value: '2-years', label: '2 Years' },
+    { value: '5-years', label: '5 Years' }
+  ];
   
   // Colors for charts
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
-
-  useEffect(() => {
-    // In a real app, we would fetch this from the API
-    // For now, generate some realistic sample data
-    setLoading(true);
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A569BD', '#52BE80'];
+  
+  // Calculate market metrics
+  const calculateMetrics = () => {
+    if (!marketData) return null;
     
-    // Simulate API delay
-    setTimeout(() => {
-      const data = generateMarketData();
-      setMarketData(data);
-      setLoading(false);
-    }, 800);
-  }, [selectedTimePeriod]);
-
-  // Function to format currency
-  const formatCurrency = (value: number): string => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
-  
-  // Format price per square foot
-  const formatPricePerSqFt = (value: number): string => {
-    return `$${value}/sqft`;
-  };
-
-  // Interface for custom tooltip props
-  interface CustomTooltipProps {
-    active?: boolean;
-    payload?: any[];
-    label?: string;
-  }
-
-  // Get custom tooltip for price trends chart
-  const PriceTrendTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-3 border border-gray-200 shadow-md rounded-md">
-          <p className="font-medium">{`${label} ${payload[0].payload.year}`}</p>
-          <p className="text-sm text-gray-700">{`Price per Sq.Ft: ${formatPricePerSqFt(payload[0].value)}`}</p>
-        </div>
-      );
-    }
-    return null;
-  };
-  
-  // Get custom tooltip for DOM trends chart
-  const DomTrendTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-3 border border-gray-200 shadow-md rounded-md">
-          <p className="font-medium">{`${label} ${payload[0].payload.year}`}</p>
-          <p className="text-sm text-gray-700">{`Days on Market: ${payload[0].value}`}</p>
-        </div>
-      );
-    }
-    return null;
-  };
-  
-  // Get custom tooltip for sales volume chart
-  const SalesTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-3 border border-gray-200 shadow-md rounded-md">
-          <p className="font-medium">{`${label} ${payload[0].payload.year}`}</p>
-          <p className="text-sm text-gray-700">{`Sales: ${payload[0].value} properties`}</p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  // Custom Legend for Pie Chart
-  const CustomLegend: React.FC<CustomLegendProps> = ({ payload }) => {
-    if (!payload || !marketData) return null;
+    const priceTrends = marketData.priceTrends;
+    const currentPrice = priceTrends[priceTrends.length - 1].value;
+    const previousPrice = priceTrends[priceTrends.length - 2].value;
+    const priceChange = ((currentPrice - previousPrice) / previousPrice) * 100;
     
-    return (
-      <ul className="flex flex-wrap justify-center gap-4 mt-4">
-        {payload.map((entry, index) => (
-          <li key={`item-${index}`} className="flex items-center">
-            <div 
-              className="w-3 h-3 mr-2" 
-              style={{ backgroundColor: entry.color }}
-            />
-            <span className="text-sm">{entry.value} ({marketData.propertyTypes[index].value}%)</span>
-          </li>
-        ))}
-      </ul>
-    );
+    const domTrends = marketData.domTrends;
+    const currentDom = domTrends[domTrends.length - 1].days;
+    const previousDom = domTrends[domTrends.length - 2].days;
+    const domChange = ((currentDom - previousDom) / previousDom) * 100;
+    
+    const salesTrends = marketData.salesTrends;
+    const currentSales = salesTrends[salesTrends.length - 1].sales;
+    const previousSales = salesTrends[salesTrends.length - 2].sales;
+    const salesChange = ((currentSales - previousSales) / previousSales) * 100;
+    
+    // Calculate average price per sq ft from neighborhood data
+    const avgPricePerSqFt = marketData.neighborhoodPrices.reduce((sum, n) => sum + n.pricePerSqft, 0) / 
+                            marketData.neighborhoodPrices.length;
+    
+    return {
+      currentPrice,
+      priceChange,
+      currentDom,
+      domChange,
+      currentSales,
+      salesChange,
+      avgPricePerSqFt
+    };
   };
-
-  if (loading || !marketData) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
+  
+  const metrics = calculateMetrics();
+  
   return (
     <div>
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold gradient-heading">Market Analysis</h1>
-          <p className="text-gray-600 mt-1">Analyze real estate market trends and insights</p>
-        </div>
-        <div className="mt-4 md:mt-0">
-          <select
-            className="border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            value={selectedTimePeriod}
-            onChange={(e) => setSelectedTimePeriod(e.target.value)}
-          >
-            <option value="3m">Last 3 Months</option>
-            <option value="6m">Last 6 Months</option>
-            <option value="12m">Last 12 Months</option>
-            <option value="24m">Last 24 Months</option>
-          </select>
-        </div>
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold gradient-heading">Market Analysis</h1>
+        <p className="text-gray-600 mt-1">Explore real estate market trends and analytics</p>
       </div>
-
-      {/* Market Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-2 bg-blue-50 rounded-lg">
-              <DollarSign size={20} className="text-blue-500" />
+      
+      {/* Search and filters */}
+      <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-grow">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <MapPin size={18} className="text-gray-400" />
             </div>
-            <div className={`flex items-center ${marketData.medianPrices.percentChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-              {marketData.medianPrices.percentChange >= 0 ? 
-                <TrendingUp size={14} className="mr-1" /> : 
-                <TrendingDown size={14} className="mr-1" />
-              }
-              <span className="text-xs font-medium">{marketData.medianPrices.percentChange}%</span>
-            </div>
-          </div>
-          <div className="text-sm text-gray-500">Median Sale Price</div>
-          <div className="text-2xl font-bold mt-1 text-gray-800">
-            {formatCurrency(marketData.medianPrices.currentYear)}
-          </div>
-          <div className="text-xs text-gray-500 mt-1">
-            vs {formatCurrency(marketData.medianPrices.previousYear)} last year
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-2 bg-green-50 rounded-lg">
-              <LineChart size={20} className="text-green-500" />
-            </div>
-            <div className="flex items-center text-green-500">
-              <TrendingUp size={14} className="mr-1" />
-              <span className="text-xs font-medium">4.3%</span>
-            </div>
-          </div>
-          <div className="text-sm text-gray-500">Avg. Price Per Sq.Ft.</div>
-          <div className="text-2xl font-bold mt-1 text-gray-800">
-            {formatPricePerSqFt(marketData.priceTrends[marketData.priceTrends.length - 1].value)}
-          </div>
-          <div className="text-xs text-gray-500 mt-1">
-            vs {formatPricePerSqFt(marketData.priceTrends[0].value)} 12 months ago
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-2 bg-purple-50 rounded-lg">
-              <Clock size={20} className="text-purple-500" />
-            </div>
-            <div className="flex items-center text-red-500">
-              <TrendingDown size={14} className="mr-1" />
-              <span className="text-xs font-medium">8.2%</span>
-            </div>
-          </div>
-          <div className="text-sm text-gray-500">Avg. Days on Market</div>
-          <div className="text-2xl font-bold mt-1 text-gray-800">
-            {marketData.domTrends[marketData.domTrends.length - 1].days} days
-          </div>
-          <div className="text-xs text-gray-500 mt-1">
-            vs {marketData.domTrends[0].days} days 12 months ago
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-2 bg-amber-50 rounded-lg">
-              <Building2 size={20} className="text-amber-500" />
-            </div>
-            <div className="flex items-center text-green-500">
-              <TrendingUp size={14} className="mr-1" />
-              <span className="text-xs font-medium">2.1%</span>
-            </div>
-          </div>
-          <div className="text-sm text-gray-500">Active Listings</div>
-          <div className="text-2xl font-bold mt-1 text-gray-800">483</div>
-          <div className="text-xs text-gray-500 mt-1">
-            vs 473 last month
-          </div>
-        </div>
-      </div>
-
-      {/* Price Trends Chart */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-6">Price Per Square Foot Trends</h2>
-        <div className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <RechartsLineChart
-              data={marketData.priceTrends}
-              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+            <select
+              value={selectedLocation}
+              onChange={(e) => setSelectedLocation(e.target.value)}
+              className="pl-10 pr-4 py-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="month" />
-              <YAxis 
-                tickFormatter={(value) => `$${value}`}
-                domain={['dataMin - 20', 'dataMax + 20']}
-              />
-              <Tooltip content={<PriceTrendTooltip />} />
-              <Line 
-                type="monotone" 
-                dataKey="value" 
-                stroke="#3b82f6" 
-                activeDot={{ r: 8 }} 
-                strokeWidth={2}
-                name="Price per Sq.Ft."
-              />
-            </RechartsLineChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Two column charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        {/* Days on Market */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-6">Days on Market Trends</h2>
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <RechartsLineChart
-                data={marketData.domTrends}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              {locationOptions.map(location => (
+                <option key={location} value={location}>{location}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex space-x-2">
+            {timeframeOptions.map(option => (
+              <button
+                key={option.value}
+                onClick={() => setSelectedTimeframe(option.value)}
+                className={`px-4 py-2 rounded-md ${selectedTimeframe === option.value ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="month" />
-                <YAxis 
-                  domain={['dataMin - 5', 'dataMax + 5']}
-                  tickFormatter={(value) => `${value} days`}
-                />
-                <Tooltip content={<DomTrendTooltip />} />
-                <Line 
-                  type="monotone" 
-                  dataKey="days" 
-                  stroke="#8b5cf6" 
-                  activeDot={{ r: 8 }} 
-                  strokeWidth={2}
-                  name="Days on Market"
-                />
-              </RechartsLineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Sales Volume */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-6">Monthly Sales Volume</h2>
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={marketData.salesTrends}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="month" />
-                <YAxis 
-                  tickFormatter={(value) => `${value}`}
-                />
-                <Tooltip content={<SalesTooltip />} />
-                <Bar dataKey="sales" fill="#10b981" name="Sales Volume" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-
-      {/* Property Types and Neighborhood Prices */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        {/* Property Types Distribution */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-6">Property Types Distribution</h2>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={marketData.propertyTypes}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                >
-                  {marketData.propertyTypes.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Legend content={<CustomLegend />} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Neighborhood Prices */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-6">Median Prices by Neighborhood</h2>
-          <div className="space-y-6">
-            {marketData.neighborhoodPrices.map((neighborhood, index) => (
-              <div key={index} className="flex items-center">
-                <MapPin className="flex-shrink-0 text-red-500 mr-2" size={16} />
-                <div className="flex-grow">
-                  <div className="flex justify-between items-center mb-1">
-                    <h3 className="text-sm font-medium">{neighborhood.name}</h3>
-                    <span className="text-sm font-bold">{formatCurrency(neighborhood.medianPrice)}</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-blue-600 h-2 rounded-full" 
-                      style={{ 
-                        width: `${Math.min(100, (neighborhood.medianPrice / 1000000) * 100)}%` 
-                      }}
-                    ></div>
-                  </div>
-                  <div className="flex justify-between items-center mt-1">
-                    <span className="text-xs text-gray-500">{formatPricePerSqFt(neighborhood.pricePerSqft)}</span>
-                  </div>
-                </div>
-              </div>
+                {option.label}
+              </button>
             ))}
           </div>
         </div>
       </div>
-
-      {/* Market Insights */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-4">Market Insights</h2>
-        <div className="space-y-4">
-          <div className="p-4 rounded-lg bg-blue-50 border border-blue-100">
-            <h3 className="font-medium text-blue-800 mb-2">Price Trends Analysis</h3>
-            <p className="text-blue-700 text-sm">
-              The average price per square foot has shown a steady increase over the past year, reaching {formatPricePerSqFt(marketData.priceTrends[marketData.priceTrends.length - 1].value)} in the most recent month. This represents a 4.3% increase compared to 12 months ago, indicating a healthy appreciation rate in property values.
-            </p>
+      
+      {/* Market metrics */}
+      {metrics && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          <div className="bg-white rounded-lg shadow-md p-4">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm text-gray-500">Median Home Price</p>
+                <p className="text-2xl font-bold mt-1">{formatCurrency(metrics.currentPrice)}</p>
+              </div>
+              <div className={`flex items-center ${metrics.priceChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {metrics.priceChange >= 0 ? <TrendingUp size={18} /> : <TrendingDown size={18} />}
+                <span className="ml-1 font-semibold">{Math.abs(metrics.priceChange).toFixed(1)}%</span>
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">vs. previous month</p>
           </div>
           
-          <div className="p-4 rounded-lg bg-green-50 border border-green-100">
-            <h3 className="font-medium text-green-800 mb-2">Inventory & Sales Analysis</h3>
-            <p className="text-green-700 text-sm">
-              The current inventory level of 483 active listings represents a slight increase from the previous month. With an average of {marketData.salesTrends[marketData.salesTrends.length - 1].sales} sales per month, the current absorption rate is approximately 3.5 months, which indicates a balanced market with a slight advantage for sellers.
-            </p>
+          <div className="bg-white rounded-lg shadow-md p-4">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm text-gray-500">Avg. Days on Market</p>
+                <p className="text-2xl font-bold mt-1">{metrics.currentDom} days</p>
+              </div>
+              <div className={`flex items-center ${metrics.domChange <= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {metrics.domChange <= 0 ? <TrendingDown size={18} /> : <TrendingUp size={18} />}
+                <span className="ml-1 font-semibold">{Math.abs(metrics.domChange).toFixed(1)}%</span>
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">vs. previous month</p>
           </div>
           
-          <div className="p-4 rounded-lg bg-purple-50 border border-purple-100">
-            <h3 className="font-medium text-purple-800 mb-2">Market Efficiency</h3>
-            <p className="text-purple-700 text-sm">
-              Properties are selling in an average of {marketData.domTrends[marketData.domTrends.length - 1].days} days, which is 8.2% faster than the same period last year. This indicates increasing market efficiency and buyer demand, particularly in the North End and Westview neighborhoods which show the strongest price appreciation.
-            </p>
+          <div className="bg-white rounded-lg shadow-md p-4">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm text-gray-500">Monthly Sales</p>
+                <p className="text-2xl font-bold mt-1">{metrics.currentSales}</p>
+              </div>
+              <div className={`flex items-center ${metrics.salesChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {metrics.salesChange >= 0 ? <TrendingUp size={18} /> : <TrendingDown size={18} />}
+                <span className="ml-1 font-semibold">{Math.abs(metrics.salesChange).toFixed(1)}%</span>
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">vs. previous month</p>
+          </div>
+          
+          <div className="bg-white rounded-lg shadow-md p-4">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm text-gray-500">Avg. Price per Sq Ft</p>
+                <p className="text-2xl font-bold mt-1">${Math.round(metrics.avgPricePerSqFt)}</p>
+              </div>
+              <DollarSign size={18} className="text-blue-600" />
+            </div>
+            <p className="text-xs text-gray-500 mt-2">across all neighborhoods</p>
+          </div>
+        </div>
+      )}
+      
+      {/* Price Trends Chart */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div className="bg-white rounded-lg shadow-md p-4">
+          <div className="flex items-center mb-4">
+            <TrendingUp size={18} className="text-blue-600 mr-2" />
+            <h2 className="text-lg font-semibold">Median Home Price Trend</h2>
+          </div>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={marketData?.priceTrends}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis 
+                  dataKey="month" 
+                  tickFormatter={(value, index) => {
+                    // Add year to January months only
+                    const item = marketData?.priceTrends[index];
+                    return item && item.month === 'Jan' ? `${item.month} ${item.year}` : item?.month;
+                  }}
+                />
+                <YAxis 
+                  tickFormatter={(value) => `$${value/1000}k`}
+                />
+                <Tooltip 
+                  formatter={(value) => formatCurrency(value as number)}
+                  labelFormatter={(label, items) => {
+                    const item = items[0]?.payload;
+                    return item ? `${item.month} ${item.year}` : label;
+                  }}
+                />
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="value" 
+                  name="Median Price" 
+                  stroke="#3B82F6" 
+                  activeDot={{ r: 8 }} 
+                  strokeWidth={2}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+        
+        {/* Days on Market Chart */}
+        <div className="bg-white rounded-lg shadow-md p-4">
+          <div className="flex items-center mb-4">
+            <Clock size={18} className="text-blue-600 mr-2" />
+            <h2 className="text-lg font-semibold">Days on Market Trend</h2>
+          </div>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={marketData?.domTrends}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis 
+                  dataKey="month" 
+                  tickFormatter={(value, index) => {
+                    const item = marketData?.domTrends[index];
+                    return item && item.month === 'Jan' ? `${item.month} ${item.year}` : item?.month;
+                  }}
+                />
+                <YAxis />
+                <Tooltip 
+                  formatter={(value) => [`${value} days`, 'Days on Market']}
+                  labelFormatter={(label, items) => {
+                    const item = items[0]?.payload;
+                    return item ? `${item.month} ${item.year}` : label;
+                  }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="days" 
+                  name="Days on Market" 
+                  stroke="#EC4899" 
+                  strokeWidth={2}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+      
+      {/* Sales Trend and Property Type Distribution */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* Monthly Sales Chart */}
+        <div className="bg-white rounded-lg shadow-md p-4">
+          <div className="flex items-center mb-4">
+            <BarChart2 size={18} className="text-blue-600 mr-2" />
+            <h2 className="text-lg font-semibold">Monthly Sales Volume</h2>
+          </div>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={marketData?.salesTrends}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis 
+                  dataKey="month" 
+                  tickFormatter={(value, index) => {
+                    const item = marketData?.salesTrends[index];
+                    return item && item.month === 'Jan' ? `${item.month} ${item.year}` : item?.month;
+                  }}
+                />
+                <YAxis />
+                <Tooltip 
+                  formatter={(value) => [`${value} sales`, 'Sales']}
+                  labelFormatter={(label, items) => {
+                    const item = items[0]?.payload;
+                    return item ? `${item.month} ${item.year}` : label;
+                  }}
+                />
+                <Bar 
+                  dataKey="sales" 
+                  name="Monthly Sales" 
+                  fill="#8884d8" 
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+        
+        {/* Property Type Distribution */}
+        <div className="bg-white rounded-lg shadow-md p-4">
+          <div className="flex items-center mb-4">
+            <PieChartIcon size={18} className="text-blue-600 mr-2" />
+            <h2 className="text-lg font-semibold">Property Type Distribution</h2>
+          </div>
+          <div className="h-80 flex justify-center items-center">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={marketData?.propertyTypes}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={true}
+                  outerRadius={120}
+                  fill="#8884d8"
+                  dataKey="value"
+                  nameKey="name"
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                >
+                  {marketData?.propertyTypes.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  formatter={(value) => [`${value}%`, 'Percentage']}
+                />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+      
+      {/* Neighborhood Price Comparison */}
+      <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+        <div className="flex items-center mb-4">
+          <MapPin size={18} className="text-blue-600 mr-2" />
+          <h2 className="text-lg font-semibold">Neighborhood Price Comparison</h2>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Neighborhood
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Median Home Price
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Price per Square Foot
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Comparison to City Average
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {marketData?.neighborhoodPrices.map((neighborhood, index) => {
+                // Calculate percentage vs. average
+                const avgMedianPrice = marketData.neighborhoodPrices.reduce((sum, n) => sum + n.medianPrice, 0) / 
+                                      marketData.neighborhoodPrices.length;
+                const percentDiff = ((neighborhood.medianPrice - avgMedianPrice) / avgMedianPrice) * 100;
+                
+                return (
+                  <tr key={neighborhood.name} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {neighborhood.name}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {formatCurrency(neighborhood.medianPrice)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      ${neighborhood.pricePerSqft}/sq.ft
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        {percentDiff >= 0 ? (
+                          <TrendingUp size={16} className="text-green-600 mr-1" />
+                        ) : (
+                          <TrendingDown size={16} className="text-red-600 mr-1" />
+                        )}
+                        <span className={`text-sm font-medium ${percentDiff >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {percentDiff >= 0 ? '+' : ''}{percentDiff.toFixed(1)}%
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      {/* Market summary */}
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h2 className="text-xl font-semibold mb-4">Market Summary</h2>
+        <p className="text-gray-700 mb-4">
+          The {selectedLocation} real estate market is currently {metrics && metrics.priceChange > 0 ? 'trending upward' : 'stabilizing'} with 
+          median home prices {metrics && metrics.priceChange > 0 ? 'rising' : 'adjusting'} by {metrics && Math.abs(metrics.priceChange).toFixed(1)}% compared to the previous month. 
+          Properties are selling in an average of {metrics?.currentDom} days, which is {metrics && metrics.domChange < 0 ? 'faster' : 'slower'} than the previous period.
+        </p>
+        <p className="text-gray-700 mb-4">
+          Single Family homes continue to dominate the market, representing approximately {marketData?.propertyTypes[0].value}% of all transactions. 
+          {metrics && metrics.salesChange > 0 
+            ? ` Sales volume has increased by ${metrics.salesChange.toFixed(1)}%, indicating strong buyer demand.` 
+            : ` Sales volume has decreased by ${Math.abs(metrics?.salesChange || 0).toFixed(1)}%, suggesting a potential shift in market dynamics.`
+          }
+        </p>
+        <p className="text-gray-700">
+          {marketData?.neighborhoodPrices[0].name} remains the most expensive neighborhood with a median price of {formatCurrency(marketData?.neighborhoodPrices[0].medianPrice || 0)}, 
+          while more affordable options can be found in {marketData?.neighborhoodPrices.reduce((prev, current) => 
+            (prev.medianPrice < current.medianPrice) ? prev : current).name} 
+          at {formatCurrency(marketData?.neighborhoodPrices.reduce((prev, current) => 
+            (prev.medianPrice < current.medianPrice) ? prev : current).medianPrice || 0)}.
+        </p>
+      </div>
+      
+      {/* Market insights */}
+      <div className="bg-blue-50 border border-blue-100 rounded-lg p-6">
+        <h2 className="text-xl font-semibold text-blue-800 mb-4">Market Insights</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="flex items-start">
+            <TrendingUp className="text-blue-600 mr-3 mt-1" size={20} />
+            <div>
+              <h3 className="font-semibold text-blue-800 mb-1">Price Appreciation</h3>
+              <p className="text-blue-700">
+                {selectedLocation} has seen a {metrics && metrics.priceChange > 3 
+                  ? 'significant' 
+                  : metrics && metrics.priceChange > 0 
+                    ? 'moderate' 
+                    : 'slight'} 
+                {metrics && metrics.priceChange >= 0 ? ' increase' : ' decrease'} in property values, 
+                making it a {metrics && metrics.priceChange > 3 ? 'strong market for sellers' : 'balanced market for buyers and sellers'}.
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-start">
+            <Clock className="text-blue-600 mr-3 mt-1" size={20} />
+            <div>
+              <h3 className="font-semibold text-blue-800 mb-1">Market Speed</h3>
+              <p className="text-blue-700">
+                Properties are selling {metrics && metrics.currentDom < 30 
+                  ? 'quickly' 
+                  : metrics && metrics.currentDom < 60 
+                    ? 'at a moderate pace' 
+                    : 'somewhat slowly'}, 
+                with an average of {metrics?.currentDom} days on market, indicating a 
+                {metrics && metrics.currentDom < 30 
+                  ? ' seller\'s market.' 
+                  : metrics && metrics.currentDom < 60 
+                    ? ' balanced market.' 
+                    : ' buyer\'s market.'}
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-start">
+            <Calendar className="text-blue-600 mr-3 mt-1" size={20} />
+            <div>
+              <h3 className="font-semibold text-blue-800 mb-1">Seasonal Trends</h3>
+              <p className="text-blue-700">
+                Based on historical data, the market tends to be most active during spring and early summer months,
+                with slightly lower activity during winter. Pricing often follows similar seasonal patterns.
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-start">
+            <MapPin className="text-blue-600 mr-3 mt-1" size={20} />
+            <div>
+              <h3 className="font-semibold text-blue-800 mb-1">Neighborhood Spotlight</h3>
+              <p className="text-blue-700">
+                {marketData?.neighborhoodPrices.sort((a, b) => (b.medianPrice / b.pricePerSqft) - (a.medianPrice / a.pricePerSqft))[0].name} offers 
+                the best value in terms of price per square foot relative to home values, 
+                while {marketData?.neighborhoodPrices.sort((a, b) => b.pricePerSqft - a.pricePerSqft)[0].name} commands the 
+                highest premium per square foot.
+              </p>
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
 };
+
+export default MarketAnalysis;

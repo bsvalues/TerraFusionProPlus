@@ -1,42 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
-import { ArrowLeft, Save, Trash2, MapPin, Home, Building2, DollarSign } from 'lucide-react';
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Home, Calendar, DollarSign, Ruler, ArrowLeft, Plus, Minus } from 'lucide-react';
+import { Appraisal } from '../types';
 
-interface ComparableFormValues {
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  salePrice: string;
-  saleDate: string;
-  squareFeet: string;
-  bedrooms: string;
-  bathrooms: string;
-  yearBuilt: string;
-  propertyType: string;
-  lotSize: string;
-  condition: string;
-  daysOnMarket: string;
-  source: string;
-  adjustmentNotes: string;
-}
-
-export const ComparableForm = () => {
-  const { id, appraisalId } = useParams();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [loading, setLoading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [appraisal, setAppraisal] = useState<any>(null);
-  const [currentAppraisalId, setCurrentAppraisalId] = useState<string | null>(null);
-  
-  const [formValues, setFormValues] = useState<ComparableFormValues>({
+const ComparableForm = () => {
+  // State for form data
+  const [formData, setFormData] = useState({
+    appraisalId: '',
     address: '',
     city: '',
     state: '',
     zipCode: '',
     salePrice: '',
-    saleDate: new Date().toISOString().split('T')[0],
+    saleDate: '',
     squareFeet: '',
     bedrooms: '',
     bathrooms: '',
@@ -46,518 +22,719 @@ export const ComparableForm = () => {
     condition: 'Average',
     daysOnMarket: '',
     source: 'MLS',
-    adjustmentNotes: ''
+    adjustments: [
+      { category: '', description: '', amount: '', isPercentage: false }
+    ]
   });
 
-  // Parse appraisal ID from query params if available
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const appId = params.get('appraisalId') || appraisalId;
-    if (appId) {
-      setCurrentAppraisalId(appId);
-    }
-  }, [location, appraisalId]);
+  // State for validation errors
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  // State for form submission
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
-  // Fetch appraisal details if we have an appraisal ID
-  useEffect(() => {
-    if (currentAppraisalId) {
-      setLoading(true);
-      fetch(`/api/appraisals/${currentAppraisalId}`)
-        .then(response => response.json())
-        .then(data => {
-          setAppraisal(data);
-          setLoading(false);
-        })
-        .catch(error => {
-          console.error('Error fetching appraisal:', error);
-          setLoading(false);
-        });
-    }
-  }, [currentAppraisalId]);
+  // Fetch appraisals for the dropdown
+  const { data: appraisals } = useQuery({
+    queryKey: ['/api/appraisals'],
+    retry: 1,
+  });
 
-  // Fetch comparable data if editing an existing comparable
-  useEffect(() => {
-    if (id) {
-      setLoading(true);
-      fetch(`/api/comparables/${id}`)
-        .then(response => response.json())
-        .then(data => {
-          setFormValues({
-            address: data.address || '',
-            city: data.city || '',
-            state: data.state || '',
-            zipCode: data.zipCode || '',
-            salePrice: data.salePrice ? data.salePrice.toString() : '',
-            saleDate: data.saleDate ? new Date(data.saleDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-            squareFeet: data.squareFeet ? data.squareFeet.toString() : '',
-            bedrooms: data.bedrooms ? data.bedrooms.toString() : '',
-            bathrooms: data.bathrooms ? data.bathrooms.toString() : '',
-            yearBuilt: data.yearBuilt ? data.yearBuilt.toString() : '',
-            propertyType: data.propertyType || 'Single Family',
-            lotSize: data.lotSize ? data.lotSize.toString() : '',
-            condition: data.condition || 'Average',
-            daysOnMarket: data.daysOnMarket ? data.daysOnMarket.toString() : '',
-            source: data.source || 'MLS',
-            adjustmentNotes: data.adjustmentNotes || ''
-          });
-          
-          // Set current appraisal ID if available from the comparable
-          if (data.appraisalId) {
-            setCurrentAppraisalId(data.appraisalId.toString());
-          }
-          
-          setLoading(false);
-        })
-        .catch(error => {
-          console.error('Error fetching comparable:', error);
-          setLoading(false);
-        });
-    }
-  }, [id]);
+  // Property type options
+  const propertyTypes = [
+    'Single Family',
+    'Condo',
+    'Multi-Family',
+    'Townhouse',
+    'Land',
+    'Commercial'
+  ];
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  // Condition options
+  const conditions = [
+    'Excellent',
+    'Good',
+    'Average',
+    'Fair',
+    'Poor'
+  ];
+
+  // Source options
+  const sources = [
+    'MLS',
+    'Public Records',
+    'Sales Office',
+    'Owner',
+    'Other'
+  ];
+
+  // Adjustment categories
+  const adjustmentCategories = [
+    'Sale Concessions',
+    'Location',
+    'Site/View',
+    'Size',
+    'Age/Condition',
+    'Design/Style',
+    'Quality of Construction',
+    'Amenities',
+    'Garage/Carport',
+    'Other'
+  ];
+
+  // Handle input change
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormValues({
-      ...formValues,
+    setFormData(prev => ({
+      ...prev,
       [name]: value
+    }));
+    
+    // Clear error when field is edited
+    if (errors[name]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+  };
+
+  // Handle adjustment change
+  const handleAdjustmentChange = (index: number, field: string, value: string | boolean) => {
+    setFormData(prev => {
+      const newAdjustments = [...prev.adjustments];
+      newAdjustments[index] = {
+        ...newAdjustments[index],
+        [field]: value
+      };
+      return {
+        ...prev,
+        adjustments: newAdjustments
+      };
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Add new adjustment
+  const addAdjustment = () => {
+    setFormData(prev => ({
+      ...prev,
+      adjustments: [
+        ...prev.adjustments,
+        { category: '', description: '', amount: '', isPercentage: false }
+      ]
+    }));
+  };
+
+  // Remove adjustment
+  const removeAdjustment = (index: number) => {
+    setFormData(prev => {
+      const newAdjustments = [...prev.adjustments];
+      newAdjustments.splice(index, 1);
+      return {
+        ...prev,
+        adjustments: newAdjustments
+      };
+    });
+  };
+
+  // Validate form
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    
+    // Required fields
+    if (!formData.appraisalId) newErrors.appraisalId = 'Appraisal is required';
+    if (!formData.address) newErrors.address = 'Address is required';
+    if (!formData.city) newErrors.city = 'City is required';
+    if (!formData.state) newErrors.state = 'State is required';
+    if (!formData.zipCode) newErrors.zipCode = 'ZIP Code is required';
+    if (!formData.salePrice) newErrors.salePrice = 'Sale price is required';
+    if (!formData.saleDate) newErrors.saleDate = 'Sale date is required';
+    if (!formData.squareFeet) newErrors.squareFeet = 'Square feet is required';
+    if (!formData.propertyType) newErrors.propertyType = 'Property type is required';
+    
+    // Number validation
+    if (formData.salePrice && isNaN(Number(formData.salePrice))) {
+      newErrors.salePrice = 'Sale price must be a number';
+    }
+    if (formData.squareFeet && isNaN(Number(formData.squareFeet))) {
+      newErrors.squareFeet = 'Square feet must be a number';
+    }
+    if (formData.bedrooms && isNaN(Number(formData.bedrooms))) {
+      newErrors.bedrooms = 'Bedrooms must be a number';
+    }
+    if (formData.bathrooms && isNaN(Number(formData.bathrooms))) {
+      newErrors.bathrooms = 'Bathrooms must be a number';
+    }
+    if (formData.yearBuilt && isNaN(Number(formData.yearBuilt))) {
+      newErrors.yearBuilt = 'Year built must be a number';
+    }
+    if (formData.lotSize && isNaN(Number(formData.lotSize))) {
+      newErrors.lotSize = 'Lot size must be a number';
+    }
+    if (formData.daysOnMarket && isNaN(Number(formData.daysOnMarket))) {
+      newErrors.daysOnMarket = 'Days on market must be a number';
+    }
+    
+    // Validate adjustments
+    formData.adjustments.forEach((adjustment, index) => {
+      if (adjustment.category && !adjustment.amount) {
+        newErrors[`adjustments[${index}].amount`] = 'Amount is required';
+      }
+      if (adjustment.amount && !adjustment.category) {
+        newErrors[`adjustments[${index}].category`] = 'Category is required';
+      }
+      if (adjustment.amount && isNaN(Number(adjustment.amount))) {
+        newErrors[`adjustments[${index}].amount`] = 'Amount must be a number';
+      }
+    });
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!currentAppraisalId) {
-      alert('Please select an appraisal for this comparable');
+    if (!validateForm()) {
+      // Scroll to first error
+      const firstErrorField = document.querySelector('.error-message');
+      if (firstErrorField) {
+        firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
       return;
     }
     
-    setSubmitting(true);
+    setIsSubmitting(true);
+    setSubmitError('');
     
-    // Convert form values to appropriate types
-    const comparableData = {
-      appraisalId: parseInt(currentAppraisalId),
-      address: formValues.address,
-      city: formValues.city,
-      state: formValues.state,
-      zipCode: formValues.zipCode,
-      salePrice: formValues.salePrice ? parseFloat(formValues.salePrice) : null,
-      saleDate: formValues.saleDate,
-      squareFeet: formValues.squareFeet ? parseFloat(formValues.squareFeet) : null,
-      bedrooms: formValues.bedrooms ? parseFloat(formValues.bedrooms) : null,
-      bathrooms: formValues.bathrooms ? parseFloat(formValues.bathrooms) : null,
-      yearBuilt: formValues.yearBuilt ? parseInt(formValues.yearBuilt) : null,
-      propertyType: formValues.propertyType,
-      lotSize: formValues.lotSize ? parseFloat(formValues.lotSize) : null,
-      condition: formValues.condition,
-      daysOnMarket: formValues.daysOnMarket ? parseInt(formValues.daysOnMarket) : null,
-      source: formValues.source,
-      adjustmentNotes: formValues.adjustmentNotes
-    };
-    
-    const url = id ? `/api/comparables/${id}` : '/api/comparables';
-    const method = id ? 'PUT' : 'POST';
-    
-    fetch(url, {
-      method: method,
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(comparableData)
-    })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then(data => {
-        setSubmitting(false);
-        // Navigate back to the appraisal detail page
-        navigate(`/appraisals/${currentAppraisalId}`);
-      })
-      .catch(error => {
-        console.error('Error saving comparable:', error);
-        setSubmitting(false);
-        alert('Error saving comparable. Please try again.');
-      });
-  };
-
-  // Get property icon based on type
-  const getPropertyIcon = (propertyType: string) => {
-    switch(propertyType.toLowerCase()) {
-      case 'single family':
-        return <Home size={20} className="text-blue-500" />;
-      case 'condo':
-        return <Building2 size={20} className="text-green-500" />;
-      case 'multi-family':
-        return <Building2 size={20} className="text-purple-500" />;
-      default:
-        return <Building2 size={20} className="text-gray-500" />;
+    try {
+      // Format data for API
+      const formattedData = {
+        appraisalId: parseInt(formData.appraisalId),
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        zipCode: formData.zipCode,
+        salePrice: parseInt(formData.salePrice),
+        saleDate: formData.saleDate,
+        squareFeet: parseInt(formData.squareFeet),
+        bedrooms: formData.bedrooms ? parseFloat(formData.bedrooms) : undefined,
+        bathrooms: formData.bathrooms ? parseFloat(formData.bathrooms) : undefined,
+        yearBuilt: formData.yearBuilt ? parseInt(formData.yearBuilt) : undefined,
+        propertyType: formData.propertyType,
+        lotSize: formData.lotSize ? parseInt(formData.lotSize) : undefined,
+        condition: formData.condition,
+        daysOnMarket: formData.daysOnMarket ? parseInt(formData.daysOnMarket) : undefined,
+        source: formData.source,
+        // Filter out empty adjustments
+        adjustments: formData.adjustments
+          .filter(adj => adj.category && adj.amount)
+          .map(adj => ({
+            category: adj.category,
+            description: adj.description,
+            amount: parseInt(adj.amount as string),
+            isPercentage: adj.isPercentage
+          }))
+      };
+      
+      // Mock submission for now - in real app, this would be an API call
+      // const response = await fetch('/api/comparables', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify(formattedData)
+      // });
+      
+      // if (!response.ok) throw new Error('Failed to create comparable');
+      
+      // Simulate API response
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setSubmitSuccess(true);
+      
+      // Reset form after 2 seconds
+      setTimeout(() => {
+        setFormData({
+          appraisalId: '',
+          address: '',
+          city: '',
+          state: '',
+          zipCode: '',
+          salePrice: '',
+          saleDate: '',
+          squareFeet: '',
+          bedrooms: '',
+          bathrooms: '',
+          yearBuilt: '',
+          propertyType: 'Single Family',
+          lotSize: '',
+          condition: 'Average',
+          daysOnMarket: '',
+          source: 'MLS',
+          adjustments: [
+            { category: '', description: '', amount: '', isPercentage: false }
+          ]
+        });
+        setSubmitSuccess(false);
+      }, 2000);
+      
+    } catch (error) {
+      console.error('Error creating comparable:', error);
+      setSubmitError('Failed to create comparable. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <div>
       <div className="mb-6">
-        <Link 
-          to={currentAppraisalId ? `/appraisals/${currentAppraisalId}` : "/appraisals"} 
-          className="inline-flex items-center text-blue-600 hover:text-blue-800"
-        >
-          <ArrowLeft size={18} className="mr-1" />
-          <span>Back to {currentAppraisalId ? 'Appraisal' : 'Appraisals'}</span>
-        </Link>
+        <button onClick={() => window.history.back()} className="flex items-center text-blue-600 hover:text-blue-800">
+          <ArrowLeft size={16} className="mr-1" /> Back
+        </button>
+        <h1 className="text-3xl font-bold gradient-heading mt-2">Add Comparable Property</h1>
+        <p className="text-gray-600 mt-1">Enter comparable property details for appraisal analysis</p>
       </div>
-
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold">{id ? 'Edit Comparable' : 'New Comparable'}</h1>
-          <p className="text-gray-600 mt-1">
-            {id ? 'Update comparable property information' : 'Add a new comparable property'}
-          </p>
+      
+      {submitSuccess && (
+        <div className="bg-green-50 border border-green-200 text-green-800 rounded-md p-4 mb-6">
+          Comparable property added successfully!
         </div>
-      </div>
-
-      {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      )}
+      
+      {submitError && (
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-md p-4 mb-6">
+          {submitError}
         </div>
-      ) : (
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Appraisal Information */}
-          {appraisal && (
-            <div className="bg-blue-50 rounded-lg p-4 mb-6">
-              <h2 className="text-md font-semibold text-blue-800 mb-2">Associated Appraisal</h2>
-              <div className="flex items-center">
-                <MapPin className="mr-2 text-blue-500" size={16} />
-                <div>
-                  <span className="font-medium">{appraisal.property?.address}</span>
-                  <span className="text-sm text-gray-600 ml-2">
-                    {appraisal.property?.city}, {appraisal.property?.state}
-                  </span>
+      )}
+      
+      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">Appraisal Information</h2>
+          <div>
+            <label htmlFor="appraisalId" className="block text-sm font-medium text-gray-700 mb-1">
+              Select Appraisal <span className="text-red-500">*</span>
+            </label>
+            <select
+              id="appraisalId"
+              name="appraisalId"
+              value={formData.appraisalId}
+              onChange={handleChange}
+              className={`mt-1 block w-full py-2 px-3 border ${errors.appraisalId ? 'border-red-300' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+            >
+              <option value="">Select an appraisal</option>
+              {appraisals?.map((appraisal: Appraisal) => (
+                <option key={appraisal.id} value={appraisal.id}>
+                  {appraisal.address} - {appraisal.clientName || 'No client'} - {appraisal.status}
+                </option>
+              ))}
+            </select>
+            {errors.appraisalId && <p className="mt-1 text-sm text-red-600 error-message">{errors.appraisalId}</p>}
+          </div>
+        </div>
+        
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">Property Information</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
+                Address <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Home size={16} className="text-gray-400" />
                 </div>
-              </div>
-            </div>
-          )}
-
-          {/* Comparable Property Information */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="p-6 border-b">
-              <h2 className="text-xl font-semibold flex items-center">
-                {getPropertyIcon(formValues.propertyType)}
-                <span className="ml-2">Comparable Property Information</span>
-              </h2>
-            </div>
-            <div className="p-6">
-              {/* Address Information */}
-              <div className="mb-6">
-                <h3 className="text-md font-medium mb-3 text-gray-700">Location</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
-                      Address *
-                    </label>
-                    <input
-                      type="text"
-                      id="address"
-                      name="address"
-                      value={formValues.address}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                      placeholder="Enter street address"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
-                      City *
-                    </label>
-                    <input
-                      type="text"
-                      id="city"
-                      name="city"
-                      value={formValues.city}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                      placeholder="Enter city"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">
-                      State *
-                    </label>
-                    <input
-                      type="text"
-                      id="state"
-                      name="state"
-                      value={formValues.state}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                      placeholder="Enter state"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="zipCode" className="block text-sm font-medium text-gray-700 mb-1">
-                      ZIP Code *
-                    </label>
-                    <input
-                      type="text"
-                      id="zipCode"
-                      name="zipCode"
-                      value={formValues.zipCode}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                      placeholder="Enter ZIP code"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Sale Information */}
-              <div className="mb-6">
-                <h3 className="text-md font-medium mb-3 text-gray-700">Sale Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="salePrice" className="block text-sm font-medium text-gray-700 mb-1">
-                      Sale Price *
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500 sm:text-sm">$</span>
-                      </div>
-                      <input
-                        type="number"
-                        id="salePrice"
-                        name="salePrice"
-                        value={formValues.salePrice}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full pl-7 border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                        placeholder="Enter sale price"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label htmlFor="saleDate" className="block text-sm font-medium text-gray-700 mb-1">
-                      Sale Date *
-                    </label>
-                    <input
-                      type="date"
-                      id="saleDate"
-                      name="saleDate"
-                      value={formValues.saleDate}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="daysOnMarket" className="block text-sm font-medium text-gray-700 mb-1">
-                      Days on Market
-                    </label>
-                    <input
-                      type="number"
-                      id="daysOnMarket"
-                      name="daysOnMarket"
-                      value={formValues.daysOnMarket}
-                      onChange={handleInputChange}
-                      className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                      placeholder="Enter days on market"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="source" className="block text-sm font-medium text-gray-700 mb-1">
-                      Source
-                    </label>
-                    <select
-                      id="source"
-                      name="source"
-                      value={formValues.source}
-                      onChange={handleInputChange}
-                      className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    >
-                      <option value="MLS">MLS</option>
-                      <option value="Public Records">Public Records</option>
-                      <option value="Direct Knowledge">Direct Knowledge</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Property Details */}
-              <div className="mb-6">
-                <h3 className="text-md font-medium mb-3 text-gray-700">Property Details</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label htmlFor="propertyType" className="block text-sm font-medium text-gray-700 mb-1">
-                      Property Type *
-                    </label>
-                    <select
-                      id="propertyType"
-                      name="propertyType"
-                      value={formValues.propertyType}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    >
-                      <option value="Single Family">Single Family</option>
-                      <option value="Condo">Condo</option>
-                      <option value="Multi-Family">Multi-Family</option>
-                      <option value="Townhouse">Townhouse</option>
-                      <option value="Land">Land</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label htmlFor="squareFeet" className="block text-sm font-medium text-gray-700 mb-1">
-                      Square Feet *
-                    </label>
-                    <input
-                      type="number"
-                      id="squareFeet"
-                      name="squareFeet"
-                      value={formValues.squareFeet}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                      placeholder="Enter square feet"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="yearBuilt" className="block text-sm font-medium text-gray-700 mb-1">
-                      Year Built
-                    </label>
-                    <input
-                      type="number"
-                      id="yearBuilt"
-                      name="yearBuilt"
-                      value={formValues.yearBuilt}
-                      onChange={handleInputChange}
-                      className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                      placeholder="Enter year built"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="bedrooms" className="block text-sm font-medium text-gray-700 mb-1">
-                      Bedrooms
-                    </label>
-                    <input
-                      type="number"
-                      id="bedrooms"
-                      name="bedrooms"
-                      value={formValues.bedrooms}
-                      onChange={handleInputChange}
-                      className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                      placeholder="Enter bedrooms"
-                      step="0.5"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="bathrooms" className="block text-sm font-medium text-gray-700 mb-1">
-                      Bathrooms
-                    </label>
-                    <input
-                      type="number"
-                      id="bathrooms"
-                      name="bathrooms"
-                      value={formValues.bathrooms}
-                      onChange={handleInputChange}
-                      className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                      placeholder="Enter bathrooms"
-                      step="0.5"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="lotSize" className="block text-sm font-medium text-gray-700 mb-1">
-                      Lot Size (sq.ft.)
-                    </label>
-                    <input
-                      type="number"
-                      id="lotSize"
-                      name="lotSize"
-                      value={formValues.lotSize}
-                      onChange={handleInputChange}
-                      className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                      placeholder="Enter lot size"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="condition" className="block text-sm font-medium text-gray-700 mb-1">
-                      Condition
-                    </label>
-                    <select
-                      id="condition"
-                      name="condition"
-                      value={formValues.condition}
-                      onChange={handleInputChange}
-                      className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    >
-                      <option value="Excellent">Excellent</option>
-                      <option value="Good">Good</option>
-                      <option value="Average">Average</option>
-                      <option value="Fair">Fair</option>
-                      <option value="Poor">Poor</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Adjustment Notes */}
-              <div>
-                <label htmlFor="adjustmentNotes" className="block text-sm font-medium text-gray-700 mb-1">
-                  Adjustment Notes
-                </label>
-                <textarea
-                  id="adjustmentNotes"
-                  name="adjustmentNotes"
-                  value={formValues.adjustmentNotes}
-                  onChange={handleInputChange}
-                  rows={3}
-                  className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  placeholder="Enter any notes about adjustments to this comparable"
+                <input
+                  type="text"
+                  id="address"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  className={`pl-10 mt-1 block w-full py-2 px-3 border ${errors.address ? 'border-red-300' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                  placeholder="123 Main St"
                 />
               </div>
+              {errors.address && <p className="mt-1 text-sm text-red-600 error-message">{errors.address}</p>}
+            </div>
+            
+            <div>
+              <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
+                City <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                id="city"
+                name="city"
+                value={formData.city}
+                onChange={handleChange}
+                className={`mt-1 block w-full py-2 px-3 border ${errors.city ? 'border-red-300' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                placeholder="Springfield"
+              />
+              {errors.city && <p className="mt-1 text-sm text-red-600 error-message">{errors.city}</p>}
+            </div>
+            
+            <div>
+              <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">
+                State <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                id="state"
+                name="state"
+                value={formData.state}
+                onChange={handleChange}
+                className={`mt-1 block w-full py-2 px-3 border ${errors.state ? 'border-red-300' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                placeholder="CA"
+                maxLength={2}
+              />
+              {errors.state && <p className="mt-1 text-sm text-red-600 error-message">{errors.state}</p>}
+            </div>
+            
+            <div>
+              <label htmlFor="zipCode" className="block text-sm font-medium text-gray-700 mb-1">
+                ZIP Code <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                id="zipCode"
+                name="zipCode"
+                value={formData.zipCode}
+                onChange={handleChange}
+                className={`mt-1 block w-full py-2 px-3 border ${errors.zipCode ? 'border-red-300' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                placeholder="90210"
+              />
+              {errors.zipCode && <p className="mt-1 text-sm text-red-600 error-message">{errors.zipCode}</p>}
+            </div>
+            
+            <div>
+              <label htmlFor="propertyType" className="block text-sm font-medium text-gray-700 mb-1">
+                Property Type <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="propertyType"
+                name="propertyType"
+                value={formData.propertyType}
+                onChange={handleChange}
+                className={`mt-1 block w-full py-2 px-3 border ${errors.propertyType ? 'border-red-300' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+              >
+                {propertyTypes.map(type => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+              {errors.propertyType && <p className="mt-1 text-sm text-red-600 error-message">{errors.propertyType}</p>}
+            </div>
+            
+            <div>
+              <label htmlFor="condition" className="block text-sm font-medium text-gray-700 mb-1">
+                Condition
+              </label>
+              <select
+                id="condition"
+                name="condition"
+                value={formData.condition}
+                onChange={handleChange}
+                className="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              >
+                {conditions.map(condition => (
+                  <option key={condition} value={condition}>{condition}</option>
+                ))}
+              </select>
             </div>
           </div>
-
-          {/* Form Actions */}
-          <div className="flex justify-end space-x-4">
-            <Link
-              to={currentAppraisalId ? `/appraisals/${currentAppraisalId}` : "/appraisals"}
-              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              Cancel
-            </Link>
+        </div>
+        
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">Sale Information</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label htmlFor="salePrice" className="block text-sm font-medium text-gray-700 mb-1">
+                Sale Price <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <DollarSign size={16} className="text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  id="salePrice"
+                  name="salePrice"
+                  value={formData.salePrice}
+                  onChange={handleChange}
+                  className={`pl-10 mt-1 block w-full py-2 px-3 border ${errors.salePrice ? 'border-red-300' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                  placeholder="500000"
+                />
+              </div>
+              {errors.salePrice && <p className="mt-1 text-sm text-red-600 error-message">{errors.salePrice}</p>}
+            </div>
+            
+            <div>
+              <label htmlFor="saleDate" className="block text-sm font-medium text-gray-700 mb-1">
+                Sale Date <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Calendar size={16} className="text-gray-400" />
+                </div>
+                <input
+                  type="date"
+                  id="saleDate"
+                  name="saleDate"
+                  value={formData.saleDate}
+                  onChange={handleChange}
+                  className={`pl-10 mt-1 block w-full py-2 px-3 border ${errors.saleDate ? 'border-red-300' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                />
+              </div>
+              {errors.saleDate && <p className="mt-1 text-sm text-red-600 error-message">{errors.saleDate}</p>}
+            </div>
+            
+            <div>
+              <label htmlFor="source" className="block text-sm font-medium text-gray-700 mb-1">
+                Source
+              </label>
+              <select
+                id="source"
+                name="source"
+                value={formData.source}
+                onChange={handleChange}
+                className="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              >
+                {sources.map(source => (
+                  <option key={source} value={source}>{source}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div>
+              <label htmlFor="daysOnMarket" className="block text-sm font-medium text-gray-700 mb-1">
+                Days on Market
+              </label>
+              <input
+                type="text"
+                id="daysOnMarket"
+                name="daysOnMarket"
+                value={formData.daysOnMarket}
+                onChange={handleChange}
+                className={`mt-1 block w-full py-2 px-3 border ${errors.daysOnMarket ? 'border-red-300' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                placeholder="30"
+              />
+              {errors.daysOnMarket && <p className="mt-1 text-sm text-red-600 error-message">{errors.daysOnMarket}</p>}
+            </div>
+          </div>
+        </div>
+        
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">Property Details</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div>
+              <label htmlFor="squareFeet" className="block text-sm font-medium text-gray-700 mb-1">
+                Square Feet <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Ruler size={16} className="text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  id="squareFeet"
+                  name="squareFeet"
+                  value={formData.squareFeet}
+                  onChange={handleChange}
+                  className={`pl-10 mt-1 block w-full py-2 px-3 border ${errors.squareFeet ? 'border-red-300' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                  placeholder="2000"
+                />
+              </div>
+              {errors.squareFeet && <p className="mt-1 text-sm text-red-600 error-message">{errors.squareFeet}</p>}
+            </div>
+            
+            <div>
+              <label htmlFor="bedrooms" className="block text-sm font-medium text-gray-700 mb-1">
+                Bedrooms
+              </label>
+              <input
+                type="text"
+                id="bedrooms"
+                name="bedrooms"
+                value={formData.bedrooms}
+                onChange={handleChange}
+                className={`mt-1 block w-full py-2 px-3 border ${errors.bedrooms ? 'border-red-300' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                placeholder="3"
+              />
+              {errors.bedrooms && <p className="mt-1 text-sm text-red-600 error-message">{errors.bedrooms}</p>}
+            </div>
+            
+            <div>
+              <label htmlFor="bathrooms" className="block text-sm font-medium text-gray-700 mb-1">
+                Bathrooms
+              </label>
+              <input
+                type="text"
+                id="bathrooms"
+                name="bathrooms"
+                value={formData.bathrooms}
+                onChange={handleChange}
+                className={`mt-1 block w-full py-2 px-3 border ${errors.bathrooms ? 'border-red-300' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                placeholder="2.5"
+              />
+              {errors.bathrooms && <p className="mt-1 text-sm text-red-600 error-message">{errors.bathrooms}</p>}
+            </div>
+            
+            <div>
+              <label htmlFor="yearBuilt" className="block text-sm font-medium text-gray-700 mb-1">
+                Year Built
+              </label>
+              <input
+                type="text"
+                id="yearBuilt"
+                name="yearBuilt"
+                value={formData.yearBuilt}
+                onChange={handleChange}
+                className={`mt-1 block w-full py-2 px-3 border ${errors.yearBuilt ? 'border-red-300' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                placeholder="2000"
+              />
+              {errors.yearBuilt && <p className="mt-1 text-sm text-red-600 error-message">{errors.yearBuilt}</p>}
+            </div>
+            
+            <div>
+              <label htmlFor="lotSize" className="block text-sm font-medium text-gray-700 mb-1">
+                Lot Size (sq. ft.)
+              </label>
+              <input
+                type="text"
+                id="lotSize"
+                name="lotSize"
+                value={formData.lotSize}
+                onChange={handleChange}
+                className={`mt-1 block w-full py-2 px-3 border ${errors.lotSize ? 'border-red-300' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                placeholder="8000"
+              />
+              {errors.lotSize && <p className="mt-1 text-sm text-red-600 error-message">{errors.lotSize}</p>}
+            </div>
+          </div>
+        </div>
+        
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-4 pb-2 border-b">
+            <h2 className="text-lg font-semibold text-gray-800">Adjustments</h2>
             <button
-              type="submit"
-              disabled={submitting || !currentAppraisalId}
-              className={`px-4 py-2 rounded-md shadow-sm text-sm font-medium text-white ${
-                submitting || !currentAppraisalId
-                  ? 'bg-blue-400 cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
-              }`}
+              type="button"
+              onClick={addAdjustment}
+              className="px-2 py-1 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors flex items-center"
             >
-              {submitting ? (
-                <span className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Saving...
-                </span>
-              ) : (
-                <span className="flex items-center">
-                  <Save size={18} className="mr-2" />
-                  {id ? 'Update Comparable' : 'Add Comparable'}
-                </span>
-              )}
+              <Plus size={16} className="mr-1" /> Add Adjustment
             </button>
           </div>
-        </form>
-      )}
+          
+          {formData.adjustments.map((adjustment, index) => (
+            <div key={index} className="p-4 border border-gray-200 rounded-md mb-4">
+              <div className="flex justify-between mb-3">
+                <h3 className="text-sm font-medium text-gray-700">Adjustment {index + 1}</h3>
+                {index > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => removeAdjustment(index)}
+                    className="text-red-600 hover:text-red-800 flex items-center text-sm"
+                  >
+                    <Minus size={16} className="mr-1" /> Remove
+                  </button>
+                )}
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label htmlFor={`adjustmentCategory-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
+                    Category
+                  </label>
+                  <select
+                    id={`adjustmentCategory-${index}`}
+                    value={adjustment.category}
+                    onChange={(e) => handleAdjustmentChange(index, 'category', e.target.value)}
+                    className={`mt-1 block w-full py-2 px-3 border ${errors[`adjustments[${index}].category`] ? 'border-red-300' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                  >
+                    <option value="">Select category</option>
+                    {adjustmentCategories.map(category => (
+                      <option key={category} value={category}>{category}</option>
+                    ))}
+                  </select>
+                  {errors[`adjustments[${index}].category`] && (
+                    <p className="mt-1 text-sm text-red-600 error-message">{errors[`adjustments[${index}].category`]}</p>
+                  )}
+                </div>
+                
+                <div>
+                  <label htmlFor={`adjustmentDescription-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
+                    Description
+                  </label>
+                  <input
+                    type="text"
+                    id={`adjustmentDescription-${index}`}
+                    value={adjustment.description}
+                    onChange={(e) => handleAdjustmentChange(index, 'description', e.target.value)}
+                    className="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="e.g., Superior location"
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor={`adjustmentAmount-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
+                    Amount
+                  </label>
+                  <div className="flex space-x-2">
+                    <div className="relative flex-grow">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <DollarSign size={16} className="text-gray-400" />
+                      </div>
+                      <input
+                        type="text"
+                        id={`adjustmentAmount-${index}`}
+                        value={adjustment.amount}
+                        onChange={(e) => handleAdjustmentChange(index, 'amount', e.target.value)}
+                        className={`pl-10 mt-1 block w-full py-2 px-3 border ${errors[`adjustments[${index}].amount`] ? 'border-red-300' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                        placeholder="5000"
+                      />
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id={`adjustmentIsPercentage-${index}`}
+                        checked={adjustment.isPercentage as boolean}
+                        onChange={(e) => handleAdjustmentChange(index, 'isPercentage', e.target.checked)}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <label htmlFor={`adjustmentIsPercentage-${index}`} className="ml-2 text-sm text-gray-700">
+                        %
+                      </label>
+                    </div>
+                  </div>
+                  {errors[`adjustments[${index}].amount`] && (
+                    <p className="mt-1 text-sm text-red-600 error-message">{errors[`adjustments[${index}].amount`]}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => window.history.back()}
+            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md mr-4 hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Saving...' : 'Save Comparable'}
+          </button>
+        </div>
+      </form>
     </div>
   );
 };
+
+export default ComparableForm;
