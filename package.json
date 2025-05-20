@@ -14,6 +14,7 @@
     "@hookform/resolvers": "^5.0.1",
     "@neondatabase/serverless": "^1.0.0",
     "@tanstack/react-query": "^5.76.1",
+    "@vitejs/plugin-react": "^4.4.1",
     "autoprefixer": "^10.4.21",
     "concurrently": "^9.1.2",
     "date-fns": "^4.1.0",
@@ -30,6 +31,7 @@
     "react-router-dom": "^7.6.0",
     "recharts": "^2.15.3",
     "tailwindcss": "^4.1.7",
+    "vite": "^6.3.5",
     "ws": "^8.18.2",
     "zod": "^3.25.7"
   }
