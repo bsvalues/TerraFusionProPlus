@@ -4,19 +4,10 @@ import { Appraisal, InsertAppraisal } from '../types';
 
 const APPRAISALS_ENDPOINT = '/api/appraisals';
 
-export function useAppraisals(filters?: { property_id?: number; appraiser_id?: number; status?: string }) {
-  const queryParams = new URLSearchParams();
-  
-  if (filters?.property_id) queryParams.append('property_id', filters.property_id.toString());
-  if (filters?.appraiser_id) queryParams.append('appraiser_id', filters.appraiser_id.toString());
-  if (filters?.status) queryParams.append('status', filters.status);
-  
-  const queryString = queryParams.toString();
-  const endpoint = queryString ? `${APPRAISALS_ENDPOINT}?${queryString}` : APPRAISALS_ENDPOINT;
-  
+export function useAppraisals() {
   return useQuery({
-    queryKey: ['appraisals', filters],
-    queryFn: () => apiRequest<Appraisal[]>({ url: endpoint }),
+    queryKey: ['appraisals'],
+    queryFn: () => apiRequest<Appraisal[]>({ url: APPRAISALS_ENDPOINT }),
   });
 }
 
@@ -25,6 +16,28 @@ export function useAppraisal(id: number) {
     queryKey: ['appraisals', id],
     queryFn: () => apiRequest<Appraisal>({ url: `${APPRAISALS_ENDPOINT}/${id}` }),
     enabled: !!id,
+  });
+}
+
+export function useAppraisalsByProperty(propertyId: number) {
+  return useQuery({
+    queryKey: ['appraisals', { property_id: propertyId }],
+    queryFn: () => 
+      apiRequest<Appraisal[]>({ 
+        url: `${APPRAISALS_ENDPOINT}?property_id=${propertyId}` 
+      }),
+    enabled: !!propertyId,
+  });
+}
+
+export function useAppraisalsByAppraiser(appraiserId: number) {
+  return useQuery({
+    queryKey: ['appraisals', { appraiser_id: appraiserId }],
+    queryFn: () => 
+      apiRequest<Appraisal[]>({ 
+        url: `${APPRAISALS_ENDPOINT}?appraiser_id=${appraiserId}` 
+      }),
+    enabled: !!appraiserId,
   });
 }
 
@@ -39,9 +52,12 @@ export function useCreateAppraisal() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['appraisals'] });
-      if (data.property_id) {
-        queryClient.invalidateQueries({ queryKey: ['appraisals', { property_id: data.property_id }] });
-      }
+      queryClient.invalidateQueries({ 
+        queryKey: ['appraisals', { property_id: data.property_id }] 
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ['appraisals', { appraiser_id: data.appraiser_id }] 
+      });
     },
   });
 }
@@ -58,9 +74,12 @@ export function useUpdateAppraisal() {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['appraisals'] });
       queryClient.invalidateQueries({ queryKey: ['appraisals', variables.id] });
-      if (data.property_id) {
-        queryClient.invalidateQueries({ queryKey: ['appraisals', { property_id: data.property_id }] });
-      }
+      queryClient.invalidateQueries({ 
+        queryKey: ['appraisals', { property_id: data.property_id }] 
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ['appraisals', { appraiser_id: data.appraiser_id }] 
+      });
     },
   });
 }

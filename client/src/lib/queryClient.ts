@@ -1,27 +1,16 @@
 import { QueryClient } from '@tanstack/react-query';
 
-export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 60 * 1000, // 1 minute
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
-
-export const apiRequest = async <T>({
-  url,
-  method = 'GET',
-  body,
-  headers = {},
-}: {
+type ApiRequestOptions = {
   url: string;
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
   body?: any;
   headers?: Record<string, string>;
-}): Promise<T> => {
-  const options: RequestInit = {
+};
+
+export async function apiRequest<T>(options: ApiRequestOptions): Promise<T> {
+  const { url, method = 'GET', body, headers = {} } = options;
+
+  const requestOptions: RequestInit = {
     method,
     headers: {
       'Content-Type': 'application/json',
@@ -30,19 +19,25 @@ export const apiRequest = async <T>({
   };
 
   if (body) {
-    options.body = JSON.stringify(body);
+    requestOptions.body = JSON.stringify(body);
   }
 
-  const response = await fetch(url, options);
+  const response = await fetch(url, requestOptions);
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(
-      errorData.error || `API error: ${response.status} ${response.statusText}`
-    );
+    const error = await response.text();
+    throw new Error(error || `API request failed with status ${response.status}`);
   }
 
   return response.json();
-};
+}
 
-export default queryClient;
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});

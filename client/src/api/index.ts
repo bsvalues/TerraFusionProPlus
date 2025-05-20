@@ -1,224 +1,323 @@
 import { 
-  Property, Appraisal, Comparable, Adjustment, User, MarketData, Attachment,
-  InsertProperty, InsertAppraisal, InsertComparable, InsertAdjustment, 
-  InsertUser, InsertMarketData, InsertAttachment
+  Property, InsertProperty,
+  Appraisal, InsertAppraisal,
+  Comparable, InsertComparable,
+  Adjustment, InsertAdjustment,
+  MarketData, InsertMarketData,
+  User, InsertUser,
+  Attachment, InsertAttachment
 } from '../types';
-import { z } from 'zod';
 
-// These types are now imported from '../types'
-
-// Base API fetch function
-const apiFetch = async <T>(
-  endpoint: string,
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET',
-  body?: any
-): Promise<T> => {
-  const options: RequestInit = {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  };
-
-  if (body) {
-    options.body = JSON.stringify(body);
-  }
-
-  const response = await fetch(`/api/${endpoint}`, options);
-
+// Properties API
+export const getProperties = async (): Promise<Property[]> => {
+  const response = await fetch('/api/properties');
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(
-      errorData.error || `API error: ${response.status} ${response.statusText}`
-    );
+    throw new Error('Failed to fetch properties');
   }
-
   return response.json();
 };
 
-// Property API endpoints
-export const propertyApi = {
-  getProperties: async (): Promise<Property[]> => {
-    return apiFetch<Property[]>('properties');
-  },
-
-  getProperty: async (id: number): Promise<Property> => {
-    return apiFetch<Property>(`properties/${id}`);
-  },
-
-  createProperty: async (property: InsertProperty): Promise<Property> => {
-    return apiFetch<Property>('properties', 'POST', property);
-  },
-
-  updateProperty: async (id: number, property: Partial<InsertProperty>): Promise<Property> => {
-    return apiFetch<Property>(`properties/${id}`, 'PUT', property);
-  },
-
-  deleteProperty: async (id: number): Promise<void> => {
-    return apiFetch<void>(`properties/${id}`, 'DELETE');
-  },
+export const getProperty = async (id: number): Promise<Property> => {
+  const response = await fetch(`/api/properties/${id}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch property with id ${id}`);
+  }
+  return response.json();
 };
 
-// Appraisal API endpoints
-export const appraisalApi = {
-  getAppraisals: async (filters?: { property_id?: number; appraiser_id?: number; status?: string }): Promise<Appraisal[]> => {
-    const queryParams = new URLSearchParams();
-
-    if (filters?.property_id) queryParams.append('property_id', filters.property_id.toString());
-    if (filters?.appraiser_id) queryParams.append('appraiser_id', filters.appraiser_id.toString());
-    if (filters?.status) queryParams.append('status', filters.status);
-
-    const queryString = queryParams.toString();
-    const endpoint = queryString ? `appraisals?${queryString}` : 'appraisals';
-
-    return apiFetch<Appraisal[]>(endpoint);
-  },
-
-  getAppraisal: async (id: number): Promise<Appraisal> => {
-    return apiFetch<Appraisal>(`appraisals/${id}`);
-  },
-
-  createAppraisal: async (appraisal: InsertAppraisal): Promise<Appraisal> => {
-    return apiFetch<Appraisal>('appraisals', 'POST', appraisal);
-  },
-
-  updateAppraisal: async (id: number, appraisal: Partial<InsertAppraisal>): Promise<Appraisal> => {
-    return apiFetch<Appraisal>(`appraisals/${id}`, 'PUT', appraisal);
-  },
-};
-
-// Comparable API endpoints
-export const comparableApi = {
-  getComparables: async (appraisal_id: number): Promise<Comparable[]> => {
-    return apiFetch<Comparable[]>(`comparables?appraisal_id=${appraisal_id}`);
-  },
-
-  getComparable: async (id: number): Promise<Comparable> => {
-    return apiFetch<Comparable>(`comparables/${id}`);
-  },
-
-  createComparable: async (comparable: InsertComparable): Promise<Comparable> => {
-    return apiFetch<Comparable>('comparables', 'POST', comparable);
-  },
-
-  updateComparable: async (id: number, comparable: Partial<InsertComparable>): Promise<Comparable> => {
-    return apiFetch<Comparable>(`comparables/${id}`, 'PUT', comparable);
-  },
-};
-
-// Adjustment API endpoints
-export const adjustmentApi = {
-  getAdjustments: async (comparable_id: number): Promise<Adjustment[]> => {
-    return apiFetch<Adjustment[]>(`adjustments?comparable_id=${comparable_id}`);
-  },
-
-  getAdjustment: async (id: number): Promise<Adjustment> => {
-    return apiFetch<Adjustment>(`adjustments/${id}`);
-  },
-
-  createAdjustment: async (adjustment: InsertAdjustment): Promise<Adjustment> => {
-    return apiFetch<Adjustment>('adjustments', 'POST', adjustment);
-  },
-
-  updateAdjustment: async (id: number, adjustment: Partial<InsertAdjustment>): Promise<Adjustment> => {
-    return apiFetch<Adjustment>(`adjustments/${id}`, 'PUT', adjustment);
-  },
-
-  deleteAdjustment: async (id: number): Promise<void> => {
-    return apiFetch<void>(`adjustments/${id}`, 'DELETE');
-  },
-};
-
-// User API endpoints
-export const userApi = {
-  getUsers: async (): Promise<User[]> => {
-    return apiFetch<User[]>('users');
-  },
-
-  getUser: async (id: number): Promise<User> => {
-    return apiFetch<User>(`users/${id}`);
-  },
-
-  createUser: async (user: InsertUser): Promise<User> => {
-    return apiFetch<User>('users', 'POST', user);
-  },
-
-  updateUser: async (id: number, user: Partial<InsertUser>): Promise<User> => {
-    return apiFetch<User>(`users/${id}`, 'PUT', user);
-  },
-};
-
-// Market data API endpoints
-export const marketDataApi = {
-  getMarketData: async (filters?: { location?: string; data_type?: string }): Promise<MarketData[]> => {
-    const queryParams = new URLSearchParams();
-
-    if (filters?.location) queryParams.append('location', filters.location);
-    if (filters?.data_type) queryParams.append('data_type', filters.data_type);
-
-    const queryString = queryParams.toString();
-    const endpoint = queryString ? `market-data?${queryString}` : 'market-data';
-
-    return apiFetch<MarketData[]>(endpoint);
-  },
-
-  createMarketData: async (marketData: InsertMarketData): Promise<MarketData> => {
-    return apiFetch<MarketData>('market-data', 'POST', marketData);
-  },
-};
-
-// Attachment API endpoints
-export const attachmentApi = {
-  getAttachments: async (filters: { property_id?: number; appraisal_id?: number }): Promise<Attachment[]> => {
-    const queryParams = new URLSearchParams();
-
-    if (filters.property_id) queryParams.append('property_id', filters.property_id.toString());
-    if (filters.appraisal_id) queryParams.append('appraisal_id', filters.appraisal_id.toString());
-
-    const queryString = queryParams.toString();
-    const endpoint = queryString ? `attachments?${queryString}` : 'attachments';
-
-    return apiFetch<Attachment[]>(endpoint);
-  },
-
-  getAttachment: async (id: number): Promise<Attachment> => {
-    return apiFetch<Attachment>(`attachments/${id}`);
-  },
-
-  uploadAttachment: async (
-    data: { 
-      property_id?: number;
-      appraisal_id?: number;
-      category?: string;
-      description?: string;
+export const createProperty = async (property: InsertProperty): Promise<Property> => {
+  const response = await fetch('/api/properties', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
     },
-    file: File
-  ): Promise<Attachment> => {
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    Object.entries(data).forEach(([key, value]) => {
-      if (value !== undefined) {
-        formData.append(key, String(value));
-      }
-    });
+    body: JSON.stringify(property),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to create property');
+  }
+  return response.json();
+};
 
-    const response = await fetch('/api/attachments', {
-      method: 'POST',
-      body: formData,
-    });
+export const updateProperty = async (id: number, property: Partial<InsertProperty>): Promise<Property> => {
+  const response = await fetch(`/api/properties/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(property),
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to update property with id ${id}`);
+  }
+  return response.json();
+};
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        errorData.error || `API error: ${response.status} ${response.statusText}`
-      );
-    }
+// Appraisals API
+export const getAppraisals = async (): Promise<Appraisal[]> => {
+  const response = await fetch('/api/appraisals');
+  if (!response.ok) {
+    throw new Error('Failed to fetch appraisals');
+  }
+  return response.json();
+};
 
-    return response.json();
-  },
+export const getAppraisal = async (id: number): Promise<Appraisal> => {
+  const response = await fetch(`/api/appraisals/${id}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch appraisal with id ${id}`);
+  }
+  return response.json();
+};
 
-  deleteAttachment: async (id: number): Promise<void> => {
-    return apiFetch<void>(`attachments/${id}`, 'DELETE');
-  },
+export const getAppraisalsByProperty = async (propertyId: number): Promise<Appraisal[]> => {
+  const response = await fetch(`/api/appraisals?property_id=${propertyId}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch appraisals for property with id ${propertyId}`);
+  }
+  return response.json();
+};
+
+export const getAppraisalsByAppraiser = async (appraiserId: number): Promise<Appraisal[]> => {
+  const response = await fetch(`/api/appraisals?appraiser_id=${appraiserId}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch appraisals for appraiser with id ${appraiserId}`);
+  }
+  return response.json();
+};
+
+export const createAppraisal = async (appraisal: InsertAppraisal): Promise<Appraisal> => {
+  const response = await fetch('/api/appraisals', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(appraisal),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to create appraisal');
+  }
+  return response.json();
+};
+
+export const updateAppraisal = async (id: number, appraisal: Partial<InsertAppraisal>): Promise<Appraisal> => {
+  const response = await fetch(`/api/appraisals/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(appraisal),
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to update appraisal with id ${id}`);
+  }
+  return response.json();
+};
+
+// Comparables API
+export const getComparables = async (appraisalId?: number): Promise<Comparable[]> => {
+  let url = '/api/comparables';
+  if (appraisalId) {
+    url += `?appraisal_id=${appraisalId}`;
+  }
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error('Failed to fetch comparables');
+  }
+  return response.json();
+};
+
+export const getComparable = async (id: number): Promise<Comparable> => {
+  const response = await fetch(`/api/comparables/${id}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch comparable with id ${id}`);
+  }
+  return response.json();
+};
+
+export const createComparable = async (comparable: InsertComparable): Promise<Comparable> => {
+  const response = await fetch('/api/comparables', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(comparable),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to create comparable');
+  }
+  return response.json();
+};
+
+export const updateComparable = async (id: number, comparable: Partial<InsertComparable>): Promise<Comparable> => {
+  const response = await fetch(`/api/comparables/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(comparable),
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to update comparable with id ${id}`);
+  }
+  return response.json();
+};
+
+// Adjustments API
+export const getAdjustments = async (comparableId: number): Promise<Adjustment[]> => {
+  const response = await fetch(`/api/adjustments?comparable_id=${comparableId}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch adjustments for comparable with id ${comparableId}`);
+  }
+  return response.json();
+};
+
+export const getAdjustment = async (id: number): Promise<Adjustment> => {
+  const response = await fetch(`/api/adjustments/${id}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch adjustment with id ${id}`);
+  }
+  return response.json();
+};
+
+export const createAdjustment = async (adjustment: InsertAdjustment): Promise<Adjustment> => {
+  const response = await fetch('/api/adjustments', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(adjustment),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to create adjustment');
+  }
+  return response.json();
+};
+
+export const updateAdjustment = async (id: number, adjustment: Partial<InsertAdjustment>): Promise<Adjustment> => {
+  const response = await fetch(`/api/adjustments/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(adjustment),
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to update adjustment with id ${id}`);
+  }
+  return response.json();
+};
+
+// Market Data API
+export const getMarketData = async (
+  filters?: { location?: string; data_type?: string }
+): Promise<MarketData[]> => {
+  let url = '/api/market-data';
+  const params = new URLSearchParams();
+  
+  if (filters?.location) {
+    params.append('location', filters.location);
+  }
+  
+  if (filters?.data_type) {
+    params.append('data_type', filters.data_type);
+  }
+  
+  const queryString = params.toString();
+  if (queryString) {
+    url += `?${queryString}`;
+  }
+  
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error('Failed to fetch market data');
+  }
+  return response.json();
+};
+
+export const createMarketData = async (marketData: InsertMarketData): Promise<MarketData> => {
+  const response = await fetch('/api/market-data', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(marketData),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to create market data');
+  }
+  return response.json();
+};
+
+// Users API
+export const getUser = async (id: number): Promise<User> => {
+  const response = await fetch(`/api/users/${id}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch user with id ${id}`);
+  }
+  return response.json();
+};
+
+export const getUserByUsername = async (username: string): Promise<User> => {
+  const response = await fetch(`/api/users?username=${username}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch user with username ${username}`);
+  }
+  const users = await response.json();
+  return users[0];
+};
+
+export const createUser = async (user: InsertUser): Promise<User> => {
+  const response = await fetch('/api/users', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(user),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to create user');
+  }
+  return response.json();
+};
+
+// Attachments API
+export const getAttachments = async (
+  filters?: { property_id?: number; appraisal_id?: number }
+): Promise<Attachment[]> => {
+  let url = '/api/attachments';
+  const params = new URLSearchParams();
+  
+  if (filters?.property_id) {
+    params.append('property_id', filters.property_id.toString());
+  }
+  
+  if (filters?.appraisal_id) {
+    params.append('appraisal_id', filters.appraisal_id.toString());
+  }
+  
+  const queryString = params.toString();
+  if (queryString) {
+    url += `?${queryString}`;
+  }
+  
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error('Failed to fetch attachments');
+  }
+  return response.json();
+};
+
+export const createAttachment = async (attachment: InsertAttachment): Promise<Attachment> => {
+  const response = await fetch('/api/attachments', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(attachment),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to create attachment');
+  }
+  return response.json();
 };

@@ -43,23 +43,9 @@ export function useUpdateProperty() {
         body: data,
       });
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['properties'] });
       queryClient.invalidateQueries({ queryKey: ['properties', variables.id] });
-    },
-  });
-}
-
-export function useDeleteProperty() {
-  return useMutation({
-    mutationFn: (id: number) => {
-      return apiRequest<void>({
-        url: `${PROPERTIES_ENDPOINT}/${id}`,
-        method: 'DELETE',
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['properties'] });
     },
   });
 }
