@@ -1,192 +1,206 @@
 const express = require('express');
 const router = express.Router();
 
-// Sample monitoring data for demonstration
-const monitoringData = {
-  resources: {
-    cpu: { currentUsage: 65, limit: 100, unit: '%' },
-    memory: { currentUsage: 4.2, limit: 8, unit: 'GB' },
-    disk: { currentUsage: 32, limit: 100, unit: 'GB' },
-    network: { currentUsage: 42, limit: 100, unit: 'Mbps' }
-  },
-  
-  alerts: [
-    { id: 'alert-1', type: 'warning', message: 'CPU usage above 60% for 15 minutes', timestamp: new Date(Date.now() - 900000) },
-    { id: 'alert-2', type: 'info', message: 'Scheduled maintenance completed', timestamp: new Date(Date.now() - 3600000) },
-    { id: 'alert-3', type: 'error', message: 'Database connection timeout occurred', timestamp: new Date(Date.now() - 7200000) },
-  ],
-  
-  // Historical time series data
-  history: {
-    cpu: [
-      { timestamp: new Date(Date.now() - 3600000 * 24), value: 45 },
-      { timestamp: new Date(Date.now() - 3600000 * 20), value: 42 },
-      { timestamp: new Date(Date.now() - 3600000 * 16), value: 50 },
-      { timestamp: new Date(Date.now() - 3600000 * 12), value: 70 },
-      { timestamp: new Date(Date.now() - 3600000 * 8), value: 75 },
-      { timestamp: new Date(Date.now() - 3600000 * 4), value: 60 },
-      { timestamp: new Date(), value: 65 },
-    ],
-    memory: [
-      { timestamp: new Date(Date.now() - 3600000 * 24), value: 3.5 },
-      { timestamp: new Date(Date.now() - 3600000 * 20), value: 3.2 },
-      { timestamp: new Date(Date.now() - 3600000 * 16), value: 3.8 },
-      { timestamp: new Date(Date.now() - 3600000 * 12), value: 4.5 },
-      { timestamp: new Date(Date.now() - 3600000 * 8), value: 4.8 },
-      { timestamp: new Date(Date.now() - 3600000 * 4), value: 4.3 },
-      { timestamp: new Date(), value: 4.2 },
-    ],
-    disk: [
-      { timestamp: new Date(Date.now() - 3600000 * 24), value: 28 },
-      { timestamp: new Date(Date.now() - 3600000 * 20), value: 29 },
-      { timestamp: new Date(Date.now() - 3600000 * 16), value: 29 },
-      { timestamp: new Date(Date.now() - 3600000 * 12), value: 30 },
-      { timestamp: new Date(Date.now() - 3600000 * 8), value: 30 },
-      { timestamp: new Date(Date.now() - 3600000 * 4), value: 31 },
-      { timestamp: new Date(), value: 32 },
-    ],
-    network: [
-      { timestamp: new Date(Date.now() - 3600000 * 24), value: 25 },
-      { timestamp: new Date(Date.now() - 3600000 * 20), value: 20 },
-      { timestamp: new Date(Date.now() - 3600000 * 16), value: 30 },
-      { timestamp: new Date(Date.now() - 3600000 * 12), value: 45 },
-      { timestamp: new Date(Date.now() - 3600000 * 8), value: 50 },
-      { timestamp: new Date(Date.now() - 3600000 * 4), value: 40 },
-      { timestamp: new Date(), value: 42 },
-    ],
-  },
-  
-  // Pod metrics for Kubernetes environments
-  pods: [
-    { 
-      name: 'api-server-7d8f7d4b7b-2xvjl', 
-      status: 'running', 
-      cpu: { usage: '120m', limit: '500m' }, 
-      memory: { usage: '256Mi', limit: '512Mi' },
-      restarts: 0,
-      age: '3d'
-    },
-    { 
-      name: 'web-app-5b9b4b4b4b-x7z9m', 
-      status: 'running', 
-      cpu: { usage: '85m', limit: '250m' }, 
-      memory: { usage: '128Mi', limit: '256Mi' },
-      restarts: 1,
-      age: '2d'
-    },
-    { 
-      name: 'db-0', 
-      status: 'running', 
-      cpu: { usage: '300m', limit: '1000m' }, 
-      memory: { usage: '1.0Gi', limit: '2.0Gi' },
-      restarts: 0,
-      age: '5d'
-    }
-  ],
-  
-  // System health checks
-  healthChecks: [
-    { name: 'API Server', status: 'healthy', lastChecked: new Date(Date.now() - 60000) },
-    { name: 'Database', status: 'healthy', lastChecked: new Date(Date.now() - 120000) },
-    { name: 'Front-end', status: 'healthy', lastChecked: new Date(Date.now() - 180000) },
-    { name: 'Cache', status: 'healthy', lastChecked: new Date(Date.now() - 240000) },
-    { name: 'Message Queue', status: 'degraded', lastChecked: new Date(Date.now() - 300000) },
-  ]
-};
-
-// Get current resource metrics
+// GET /api/monitoring/metrics - Get system metrics
 router.get('/metrics', (req, res) => {
-  res.json(monitoringData);
-});
-
-// Get specific resource metrics
-router.get('/metrics/resources', (req, res) => {
-  res.json(monitoringData.resources);
-});
-
-// Get historical data for a specific resource
-router.get('/metrics/history/:resource', (req, res) => {
-  const { resource } = req.params;
-  const { startTime, endTime } = req.query;
-  
-  if (!monitoringData.history[resource]) {
-    return res.status(404).json({ error: 'Resource not found' });
-  }
-  
-  let filteredData = monitoringData.history[resource];
-  
-  // Filter by time range if provided
-  if (startTime && endTime) {
-    const start = new Date(startTime);
-    const end = new Date(endTime);
+  try {
+    // Mock monitoring data for now - would be replaced with real monitoring data
+    const metrics = {
+      cpu: {
+        usage: 42.5,
+        cores: 8,
+        load: [1.2, 1.5, 1.7]
+      },
+      memory: {
+        total: 16384,
+        used: 8192,
+        free: 8192,
+        usage: 50.0
+      },
+      disk: {
+        total: 1024000,
+        used: 512000,
+        free: 512000,
+        usage: 50.0
+      },
+      network: {
+        inbound: 25.6,
+        outbound: 10.2,
+        connections: 128
+      }
+    };
     
-    filteredData = filteredData.filter(entry => {
-      const timestamp = new Date(entry.timestamp);
-      return timestamp >= start && timestamp <= end;
-    });
+    res.json(metrics);
+  } catch (error) {
+    console.error('Error fetching system metrics:', error);
+    res.status(500).json({ error: 'Failed to fetch system metrics' });
   }
-  
-  res.json(filteredData);
 });
 
-// Get all active alerts
+// GET /api/monitoring/alerts - Get alerts
 router.get('/alerts', (req, res) => {
-  const { type } = req.query;
-  
-  if (type) {
-    const filteredAlerts = monitoringData.alerts.filter(alert => alert.type === type);
-    return res.json(filteredAlerts);
-  }
-  
-  res.json(monitoringData.alerts);
-});
-
-// Get pod metrics
-router.get('/pods', (req, res) => {
-  res.json(monitoringData.pods);
-});
-
-// Get health check status
-router.get('/health', (req, res) => {
-  const { service } = req.query;
-  
-  if (service) {
-    const serviceHealth = monitoringData.healthChecks.find(check => 
-      check.name.toLowerCase() === service.toLowerCase()
-    );
+  try {
+    // Mock alerts data
+    const alerts = [
+      {
+        id: 1,
+        severity: 'critical',
+        message: 'Database CPU usage above 90%',
+        timestamp: '2023-01-25T08:15:30Z',
+        source: 'db-server-01',
+        acknowledged: false
+      },
+      {
+        id: 2,
+        severity: 'warning',
+        message: 'API response time degraded',
+        timestamp: '2023-01-25T07:45:12Z',
+        source: 'api-gateway',
+        acknowledged: true
+      },
+      {
+        id: 3,
+        severity: 'info',
+        message: 'Autoscaling event triggered',
+        timestamp: '2023-01-25T06:30:45Z',
+        source: 'k8s-cluster',
+        acknowledged: true
+      }
+    ];
     
-    if (!serviceHealth) {
-      return res.status(404).json({ error: 'Service not found' });
+    res.json(alerts);
+  } catch (error) {
+    console.error('Error fetching alerts:', error);
+    res.status(500).json({ error: 'Failed to fetch alerts' });
+  }
+});
+
+// GET /api/monitoring/logs - Get system logs
+router.get('/logs', (req, res) => {
+  try {
+    // Query parameters for filtering and pagination
+    const limit = parseInt(req.query.limit) || 100;
+    const level = req.query.level || 'all';
+    const service = req.query.service || 'all';
+    
+    // Mock logs data
+    const logs = [
+      {
+        timestamp: '2023-01-25T08:17:42Z',
+        level: 'error',
+        service: 'database',
+        message: 'Connection timeout after 30s'
+      },
+      {
+        timestamp: '2023-01-25T08:17:40Z',
+        level: 'warn',
+        service: 'api-gateway',
+        message: 'Rate limit approaching for client 192.168.1.55'
+      },
+      {
+        timestamp: '2023-01-25T08:17:35Z',
+        level: 'info',
+        service: 'auth-service',
+        message: 'User login successful: user_id=12345'
+      },
+      {
+        timestamp: '2023-01-25T08:17:30Z',
+        level: 'debug',
+        service: 'payment-processor',
+        message: 'Processing payment request for order 98765'
+      }
+    ];
+    
+    // Apply filters (in a real implementation, this would be done at the DB level)
+    let filteredLogs = logs;
+    if (level !== 'all') {
+      filteredLogs = filteredLogs.filter(log => log.level === level);
+    }
+    if (service !== 'all') {
+      filteredLogs = filteredLogs.filter(log => log.service === service);
     }
     
-    return res.json(serviceHealth);
+    // Apply limit
+    filteredLogs = filteredLogs.slice(0, limit);
+    
+    res.json({
+      logs: filteredLogs,
+      total: logs.length,
+      filtered: filteredLogs.length,
+      limit
+    });
+  } catch (error) {
+    console.error('Error fetching logs:', error);
+    res.status(500).json({ error: 'Failed to fetch logs' });
   }
-  
-  res.json(monitoringData.healthChecks);
 });
 
-// Create a new alert (for demonstration)
-router.post('/alerts', (req, res) => {
-  const { type, message } = req.body;
-  
-  if (!type || !message) {
-    return res.status(400).json({ error: 'Type and message are required' });
+// GET /api/monitoring/services - Get service health
+router.get('/services', (req, res) => {
+  try {
+    // Mock service health data
+    const services = [
+      {
+        id: 'api-gateway',
+        name: 'API Gateway',
+        status: 'healthy',
+        uptime: '15d 7h 23m',
+        version: '1.5.2',
+        lastChecked: '2023-01-25T08:18:00Z'
+      },
+      {
+        id: 'auth-service',
+        name: 'Authentication Service',
+        status: 'healthy',
+        uptime: '10d 12h 45m',
+        version: '2.1.0',
+        lastChecked: '2023-01-25T08:18:00Z'
+      },
+      {
+        id: 'database',
+        name: 'Primary Database',
+        status: 'degraded',
+        uptime: '30d 5h 12m',
+        version: 'PostgreSQL 14.2',
+        lastChecked: '2023-01-25T08:18:00Z',
+        issues: [
+          'High CPU usage',
+          'Slow query performance'
+        ]
+      },
+      {
+        id: 'payment-processor',
+        name: 'Payment Processor',
+        status: 'healthy',
+        uptime: '5d 8h 30m',
+        version: '1.2.3',
+        lastChecked: '2023-01-25T08:18:00Z'
+      }
+    ];
+    
+    res.json(services);
+  } catch (error) {
+    console.error('Error fetching service health:', error);
+    res.status(500).json({ error: 'Failed to fetch service health' });
   }
-  
-  if (!['info', 'warning', 'error'].includes(type)) {
-    return res.status(400).json({ error: 'Type must be one of: info, warning, error' });
+});
+
+// POST /api/monitoring/alerts/:id/acknowledge - Acknowledge an alert
+router.post('/alerts/:id/acknowledge', (req, res) => {
+  try {
+    const alertId = parseInt(req.params.id);
+    
+    // In a real implementation, we would update the alert in the database
+    
+    res.json({
+      success: true,
+      message: `Alert ${alertId} has been acknowledged`,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error(`Error acknowledging alert ${req.params.id}:`, error);
+    res.status(500).json({ error: 'Failed to acknowledge alert' });
   }
-  
-  const newAlert = {
-    id: `alert-${monitoringData.alerts.length + 1}`,
-    type,
-    message,
-    timestamp: new Date()
-  };
-  
-  monitoringData.alerts.unshift(newAlert);
-  
-  res.status(201).json(newAlert);
 });
 
 module.exports = router;
