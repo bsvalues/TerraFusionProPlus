@@ -1,17 +1,24 @@
 import { queryClient, apiRequest } from '../lib/queryClient';
-import { 
+import {
   Property,
   Appraisal,
   Comparable,
   User,
   Attachment,
   MarketData,
-  InsertProperty,
-  InsertAppraisal,
-  InsertComparable,
-  InsertUser,
-  InsertAttachment
-} from '../../shared/schema';
+  PriceTrendDataPoint,
+  DomTrendDataPoint,
+  SalesTrendDataPoint,
+  PropertyTypeDataPoint,
+  NeighborhoodPriceDataPoint
+} from '../types';
+
+// Types for insert operations (simplified)
+type InsertProperty = Omit<Property, 'id' | 'created_at' | 'updated_at'>;
+type InsertAppraisal = Omit<Appraisal, 'id' | 'createdAt' | 'completedAt'>;
+type InsertComparable = Omit<Comparable, 'id' | 'createdAt'>;
+type InsertUser = Omit<User, 'id' | 'createdAt' | 'updatedAt'>;
+type InsertAttachment = Omit<Attachment, 'id' | 'uploadDate'>;
 
 // API endpoints for Properties
 export const propertyApi = {

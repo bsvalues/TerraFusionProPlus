@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { formatCurrency, formatNumber, formatDate } from '../lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { propertyApi, appraisalApi, comparableApi } from '../api';
+import { Property, Appraisal, Comparable } from '../types';
 
 // Icons
 import { 
