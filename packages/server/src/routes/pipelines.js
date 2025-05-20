@@ -1,340 +1,190 @@
 const express = require('express');
 const router = express.Router();
 
-// Sample pipeline data
+// Mock data for pipelines
 const pipelines = [
   {
     id: '1',
     name: 'API Gateway CI/CD',
-    description: 'Continuous integration and deployment for API Gateway service',
-    status: 'active',
-    lastRun: '2025-05-18T16:30:00Z',
-    lastRunStatus: 'success',
-    createdBy: 'devops-team',
+    description: 'Continuous integration and deployment pipeline for API Gateway service',
+    repository: 'github.com/terrafusion/api-gateway',
+    branch: 'main',
+    type: 'deployment',
     stages: [
       {
-        id: '1-1',
         name: 'Build',
-        description: 'Compile code and run unit tests',
-        order: 1,
+        status: 'completed',
+        startTime: '2025-05-19T15:00:00Z',
+        endTime: '2025-05-19T15:05:00Z',
+        duration: '5m',
         steps: [
-          { id: '1-1-1', name: 'Checkout', status: 'success', duration: 5 },
-          { id: '1-1-2', name: 'Install Dependencies', status: 'success', duration: 45 },
-          { id: '1-1-3', name: 'Compile', status: 'success', duration: 30 },
-          { id: '1-1-4', name: 'Unit Tests', status: 'success', duration: 120 }
+          { name: 'Checkout', status: 'completed', duration: '10s' },
+          { name: 'Test', status: 'completed', duration: '2m' },
+          { name: 'Build Image', status: 'completed', duration: '2m 50s' }
         ]
       },
       {
-        id: '1-2',
-        name: 'Quality',
-        description: 'Run static analysis and integration tests',
-        order: 2,
+        name: 'Deploy to Staging',
+        status: 'completed',
+        startTime: '2025-05-19T15:05:00Z',
+        endTime: '2025-05-19T15:15:00Z',
+        duration: '10m',
         steps: [
-          { id: '1-2-1', name: 'Lint Code', status: 'success', duration: 25 },
-          { id: '1-2-2', name: 'Code Coverage', status: 'success', duration: 35 },
-          { id: '1-2-3', name: 'Security Scan', status: 'success', duration: 60 },
-          { id: '1-2-4', name: 'Integration Tests', status: 'success', duration: 180 }
+          { name: 'Push Image', status: 'completed', duration: '1m' },
+          { name: 'Update Manifest', status: 'completed', duration: '30s' },
+          { name: 'Apply Changes', status: 'completed', duration: '8m 30s' }
         ]
       },
       {
-        id: '1-3',
-        name: 'Deploy',
-        description: 'Build and deploy to environment',
-        order: 3,
+        name: 'Integration Tests',
+        status: 'completed',
+        startTime: '2025-05-19T15:15:00Z',
+        endTime: '2025-05-19T15:20:00Z',
+        duration: '5m',
         steps: [
-          { id: '1-3-1', name: 'Build Docker Image', status: 'success', duration: 90 },
-          { id: '1-3-2', name: 'Push to Registry', status: 'success', duration: 45 },
-          { id: '1-3-3', name: 'Deploy to Environment', status: 'success', duration: 120 },
-          { id: '1-3-4', name: 'Run Health Checks', status: 'success', duration: 60 }
+          { name: 'API Tests', status: 'completed', duration: '3m' },
+          { name: 'Performance Check', status: 'completed', duration: '2m' }
         ]
+      },
+      {
+        name: 'Deploy to Production',
+        status: 'completed',
+        startTime: '2025-05-19T15:30:00Z',
+        endTime: '2025-05-19T15:45:00Z',
+        duration: '15m',
+        steps: [
+          { name: 'Approval', status: 'completed', duration: '5m' },
+          { name: 'Push Image', status: 'completed', duration: '1m' },
+          { name: 'Update Manifest', status: 'completed', duration: '30s' },
+          { name: 'Apply Changes', status: 'completed', duration: '8m 30s' }
+        ],
+        approvers: ['john.admin', 'maria.dev']
       }
     ],
-    triggers: {
-      onPush: true,
-      onPullRequest: true,
-      onSchedule: true,
-      scheduleExpression: '0 0 * * *', // Daily at midnight
-      branches: ['main', 'release/*']
-    },
-    metrics: {
-      successRate: 98.5,
-      averageDuration: 780,
-      lastMonthRuns: 45,
-      failureCount: 1
-    }
+    status: 'completed',
+    lastRun: '2025-05-19T15:45:00Z',
+    averageDuration: '35m',
+    successRate: 92
   },
   {
     id: '2',
     name: 'Payment Processor CI/CD',
-    description: 'Continuous integration and deployment for Payment Processor service',
-    status: 'active',
-    lastRun: '2025-05-18T14:15:00Z',
-    lastRunStatus: 'failed',
-    createdBy: 'finance-team',
+    description: 'Continuous integration and deployment pipeline for Payment Processor service',
+    repository: 'github.com/terrafusion/payment-processor',
+    branch: 'main',
+    type: 'deployment',
     stages: [
       {
-        id: '2-1',
         name: 'Build',
-        description: 'Compile code and run unit tests',
-        order: 1,
+        status: 'completed',
+        startTime: '2025-05-19T13:30:00Z',
+        endTime: '2025-05-19T13:35:00Z',
+        duration: '5m',
         steps: [
-          { id: '2-1-1', name: 'Checkout', status: 'success', duration: 5 },
-          { id: '2-1-2', name: 'Install Dependencies', status: 'success', duration: 40 },
-          { id: '2-1-3', name: 'Compile', status: 'success', duration: 25 },
-          { id: '2-1-4', name: 'Unit Tests', status: 'success', duration: 140 }
+          { name: 'Checkout', status: 'completed', duration: '10s' },
+          { name: 'Test', status: 'completed', duration: '2m' },
+          { name: 'Build Image', status: 'completed', duration: '2m 50s' }
         ]
       },
       {
-        id: '2-2',
-        name: 'Quality',
-        description: 'Run static analysis and integration tests',
-        order: 2,
+        name: 'Deploy to Staging',
+        status: 'completed',
+        startTime: '2025-05-19T13:35:00Z',
+        endTime: '2025-05-19T13:45:00Z',
+        duration: '10m',
         steps: [
-          { id: '2-2-1', name: 'Lint Code', status: 'success', duration: 20 },
-          { id: '2-2-2', name: 'Code Coverage', status: 'success', duration: 30 },
-          { id: '2-2-3', name: 'Security Scan', status: 'success', duration: 75 },
-          { id: '2-2-4', name: 'Integration Tests', status: 'failed', duration: 90, error: 'Timeout waiting for payment gateway mock' }
+          { name: 'Push Image', status: 'completed', duration: '1m' },
+          { name: 'Update Manifest', status: 'completed', duration: '30s' },
+          { name: 'Apply Changes', status: 'completed', duration: '8m 30s' }
         ]
       },
       {
-        id: '2-3',
-        name: 'Deploy',
-        description: 'Build and deploy to environment',
-        order: 3,
+        name: 'Integration Tests',
+        status: 'failed',
+        startTime: '2025-05-19T13:45:00Z',
+        endTime: '2025-05-19T14:00:00Z',
+        duration: '15m',
         steps: [
-          { id: '2-3-1', name: 'Build Docker Image', status: 'skipped', duration: 0 },
-          { id: '2-3-2', name: 'Push to Registry', status: 'skipped', duration: 0 },
-          { id: '2-3-3', name: 'Deploy to Environment', status: 'skipped', duration: 0 },
-          { id: '2-3-4', name: 'Run Health Checks', status: 'skipped', duration: 0 }
+          { name: 'API Tests', status: 'completed', duration: '3m' },
+          { name: 'Transaction Tests', status: 'failed', duration: '12m', error: 'Timeout waiting for database response' }
         ]
+      },
+      {
+        name: 'Deploy to Production',
+        status: 'not_started'
       }
     ],
-    triggers: {
-      onPush: true,
-      onPullRequest: true,
-      onSchedule: false,
-      scheduleExpression: null,
-      branches: ['main', 'develop']
-    },
-    metrics: {
-      successRate: 85.2,
-      averageDuration: 820,
-      lastMonthRuns: 32,
-      failureCount: 5
-    }
+    status: 'failed',
+    lastRun: '2025-05-19T14:00:00Z',
+    averageDuration: '40m',
+    successRate: 78
   },
   {
     id: '3',
     name: 'User Service CI/CD',
-    description: 'Continuous integration and deployment for User Service',
-    status: 'active',
-    lastRun: '2025-05-19T13:40:00Z',
-    lastRunStatus: 'in-progress',
-    createdBy: 'auth-team',
+    description: 'Continuous integration and deployment pipeline for User Service',
+    repository: 'github.com/terrafusion/user-service',
+    branch: 'main',
+    type: 'deployment',
     stages: [
       {
-        id: '3-1',
         name: 'Build',
-        description: 'Compile code and run unit tests',
-        order: 1,
+        status: 'completed',
+        startTime: '2025-05-19T14:00:00Z',
+        endTime: '2025-05-19T14:10:00Z',
+        duration: '10m',
         steps: [
-          { id: '3-1-1', name: 'Checkout', status: 'success', duration: 4 },
-          { id: '3-1-2', name: 'Install Dependencies', status: 'success', duration: 38 },
-          { id: '3-1-3', name: 'Compile', status: 'success', duration: 22 },
-          { id: '3-1-4', name: 'Unit Tests', status: 'success', duration: 135 }
+          { name: 'Checkout', status: 'completed', duration: '10s' },
+          { name: 'Test', status: 'completed', duration: '5m' },
+          { name: 'Build Image', status: 'completed', duration: '4m 50s' }
         ]
       },
       {
-        id: '3-2',
-        name: 'Quality',
-        description: 'Run static analysis and integration tests',
-        order: 2,
+        name: 'Deploy to Dev',
+        status: 'in_progress',
+        startTime: '2025-05-19T14:10:00Z',
         steps: [
-          { id: '3-2-1', name: 'Lint Code', status: 'success', duration: 18 },
-          { id: '3-2-2', name: 'Code Coverage', status: 'success', duration: 32 },
-          { id: '3-2-3', name: 'Security Scan', status: 'in-progress', duration: 0 },
-          { id: '3-2-4', name: 'Integration Tests', status: 'pending', duration: 0 }
+          { name: 'Push Image', status: 'completed', duration: '1m' },
+          { name: 'Update Manifest', status: 'completed', duration: '30s' },
+          { name: 'Apply Changes', status: 'in_progress' }
         ]
       },
       {
-        id: '3-3',
-        name: 'Deploy',
-        description: 'Build and deploy to environment',
-        order: 3,
-        steps: [
-          { id: '3-3-1', name: 'Build Docker Image', status: 'pending', duration: 0 },
-          { id: '3-3-2', name: 'Push to Registry', status: 'pending', duration: 0 },
-          { id: '3-3-3', name: 'Deploy to Environment', status: 'pending', duration: 0 },
-          { id: '3-3-4', name: 'Run Health Checks', status: 'pending', duration: 0 }
-        ]
+        name: 'Integration Tests',
+        status: 'not_started'
+      },
+      {
+        name: 'Deploy to Staging',
+        status: 'not_started'
       }
     ],
-    triggers: {
-      onPush: true,
-      onPullRequest: true,
-      onSchedule: true,
-      scheduleExpression: '0 0 * * MON', // Weekly on Monday
-      branches: ['main', 'develop', 'feature/*']
-    },
-    metrics: {
-      successRate: 92.7,
-      averageDuration: 720,
-      lastMonthRuns: 52,
-      failureCount: 3
-    }
-  },
-  {
-    id: '4',
-    name: 'Analytics Backend CI/CD',
-    description: 'Continuous integration and deployment for Analytics Backend',
-    status: 'inactive',
-    lastRun: '2025-05-15T10:00:00Z',
-    lastRunStatus: 'success',
-    createdBy: 'data-team',
-    stages: [
-      {
-        id: '4-1',
-        name: 'Build',
-        description: 'Compile code and run unit tests',
-        order: 1,
-        steps: [
-          { id: '4-1-1', name: 'Checkout', status: 'success', duration: 5 },
-          { id: '4-1-2', name: 'Install Dependencies', status: 'success', duration: 65 },
-          { id: '4-1-3', name: 'Compile', status: 'success', duration: 40 },
-          { id: '4-1-4', name: 'Unit Tests', status: 'success', duration: 210 }
-        ]
-      },
-      {
-        id: '4-2',
-        name: 'Quality',
-        description: 'Run static analysis and integration tests',
-        order: 2,
-        steps: [
-          { id: '4-2-1', name: 'Lint Code', status: 'success', duration: 25 },
-          { id: '4-2-2', name: 'Code Coverage', status: 'success', duration: 45 },
-          { id: '4-2-3', name: 'Security Scan', status: 'success', duration: 90 },
-          { id: '4-2-4', name: 'Integration Tests', status: 'success', duration: 240 }
-        ]
-      },
-      {
-        id: '4-3',
-        name: 'Deploy',
-        description: 'Build and deploy to environment',
-        order: 3,
-        steps: [
-          { id: '4-3-1', name: 'Build Docker Image', status: 'success', duration: 120 },
-          { id: '4-3-2', name: 'Push to Registry', status: 'success', duration: 65 },
-          { id: '4-3-3', name: 'Deploy to Environment', status: 'success', duration: 180 },
-          { id: '4-3-4', name: 'Run Health Checks', status: 'success', duration: 75 }
-        ]
-      }
-    ],
-    triggers: {
-      onPush: false,
-      onPullRequest: false,
-      onSchedule: true,
-      scheduleExpression: '0 0 * * 1-5', // Weekdays at midnight
-      branches: ['main']
-    },
-    metrics: {
-      successRate: 97.1,
-      averageDuration: 1160,
-      lastMonthRuns: 22,
-      failureCount: 0
-    }
-  },
-  {
-    id: '5',
-    name: 'Infrastructure Provisioning',
-    description: 'Automated infrastructure provisioning with Terraform',
-    status: 'active',
-    lastRun: '2025-05-19T08:00:00Z',
-    lastRunStatus: 'success',
-    createdBy: 'infra-team',
-    stages: [
-      {
-        id: '5-1',
-        name: 'Validation',
-        description: 'Validate infrastructure code',
-        order: 1,
-        steps: [
-          { id: '5-1-1', name: 'Checkout', status: 'success', duration: 3 },
-          { id: '5-1-2', name: 'Format Check', status: 'success', duration: 10 },
-          { id: '5-1-3', name: 'Terraform Validate', status: 'success', duration: 15 },
-          { id: '5-1-4', name: 'Security Scan', status: 'success', duration: 45 }
-        ]
-      },
-      {
-        id: '5-2',
-        name: 'Plan',
-        description: 'Generate and review execution plan',
-        order: 2,
-        steps: [
-          { id: '5-2-1', name: 'Init', status: 'success', duration: 8 },
-          { id: '5-2-2', name: 'Plan', status: 'success', duration: 25 },
-          { id: '5-2-3', name: 'Plan Review', status: 'success', duration: 15 }
-        ]
-      },
-      {
-        id: '5-3',
-        name: 'Apply',
-        description: 'Apply infrastructure changes',
-        order: 3,
-        steps: [
-          { id: '5-3-1', name: 'Approval', status: 'success', duration: 120 },
-          { id: '5-3-2', name: 'Apply', status: 'success', duration: 180 },
-          { id: '5-3-3', name: 'Verification', status: 'success', duration: 90 }
-        ]
-      }
-    ],
-    triggers: {
-      onPush: false,
-      onPullRequest: true,
-      onSchedule: true,
-      scheduleExpression: '0 1 * * 1', // Monday at 1 AM
-      branches: ['main', 'infrastructure/*']
-    },
-    metrics: {
-      successRate: 100.0,
-      averageDuration: 510,
-      lastMonthRuns: 8,
-      failureCount: 0
-    }
+    status: 'in_progress',
+    lastRun: '2025-05-19T14:00:00Z',
+    averageDuration: '45m',
+    successRate: 88
   }
 ];
 
-// Get all pipelines
+// GET all pipelines
 router.get('/', (req, res) => {
-  // Filter pipelines based on query params
+  // Extract query parameters for filtering
+  const { status, type } = req.query;
+  
   let filteredPipelines = [...pipelines];
   
-  if (req.query.status) {
-    filteredPipelines = filteredPipelines.filter(p => p.status === req.query.status);
+  // Apply filters if provided
+  if (status) {
+    filteredPipelines = filteredPipelines.filter(p => p.status === status);
   }
   
-  if (req.query.lastRunStatus) {
-    filteredPipelines = filteredPipelines.filter(p => p.lastRunStatus === req.query.lastRunStatus);
-  }
-  
-  // Return simplified version for list view if requested
-  if (req.query.view === 'summary') {
-    const summaryPipelines = filteredPipelines.map(p => ({
-      id: p.id,
-      name: p.name,
-      description: p.description,
-      status: p.status,
-      lastRunStatus: p.lastRunStatus,
-      lastRun: p.lastRun,
-      metrics: p.metrics
-    }));
-    
-    return res.json(summaryPipelines);
+  if (type) {
+    filteredPipelines = filteredPipelines.filter(p => p.type === type);
   }
   
   res.json(filteredPipelines);
 });
 
-// Get pipeline by id
+// GET a specific pipeline
 router.get('/:id', (req, res) => {
   const pipeline = pipelines.find(p => p.id === req.params.id);
   
@@ -345,31 +195,29 @@ router.get('/:id', (req, res) => {
   res.json(pipeline);
 });
 
-// Create a new pipeline
+// POST create a new pipeline
 router.post('/', (req, res) => {
-  // In a real app, we would validate the request body
+  // In a real app, validate request body using schema validation
   const newPipeline = {
-    id: String(pipelines.length + 1),
-    status: 'inactive',
-    lastRun: null,
-    lastRunStatus: null,
-    stages: [],
+    id: (pipelines.length + 1).toString(),
     ...req.body,
-    createdAt: new Date().toISOString()
+    status: 'created',
+    stages: req.body.stages || []
   };
   
   pipelines.push(newPipeline);
   res.status(201).json(newPipeline);
 });
 
-// Update a pipeline
-router.patch('/:id', (req, res) => {
+// PUT update an existing pipeline
+router.put('/:id', (req, res) => {
   const pipelineIndex = pipelines.findIndex(p => p.id === req.params.id);
   
   if (pipelineIndex === -1) {
     return res.status(404).json({ message: 'Pipeline not found' });
   }
   
+  // Update the pipeline
   pipelines[pipelineIndex] = {
     ...pipelines[pipelineIndex],
     ...req.body
@@ -378,7 +226,7 @@ router.patch('/:id', (req, res) => {
   res.json(pipelines[pipelineIndex]);
 });
 
-// Delete a pipeline
+// DELETE a pipeline
 router.delete('/:id', (req, res) => {
   const pipelineIndex = pipelines.findIndex(p => p.id === req.params.id);
   
@@ -386,64 +234,115 @@ router.delete('/:id', (req, res) => {
     return res.status(404).json({ message: 'Pipeline not found' });
   }
   
-  const deleted = pipelines.splice(pipelineIndex, 1)[0];
-  res.json({ message: 'Pipeline deleted successfully', pipeline: deleted });
+  // Remove the pipeline
+  pipelines.splice(pipelineIndex, 1);
+  
+  res.status(204).send();
 });
 
-// Trigger a pipeline run
-router.post('/:id/run', (req, res) => {
+// GET pipeline status
+router.get('/:id/status', (req, res) => {
   const pipeline = pipelines.find(p => p.id === req.params.id);
   
   if (!pipeline) {
     return res.status(404).json({ message: 'Pipeline not found' });
   }
   
-  if (pipeline.status === 'inactive') {
-    return res.status(400).json({ message: 'Cannot run an inactive pipeline' });
+  // Return status summary
+  const statusSummary = {
+    id: pipeline.id,
+    name: pipeline.name,
+    status: pipeline.status,
+    lastRun: pipeline.lastRun,
+    currentStage: pipeline.stages.find(stage => stage.status === 'in_progress')?.name,
+    stages: pipeline.stages.map(stage => ({
+      name: stage.name,
+      status: stage.status
+    }))
+  };
+  
+  res.json(statusSummary);
+});
+
+// POST trigger a pipeline
+router.post('/:id/trigger', (req, res) => {
+  const pipeline = pipelines.find(p => p.id === req.params.id);
+  
+  if (!pipeline) {
+    return res.status(404).json({ message: 'Pipeline not found' });
   }
   
-  if (pipeline.lastRunStatus === 'in-progress') {
-    return res.status(400).json({ message: 'Pipeline is already running' });
-  }
-  
-  // Update pipeline to be in progress
+  // Set pipeline to in_progress
+  pipeline.status = 'in_progress';
   pipeline.lastRun = new Date().toISOString();
-  pipeline.lastRunStatus = 'in-progress';
   
-  // Reset all steps to pending
-  pipeline.stages.forEach(stage => {
-    stage.steps.forEach(step => {
-      step.status = 'pending';
-      step.duration = 0;
-    });
-    
-    // Set first step of first stage to in-progress
-    if (stage.order === 1) {
-      stage.steps[0].status = 'in-progress';
+  // Reset stages
+  pipeline.stages.forEach((stage, index) => {
+    if (index === 0) {
+      stage.status = 'in_progress';
+      stage.startTime = new Date().toISOString();
+      stage.endTime = null;
+      
+      // Reset steps
+      if (stage.steps) {
+        stage.steps.forEach((step, stepIndex) => {
+          if (stepIndex === 0) {
+            step.status = 'in_progress';
+          } else {
+            step.status = 'not_started';
+          }
+          step.duration = null;
+        });
+      }
+    } else {
+      stage.status = 'not_started';
+      stage.startTime = null;
+      stage.endTime = null;
+      
+      // Reset steps
+      if (stage.steps) {
+        stage.steps.forEach(step => {
+          step.status = 'not_started';
+          step.duration = null;
+        });
+      }
     }
   });
   
-  res.json({
-    message: 'Pipeline run started',
-    runId: `run-${Date.now()}`,
-    pipeline
-  });
+  res.json(pipeline);
 });
 
-// Get pipeline metrics
+// GET pipeline metrics summary
 router.get('/metrics/summary', (req, res) => {
+  // Calculate metrics based on pipeline data
+  const totalPipelines = pipelines.length;
+  const activePipelines = pipelines.filter(p => p.status === 'in_progress').length;
+  const successfulPipelines = pipelines.filter(p => p.status === 'completed').length;
+  const failedPipelines = pipelines.filter(p => p.status === 'failed').length;
+  
+  // Calculate average success rate
+  const avgSuccessRate = pipelines.reduce((sum, p) => sum + (p.successRate || 0), 0) / totalPipelines;
+  
+  // Calculate average duration
+  const avgDuration = pipelines.reduce((sum, p) => {
+    // Parse the duration string (e.g. "35m") to minutes
+    const durationMatch = (p.averageDuration || '0m').match(/(\d+)m/);
+    return sum + (durationMatch ? parseInt(durationMatch[1]) : 0);
+  }, 0) / totalPipelines;
+  
   const metrics = {
-    totalPipelines: pipelines.length,
-    activePipelines: pipelines.filter(p => p.status === 'active').length,
-    successfulRuns: pipelines.filter(p => p.lastRunStatus === 'success').length,
-    failedRuns: pipelines.filter(p => p.lastRunStatus === 'failed').length,
-    inProgressRuns: pipelines.filter(p => p.lastRunStatus === 'in-progress').length,
-    averageSuccessRate: Math.round(
-      pipelines.reduce((acc, p) => acc + (p.metrics?.successRate || 0), 0) / pipelines.length
-    ),
-    mostFrequentlyRun: pipelines.sort((a, b) => 
-      (b.metrics?.lastMonthRuns || 0) - (a.metrics?.lastMonthRuns || 0)
-    )[0].name
+    totalPipelines,
+    activePipelines,
+    successfulPipelines,
+    failedPipelines,
+    avgSuccessRate,
+    avgDuration: `${Math.round(avgDuration)}m`,
+    recentRuns: pipelines.map(p => ({
+      id: p.id,
+      name: p.name,
+      status: p.status,
+      lastRun: p.lastRun
+    })).sort((a, b) => new Date(b.lastRun) - new Date(a.lastRun)).slice(0, 5)
   };
   
   res.json(metrics);

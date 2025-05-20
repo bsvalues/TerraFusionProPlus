@@ -1,125 +1,121 @@
 const express = require('express');
 const router = express.Router();
 
-// Sample deployment data
+// Mock data for deployments
 const deployments = [
   {
     id: '1',
     name: 'API Gateway Update',
+    description: 'Update to API Gateway v1.2.3',
     status: 'completed',
     environment: 'production',
-    startTime: '2025-05-18T16:30:00Z',
-    endTime: '2025-05-18T16:45:23Z',
     initiatedBy: 'jenkins-ci',
-    artifacts: {
-      image: 'api-gateway:1.2.3',
-      configVersion: '89',
-      commit: 'abc123def456'
-    },
-    logs: [
-      { timestamp: '2025-05-18T16:30:00Z', message: 'Deployment started', level: 'info' },
-      { timestamp: '2025-05-18T16:31:12Z', message: 'Pre-flight checks passed', level: 'info' },
-      { timestamp: '2025-05-18T16:32:45Z', message: 'Rolling update initiated', level: 'info' },
-      { timestamp: '2025-05-18T16:40:18Z', message: 'Health checks passed', level: 'info' },
-      { timestamp: '2025-05-18T16:45:23Z', message: 'Deployment completed successfully', level: 'info' }
-    ]
+    startTime: '2025-05-19T15:30:00Z',
+    endTime: '2025-05-19T15:45:00Z',
+    duration: '15m',
+    version: 'v1.2.3',
+    services: ['api-gateway'],
+    configuration: {
+      replicas: 3,
+      resources: {
+        cpu: '500m',
+        memory: '1Gi'
+      },
+      autoscaling: {
+        enabled: true,
+        minReplicas: 2,
+        maxReplicas: 5,
+        targetCPUUtilization: 80
+      }
+    }
   },
   {
     id: '2',
     name: 'Payment Processor Update',
+    description: 'Deployment of Payment Processor v2.1.0',
     status: 'failed',
     environment: 'staging',
-    startTime: '2025-05-18T14:15:00Z',
-    endTime: '2025-05-18T14:22:37Z',
     initiatedBy: 'maria.dev',
-    artifacts: {
-      image: 'payment-processor:2.1.0',
-      configVersion: '54',
-      commit: '789xyz456abc'
-    },
-    logs: [
-      { timestamp: '2025-05-18T14:15:00Z', message: 'Deployment started', level: 'info' },
-      { timestamp: '2025-05-18T14:16:20Z', message: 'Pre-flight checks passed', level: 'info' },
-      { timestamp: '2025-05-18T14:18:05Z', message: 'Database migration failed', level: 'error' },
-      { timestamp: '2025-05-18T14:22:37Z', message: 'Rolling back changes', level: 'warn' },
-      { timestamp: '2025-05-18T14:22:37Z', message: 'Deployment failed', level: 'error' }
-    ]
+    startTime: '2025-05-19T14:00:00Z',
+    endTime: '2025-05-19T14:15:00Z',
+    duration: '15m',
+    failureReason: 'Integration tests failed',
+    version: 'v2.1.0',
+    services: ['payment-processor'],
+    configuration: {
+      replicas: 2,
+      resources: {
+        cpu: '250m',
+        memory: '512Mi'
+      },
+      autoscaling: {
+        enabled: false
+      }
+    }
   },
   {
     id: '3',
     name: 'User Service Update',
+    description: 'Deployment of User Service v3.0.1',
     status: 'in-progress',
     environment: 'development',
-    startTime: '2025-05-19T13:40:00Z',
-    endTime: null,
     initiatedBy: 'alex.ops',
-    artifacts: {
-      image: 'user-service:3.0.1',
-      configVersion: '30',
-      commit: 'def789abc012'
-    },
-    logs: [
-      { timestamp: '2025-05-19T13:40:00Z', message: 'Deployment started', level: 'info' },
-      { timestamp: '2025-05-19T13:41:45Z', message: 'Pre-flight checks passed', level: 'info' },
-      { timestamp: '2025-05-19T13:43:10Z', message: 'Database migration in progress', level: 'info' },
-      { timestamp: '2025-05-19T13:46:30Z', message: 'Service update in progress', level: 'info' }
-    ]
+    startTime: '2025-05-19T14:40:00Z',
+    version: 'v3.0.1',
+    services: ['user-service'],
+    configuration: {
+      replicas: 1,
+      resources: {
+        cpu: '250m',
+        memory: '512Mi'
+      },
+      autoscaling: {
+        enabled: false
+      }
+    }
   },
   {
     id: '4',
-    name: 'Analytics Backend Update',
-    status: 'completed',
-    environment: 'production',
-    startTime: '2025-05-15T10:00:00Z',
-    endTime: '2025-05-15T10:45:12Z',
-    initiatedBy: 'jenkins-ci',
-    artifacts: {
-      image: 'analytics-backend:1.8.5',
-      configVersion: '76',
-      commit: '456def789ghi'
-    },
-    logs: [
-      { timestamp: '2025-05-15T10:00:00Z', message: 'Deployment started', level: 'info' },
-      { timestamp: '2025-05-15T10:02:30Z', message: 'Pre-flight checks passed', level: 'info' },
-      { timestamp: '2025-05-15T10:15:45Z', message: 'Service update completed', level: 'info' },
-      { timestamp: '2025-05-15T10:30:20Z', message: 'Running data verification', level: 'info' },
-      { timestamp: '2025-05-15T10:45:12Z', message: 'Deployment completed successfully', level: 'info' }
-    ]
-  },
-  {
-    id: '5',
-    name: 'Notification Service Update',
+    name: 'Database Migration',
+    description: 'Migration of user data to new schema',
     status: 'scheduled',
     environment: 'production',
-    startTime: '2025-05-25T02:00:00Z',
-    endTime: null,
-    initiatedBy: 'scheduled-job',
-    artifacts: {
-      image: 'notification-service:2.3.0',
-      configVersion: '42',
-      commit: '123ghi456jkl'
-    },
-    logs: []
+    initiatedBy: 'john.dba',
+    scheduledTime: '2025-05-20T02:00:00Z',
+    version: 'v2.0.0',
+    services: ['user-database'],
+    configuration: {
+      backup: true,
+      rollbackPlan: 'Restore from snapshot if migration fails',
+      downtime: '30m'
+    }
   }
 ];
 
-// Get all deployments
+// GET all deployments
 router.get('/', (req, res) => {
-  // Filter deployments based on query params
+  // Extract query parameters for filtering
+  const { status, environment, service } = req.query;
+  
   let filteredDeployments = [...deployments];
   
-  if (req.query.status) {
-    filteredDeployments = filteredDeployments.filter(d => d.status === req.query.status);
+  // Apply filters if provided
+  if (status) {
+    filteredDeployments = filteredDeployments.filter(d => d.status === status);
   }
   
-  if (req.query.environment) {
-    filteredDeployments = filteredDeployments.filter(d => d.environment === req.query.environment);
+  if (environment) {
+    filteredDeployments = filteredDeployments.filter(d => d.environment === environment);
+  }
+  
+  if (service) {
+    filteredDeployments = filteredDeployments.filter(d => d.services.includes(service));
   }
   
   res.json(filteredDeployments);
 });
 
-// Get deployment by id
+// GET a specific deployment
 router.get('/:id', (req, res) => {
   const deployment = deployments.find(d => d.id === req.params.id);
   
@@ -130,30 +126,29 @@ router.get('/:id', (req, res) => {
   res.json(deployment);
 });
 
-// Create a new deployment
+// POST create a new deployment
 router.post('/', (req, res) => {
-  // In a real app, we would validate the request body
+  // In a real app, validate request body using schema validation
   const newDeployment = {
-    id: String(deployments.length + 1),
-    status: 'scheduled',
-    startTime: new Date(Date.now() + 5 * 60 * 1000).toISOString(), // Schedule 5 minutes from now
-    endTime: null,
-    logs: [],
-    ...req.body
+    id: (deployments.length + 1).toString(),
+    ...req.body,
+    startTime: new Date().toISOString(),
+    status: 'pending'
   };
   
   deployments.push(newDeployment);
   res.status(201).json(newDeployment);
 });
 
-// Update a deployment
-router.patch('/:id', (req, res) => {
+// PUT update an existing deployment
+router.put('/:id', (req, res) => {
   const deploymentIndex = deployments.findIndex(d => d.id === req.params.id);
   
   if (deploymentIndex === -1) {
     return res.status(404).json({ message: 'Deployment not found' });
   }
   
+  // Update the deployment
   deployments[deploymentIndex] = {
     ...deployments[deploymentIndex],
     ...req.body
@@ -162,48 +157,62 @@ router.patch('/:id', (req, res) => {
   res.json(deployments[deploymentIndex]);
 });
 
-// Cancel a deployment
-router.post('/:id/cancel', (req, res) => {
+// DELETE a deployment
+router.delete('/:id', (req, res) => {
   const deploymentIndex = deployments.findIndex(d => d.id === req.params.id);
   
   if (deploymentIndex === -1) {
     return res.status(404).json({ message: 'Deployment not found' });
   }
   
-  const deployment = deployments[deploymentIndex];
+  // Remove the deployment
+  deployments.splice(deploymentIndex, 1);
   
-  if (deployment.status !== 'scheduled' && deployment.status !== 'in-progress') {
-    return res.status(400).json({ message: 'Can only cancel scheduled or in-progress deployments' });
-  }
-  
-  deployment.status = 'cancelled';
-  deployment.endTime = new Date().toISOString();
-  deployment.logs.push({
-    timestamp: deployment.endTime,
-    message: 'Deployment cancelled',
-    level: 'warn'
-  });
-  
-  res.json(deployment);
+  res.status(204).send();
 });
 
-// Add a log entry to a deployment
-router.post('/:id/logs', (req, res) => {
+// PUT update deployment configuration
+router.put('/:id/config', (req, res) => {
   const deploymentIndex = deployments.findIndex(d => d.id === req.params.id);
   
   if (deploymentIndex === -1) {
     return res.status(404).json({ message: 'Deployment not found' });
   }
   
-  const newLog = {
-    timestamp: new Date().toISOString(),
-    level: 'info',
+  // Update the configuration
+  deployments[deploymentIndex].configuration = {
+    ...deployments[deploymentIndex].configuration,
     ...req.body
   };
   
-  deployments[deploymentIndex].logs.push(newLog);
+  res.json(deployments[deploymentIndex]);
+});
+
+// POST to trigger a rollback for a deployment
+router.post('/:id/rollback', (req, res) => {
+  const deployment = deployments.find(d => d.id === req.params.id);
   
-  res.status(201).json(newLog);
+  if (!deployment) {
+    return res.status(404).json({ message: 'Deployment not found' });
+  }
+  
+  // Create a new rollback deployment
+  const rollbackDeployment = {
+    id: (deployments.length + 1).toString(),
+    name: `Rollback: ${deployment.name}`,
+    description: `Rollback of ${deployment.name} to previous version`,
+    status: 'in-progress',
+    environment: deployment.environment,
+    initiatedBy: req.body.initiatedBy || 'system',
+    startTime: new Date().toISOString(),
+    version: deployment.version, // Previous version
+    services: deployment.services,
+    configuration: deployment.configuration,
+    rollbackOf: deployment.id
+  };
+  
+  deployments.push(rollbackDeployment);
+  res.status(201).json(rollbackDeployment);
 });
 
 module.exports = router;

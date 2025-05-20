@@ -147,3 +147,4 @@ export const updateDeploymentConfig = async (id: string, configData: any) => {
     method: 'PUT',
     body: JSON.stringify(configData),
   });
+};
