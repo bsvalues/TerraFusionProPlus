@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Routes, Route, Link, useLocation, Outlet } from 'react-router-dom';
+import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/queryClient';
 
