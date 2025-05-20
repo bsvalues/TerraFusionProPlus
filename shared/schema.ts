@@ -164,6 +164,25 @@ export const attachments = pgTable("attachments", {
   uploadDate: timestamp("upload_date").notNull().defaultNow()
 });
 
+// Define attachments relations
+export const attachmentsRelations = relations(attachments, ({ one }) => ({
+  property: one(properties, {
+    fields: [attachments.propertyId],
+    references: [properties.id],
+    relationName: "property_attachments"
+  }),
+  appraisal: one(appraisals, {
+    fields: [attachments.appraisalId],
+    references: [appraisals.id],
+    relationName: "appraisal_attachments"
+  }),
+  uploader: one(users, {
+    fields: [attachments.uploadedBy],
+    references: [users.id],
+    relationName: "uploader"
+  })
+}));
+
 // Market data table definition
 export const marketData = pgTable("market_data", {
   id: serial("id").primaryKey(),

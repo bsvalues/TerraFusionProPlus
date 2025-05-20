@@ -2,194 +2,392 @@ import { db } from './db';
 import { users, properties, appraisals, comparables, adjustments, attachments, marketData } from '../shared/schema';
 import { sql } from 'drizzle-orm';
 
-// Function to initialize the database schema
-async function initializeDatabase() {
-  console.log('Starting database initialization...');
+export async function initializeDatabase() {
+  console.log('Initializing database...');
   
   try {
-    // Create schemas in order of dependencies
-    console.log('Creating database schema...');
+    // Create tables
+    await createTables();
     
-    // Verify connection
-    const result = await db.execute(sql`SELECT NOW()`);
-    console.log('Database connection successful.');
+    // Insert sample data if needed
+    await insertSampleData();
     
-    // Create schema using drizzle-kit (this is normally done via drizzle-kit migrate command)
-    // But we'll execute it here for initial setup
-    
-    // Sample data for testing
-    // Insert a test user
-    const [testUser] = await db.insert(users).values({
-      username: 'johndoe',
-      firstName: 'John',
-      lastName: 'Doe',
-      email: 'john@example.com',
-      password: 'password123', // In production, this would be hashed
-      role: 'appraiser',
-      isActive: true
-    }).returning();
-    
-    console.log('Test user created:', testUser);
-    
-    // Insert a test property
-    const propertyData = {
-      address: '123 Main Street',
-      city: 'Austin',
-      state: 'TX',
-      zip_code: '78701',
-      property_type: 'Single Family',
-      year_built: 2005,
-      square_feet: 2450,
-      bedrooms: 3,
-      bathrooms: 2.5,
-      lot_size: 8500,
-      description: 'Beautiful family home in a desirable neighborhood',
-      parcel_number: '10-4567-89',
-      zoning: 'Residential (R-1)',
-      latitude: 30.267153,
-      longitude: -97.743057,
-      features: {
-        pool: true,
-        garage: '2-Car Attached',
-        fireplace: true,
-        stories: 2
-      }
-    };
-    
-    const [testProperty] = await db.insert(properties).values(propertyData).returning();
-    
-    console.log('Test property created:', testProperty);
-    
-    // Insert a test appraisal
-    const [testAppraisal] = await db.insert(appraisals).values({
-      propertyId: testProperty.id,
-      appraiserId: testUser.id,
-      status: 'Completed',
-      purpose: 'Refinance',
-      marketValue: 975000,
-      inspectionDate: new Date('2024-05-18T00:00:00Z'),
-      effectiveDate: new Date('2024-05-20T00:00:00Z'),
-      reportType: 'Form 1004',
-      clientName: 'First National Bank',
-      clientEmail: 'loans@firstnational.example',
-      clientPhone: '555-123-4567',
-      lenderName: 'First National Bank',
-      loanNumber: 'L-12345',
-      intendedUse: 'Refinance transaction',
-      valuationMethod: 'Sales Comparison Approach',
-      scopeOfWork: 'Full appraisal with interior and exterior inspection',
-    }).returning();
-    
-    console.log('Test appraisal created:', testAppraisal);
-    
-    // Insert test comparables
-    const comparableData = [
-      {
-        appraisalId: testAppraisal.id,
-        address: '456 Oak Avenue',
-        city: 'Austin',
-        state: 'TX',
-        zipCode: '78701',
-        salePrice: 925000,
-        saleDate: new Date('2024-03-15T00:00:00Z'),
-        squareFeet: 2350,
-        bedrooms: 3,
-        bathrooms: 2,
-        yearBuilt: 2003,
-        propertyType: 'Single Family',
-        lotSize: 7500,
-        condition: 'Good',
-        daysOnMarket: 28,
-        source: 'MLS',
-        adjustedPrice: 952000,
-        adjustmentNotes: 'Adjusted for smaller square footage and lot size',
-      },
-      {
-        appraisalId: testAppraisal.id,
-        address: '789 Elm Drive',
-        city: 'Austin',
-        state: 'TX',
-        zipCode: '78704',
-        salePrice: 1050000,
-        saleDate: new Date('2024-04-02T00:00:00Z'),
-        squareFeet: 2650,
-        bedrooms: 4,
-        bathrooms: 3,
-        yearBuilt: 2008,
-        propertyType: 'Single Family',
-        lotSize: 9000,
-        condition: 'Excellent',
-        daysOnMarket: 14,
-        source: 'MLS',
-        adjustedPrice: 985000,
-        adjustmentNotes: 'Adjusted for larger square footage and newer construction',
-      }
-    ];
-    
-    for (const comparable of comparableData) {
-      const [testComparable] = await db.insert(comparables).values(comparable).returning();
-      console.log('Test comparable created:', testComparable);
-      
-      // Add adjustments for this comparable
-      const [testAdjustment] = await db.insert(adjustments).values({
-        comparableId: testComparable.id,
-        category: 'Size',
-        description: 'Square Footage Adjustment',
-        amount: 15000,
-        isPercentage: false,
-        notes: 'Adjustment for difference in size'
-      }).returning();
-      
-      console.log('Test adjustment created:', testAdjustment);
-    }
-    
-    // Insert test market data
-    const marketDataPoints = [
-      {
-        location: 'Austin, TX',
-        dataType: 'MedianPrice',
-        time: 'May 2024',
-        value: 550000,
-        comparisonValue: 525000,
-        percentChange: 4.76,
-        source: 'Local MLS',
-        notes: 'Monthly median sales price'
-      },
-      {
-        location: 'Austin, TX',
-        dataType: 'DaysOnMarket',
-        time: 'May 2024',
-        value: 32,
-        comparisonValue: 35,
-        percentChange: -8.57,
-        source: 'Local MLS',
-        notes: 'Average days on market'
-      }
-    ];
-    
-    for (const dataPoint of marketDataPoints) {
-      const [marketDataEntry] = await db.insert(marketData).values(dataPoint).returning();
-      console.log('Test market data created:', marketDataEntry);
-    }
-    
-    console.log('Database initialization completed successfully!');
+    console.log('Database initialized successfully');
   } catch (error) {
     console.error('Error initializing database:', error);
     throw error;
   }
 }
 
-// Execute if this file is run directly
-if (require.main === module) {
-  initializeDatabase()
-    .then(() => {
-      console.log('Database initialization script completed.');
-      process.exit(0);
-    })
-    .catch((error) => {
-      console.error('Database initialization failed:', error);
-      process.exit(1);
-    });
+async function createTables() {
+  try {
+    console.log('Creating tables...');
+    
+    // Create users table
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        username VARCHAR(100) UNIQUE NOT NULL,
+        first_name VARCHAR(100) NOT NULL,
+        last_name VARCHAR(100) NOT NULL,
+        email VARCHAR(100) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        role VARCHAR(50) NOT NULL DEFAULT 'appraiser',
+        is_active BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+    
+    // Create properties table
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS properties (
+        id SERIAL PRIMARY KEY,
+        address VARCHAR(255) NOT NULL,
+        city VARCHAR(100) NOT NULL,
+        state VARCHAR(50) NOT NULL,
+        zip_code VARCHAR(20) NOT NULL,
+        property_type VARCHAR(50) NOT NULL,
+        year_built INTEGER NOT NULL,
+        square_feet INTEGER NOT NULL,
+        bedrooms DECIMAL(3,1) NOT NULL,
+        bathrooms DECIMAL(3,1) NOT NULL,
+        lot_size INTEGER NOT NULL,
+        description TEXT,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        parcel_number VARCHAR(50),
+        zoning VARCHAR(50),
+        lot_unit VARCHAR(20),
+        latitude DECIMAL(10,6),
+        longitude DECIMAL(10,6),
+        features JSONB,
+        created_by INTEGER REFERENCES users(id)
+      );
+    `);
+    
+    // Create appraisals table
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS appraisals (
+        id SERIAL PRIMARY KEY,
+        property_id INTEGER NOT NULL REFERENCES properties(id),
+        appraiser_id INTEGER NOT NULL REFERENCES users(id),
+        status VARCHAR(50) NOT NULL DEFAULT 'Draft',
+        purpose VARCHAR(100) NOT NULL,
+        market_value INTEGER,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        completed_at TIMESTAMP,
+        inspection_date TIMESTAMP,
+        effective_date TIMESTAMP,
+        report_type VARCHAR(50),
+        client_name VARCHAR(100),
+        client_email VARCHAR(100),
+        client_phone VARCHAR(50),
+        lender_name VARCHAR(100),
+        loan_number VARCHAR(50),
+        intended_use VARCHAR(255),
+        valuation_method VARCHAR(50),
+        scope_of_work TEXT,
+        notes TEXT
+      );
+    `);
+    
+    // Create comparables table
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS comparables (
+        id SERIAL PRIMARY KEY,
+        appraisal_id INTEGER NOT NULL REFERENCES appraisals(id),
+        address VARCHAR(255) NOT NULL,
+        city VARCHAR(100) NOT NULL,
+        state VARCHAR(50) NOT NULL,
+        zip_code VARCHAR(20) NOT NULL,
+        sale_price INTEGER NOT NULL,
+        sale_date TIMESTAMP NOT NULL,
+        square_feet INTEGER NOT NULL,
+        bedrooms DECIMAL(3,1),
+        bathrooms DECIMAL(3,1),
+        year_built INTEGER,
+        property_type VARCHAR(50) NOT NULL,
+        lot_size INTEGER,
+        condition VARCHAR(50),
+        days_on_market INTEGER,
+        source VARCHAR(100),
+        adjusted_price INTEGER,
+        adjustment_notes TEXT,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+    
+    // Create adjustments table
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS adjustments (
+        id SERIAL PRIMARY KEY,
+        comparable_id INTEGER NOT NULL REFERENCES comparables(id),
+        category VARCHAR(50) NOT NULL,
+        description VARCHAR(255) NOT NULL,
+        amount INTEGER NOT NULL,
+        is_percentage BOOLEAN NOT NULL DEFAULT FALSE,
+        notes TEXT,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+    
+    // Create attachments table
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS attachments (
+        id SERIAL PRIMARY KEY,
+        property_id INTEGER REFERENCES properties(id),
+        appraisal_id INTEGER REFERENCES appraisals(id),
+        file_name VARCHAR(255) NOT NULL,
+        file_type VARCHAR(50) NOT NULL,
+        file_size INTEGER NOT NULL,
+        file_url VARCHAR(255) NOT NULL,
+        uploaded_by INTEGER NOT NULL REFERENCES users(id),
+        category VARCHAR(50),
+        description TEXT,
+        upload_date TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+    
+    // Create market_data table
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS market_data (
+        id SERIAL PRIMARY KEY,
+        location VARCHAR(100) NOT NULL,
+        data_type VARCHAR(50) NOT NULL,
+        time VARCHAR(50) NOT NULL,
+        value DECIMAL(12,2) NOT NULL,
+        comparison_value DECIMAL(12,2),
+        percent_change DECIMAL(6,2),
+        source VARCHAR(100),
+        notes TEXT,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+    
+    console.log('Tables created successfully');
+  } catch (error) {
+    console.error('Error creating tables:', error);
+    throw error;
+  }
 }
 
-export { initializeDatabase };
+async function insertSampleData() {
+  try {
+    // Check if we already have users
+    const existingUsers = await db.select().from(users).limit(1);
+    if (existingUsers.length > 0) {
+      console.log('Sample data already exists, skipping');
+      return;
+    }
+    
+    console.log('Inserting sample data...');
+    
+    // Insert sample users
+    const [adminUser] = await db.insert(users).values({
+      username: 'admin',
+      firstName: 'Admin',
+      lastName: 'User',
+      email: 'admin@terrafusion.com',
+      password: '$2b$10$JK4Wt9fE3KnuiB1DFXvxQesNQZKxr2KReLuKVb7TqDQsQvAVLBHyW', // hashed 'password123'
+      role: 'admin'
+    }).returning();
+    
+    const [appraiser1] = await db.insert(users).values({
+      username: 'appraiser1',
+      firstName: 'John',
+      lastName: 'Smith',
+      email: 'john.smith@terrafusion.com',
+      password: '$2b$10$JK4Wt9fE3KnuiB1DFXvxQesNQZKxr2KReLuKVb7TqDQsQvAVLBHyW',
+      role: 'appraiser'
+    }).returning();
+    
+    const [appraiser2] = await db.insert(users).values({
+      username: 'appraiser2',
+      firstName: 'Emma',
+      lastName: 'Johnson',
+      email: 'emma.johnson@terrafusion.com',
+      password: '$2b$10$JK4Wt9fE3KnuiB1DFXvxQesNQZKxr2KReLuKVb7TqDQsQvAVLBHyW',
+      role: 'appraiser'
+    }).returning();
+    
+    // Insert sample properties
+    const [property1] = await db.insert(properties).values({
+      address: '123 Main St',
+      city: 'Austin',
+      state: 'TX',
+      zip_code: '78701',
+      property_type: 'Single Family',
+      year_built: 2005,
+      square_feet: 2500,
+      bedrooms: 4,
+      bathrooms: 2.5,
+      lot_size: 8500,
+      description: 'Beautiful two-story home in central Austin',
+      created_by: appraiser1.id
+    }).returning();
+    
+    const [property2] = await db.insert(properties).values({
+      address: '456 Oak Ave',
+      city: 'Austin',
+      state: 'TX',
+      zip_code: '78704',
+      property_type: 'Condo',
+      year_built: 2015,
+      square_feet: 1200,
+      bedrooms: 2,
+      bathrooms: 2,
+      lot_size: 0,
+      description: 'Modern condo in South Austin',
+      created_by: appraiser1.id
+    }).returning();
+    
+    const [property3] = await db.insert(properties).values({
+      address: '789 Pine Rd',
+      city: 'Round Rock',
+      state: 'TX',
+      zip_code: '78664',
+      property_type: 'Single Family',
+      year_built: 2000,
+      square_feet: 2200,
+      bedrooms: 3,
+      bathrooms: 2,
+      lot_size: 7500,
+      description: 'Ranch-style home with large backyard',
+      created_by: appraiser2.id
+    }).returning();
+    
+    // Insert sample appraisals
+    const [appraisal1] = await db.insert(appraisals).values({
+      propertyId: property1.id,
+      appraiserId: appraiser1.id,
+      status: 'In Progress',
+      purpose: 'Refinance',
+      marketValue: 450000,
+      clientName: 'Wells Fargo',
+      clientEmail: 'loans@wellsfargo.com',
+      clientPhone: '555-123-4567',
+      lenderName: 'Wells Fargo',
+      loanNumber: 'WF123456789',
+      valuationMethod: 'Sales Comparison'
+    }).returning();
+    
+    const [appraisal2] = await db.insert(appraisals).values({
+      propertyId: property2.id,
+      appraiserId: appraiser2.id,
+      status: 'Completed',
+      purpose: 'Purchase',
+      marketValue: 320000,
+      completedAt: new Date(),
+      clientName: 'Bank of America',
+      clientEmail: 'loans@bofa.com',
+      clientPhone: '555-987-6543',
+      lenderName: 'Bank of America',
+      loanNumber: 'BOA987654321',
+      valuationMethod: 'Sales Comparison'
+    }).returning();
+    
+    // Insert sample comparables
+    const [comparable1] = await db.insert(comparables).values({
+      appraisalId: appraisal1.id,
+      address: '125 Main St',
+      city: 'Austin',
+      state: 'TX',
+      zipCode: '78701',
+      salePrice: 445000,
+      saleDate: new Date('2023-01-15'),
+      squareFeet: 2400,
+      bedrooms: 4,
+      bathrooms: 2.5,
+      yearBuilt: 2003,
+      propertyType: 'Single Family',
+      lotSize: 8000,
+      condition: 'Good',
+      source: 'MLS'
+    }).returning();
+    
+    const [comparable2] = await db.insert(comparables).values({
+      appraisalId: appraisal1.id,
+      address: '127 Main St',
+      city: 'Austin',
+      state: 'TX',
+      zipCode: '78701',
+      salePrice: 460000,
+      saleDate: new Date('2023-02-10'),
+      squareFeet: 2600,
+      bedrooms: 4,
+      bathrooms: 3.0,
+      yearBuilt: 2007,
+      propertyType: 'Single Family',
+      lotSize: 8200,
+      condition: 'Excellent',
+      source: 'MLS'
+    }).returning();
+    
+    // Insert sample adjustments
+    await db.insert(adjustments).values({
+      comparableId: comparable1.id,
+      category: 'Size',
+      description: 'Square Footage Adjustment',
+      amount: -5000,
+      isPercentage: false,
+      notes: 'Subject property is 100 sqft larger'
+    });
+    
+    await db.insert(adjustments).values({
+      comparableId: comparable1.id,
+      category: 'Condition',
+      description: 'Condition Adjustment',
+      amount: 2000,
+      isPercentage: false,
+      notes: 'Subject property has newer appliances'
+    });
+    
+    // Insert sample market data
+    await db.insert(marketData).values({
+      location: 'Austin, TX',
+      dataType: 'Median Home Price',
+      time: '2023-Q1',
+      value: 450000,
+      comparisonValue: 420000,
+      percentChange: 7.14,
+      source: 'MLS'
+    });
+    
+    await db.insert(marketData).values({
+      location: 'Austin, TX',
+      dataType: 'Median Home Price',
+      time: '2023-Q2',
+      value: 455000,
+      comparisonValue: 450000,
+      percentChange: 1.11,
+      source: 'MLS'
+    });
+    
+    await db.insert(marketData).values({
+      location: 'Austin, TX',
+      dataType: 'Days on Market',
+      time: '2023-Q1',
+      value: 28,
+      comparisonValue: 21,
+      percentChange: 33.33,
+      source: 'MLS'
+    });
+    
+    await db.insert(marketData).values({
+      location: 'Austin, TX',
+      dataType: 'Days on Market',
+      time: '2023-Q2',
+      value: 32,
+      comparisonValue: 28,
+      percentChange: 14.29,
+      source: 'MLS'
+    });
+    
+    console.log('Sample data inserted successfully');
+  } catch (error) {
+    console.error('Error inserting sample data:', error);
+    throw error;
+  }
+}
