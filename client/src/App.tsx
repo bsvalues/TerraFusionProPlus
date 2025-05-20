@@ -21,6 +21,8 @@ import { Properties } from './pages/Properties';
 import { PropertyDetail } from './pages/PropertyDetail';
 import { AppraisalForm } from './pages/AppraisalForm';
 import { Appraisals } from './pages/Appraisals';
+import { Comparables } from './pages/Comparables';
+import { ComparableForm } from './pages/ComparableForm';
 
 const App = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -162,12 +164,25 @@ const App = () => {
         <div className="flex-1 md:ml-64 overflow-y-auto">
           <main className="p-6">
             <Routes>
+              {/* Dashboard */}
               <Route path="/" element={<Home />} />
+              
+              {/* Properties */}
               <Route path="/properties" element={<Properties />} />
               <Route path="/properties/:id" element={<PropertyDetail />} />
+              
+              {/* Appraisals */}
               <Route path="/appraisals" element={<Appraisals />} />
               <Route path="/appraisals/new" element={<AppraisalForm />} />
               <Route path="/appraisals/:id/edit" element={<AppraisalForm />} />
+              
+              {/* Comparables */}
+              <Route path="/comparables" element={<Comparables />} />
+              <Route path="/comparables/new" element={<ComparableForm />} />
+              <Route path="/comparables/:id/edit" element={<ComparableForm />} />
+              <Route path="/appraisals/:appraisalId/comparables/new" element={<ComparableForm />} />
+              
+              {/* 404 Page */}
               <Route path="*" element={
                 <div className="flex flex-col items-center justify-center h-64">
                   <h2 className="text-2xl font-semibold text-gray-700 mb-4">Page Not Found</h2>
