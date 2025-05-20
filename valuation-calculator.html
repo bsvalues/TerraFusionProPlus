@@ -653,29 +653,234 @@
     </div>
     
     <script>
-        // Simple interactive functionality
         document.addEventListener('DOMContentLoaded', function() {
+            // Get all required elements
+            const squareFeetInput = document.getElementById('squareFeet');
+            const basePricePerSqFtInput = document.getElementById('basePricePerSqFt');
+            const propertySelect = document.getElementById('propertySelect');
+            const resetButton = document.querySelector('.btn-secondary');
+            const recalculateButton = document.querySelector('.btn-primary');
+            
+            // Initialize base value elements
+            const baseValueElement = document.querySelector('.summary-item:nth-child(1) .summary-value');
+            const adjustmentsElement = document.querySelector('.summary-item:nth-child(2) .summary-value');
+            const totalValueElement = document.querySelector('.summary-item:nth-child(3) .summary-value.summary-total');
+            const pricePerSqFtElement = document.querySelector('.price-per-sqft');
+            
             // Toggle adjustment factors
             document.querySelectorAll('.adjustment-title .toggle').forEach(toggle => {
                 toggle.addEventListener('click', function() {
                     const factor = this.closest('.adjustment-factor');
                     factor.classList.toggle('enabled');
                     this.textContent = factor.classList.contains('enabled') ? '-' : '+';
+                    calculateValue(); // Recalculate when a factor is enabled/disabled
                 });
             });
             
-            // Sync range inputs with number inputs
+            // Sync range inputs with number inputs and trigger calculation
             document.querySelectorAll('.adjustment-controls input[type="range"]').forEach(range => {
                 const numberInput = range.nextElementSibling.querySelector('input');
                 
                 range.addEventListener('input', function() {
                     numberInput.value = this.value;
+                    calculateValue(); // Recalculate when slider moves
                 });
                 
                 numberInput.addEventListener('input', function() {
                     range.value = this.value;
+                    calculateValue(); // Recalculate when value changes
                 });
             });
+            
+            // Handle form inputs that affect base calculation
+            squareFeetInput.addEventListener('input', calculateValue);
+            basePricePerSqFtInput.addEventListener('input', calculateValue);
+            
+            // Property selection dropdown
+            propertySelect.addEventListener('change', function() {
+                if (this.value === '1') {
+                    // 123 Main Street
+                    document.getElementById('address').value = '123 Main Street';
+                    document.getElementById('city').value = 'Austin';
+                    document.getElementById('propertyType').value = 'Single Family';
+                    document.getElementById('condition').value = 'Average';
+                    document.getElementById('squareFeet').value = '2450';
+                    document.getElementById('basePricePerSqFt').value = '350';
+                    document.getElementById('bedrooms').value = '3';
+                    document.getElementById('bathrooms').value = '2.5';
+                    document.getElementById('yearBuilt').value = '2005';
+                    document.getElementById('lotSize').value = '8500';
+                } else if (this.value === '2') {
+                    // 456 Oak Avenue
+                    document.getElementById('address').value = '456 Oak Avenue';
+                    document.getElementById('city').value = 'Austin';
+                    document.getElementById('propertyType').value = 'Condo';
+                    document.getElementById('condition').value = 'Good';
+                    document.getElementById('squareFeet').value = '1750';
+                    document.getElementById('basePricePerSqFt').value = '425';
+                    document.getElementById('bedrooms').value = '2';
+                    document.getElementById('bathrooms').value = '2';
+                    document.getElementById('yearBuilt').value = '2010';
+                    document.getElementById('lotSize').value = '0';
+                } else if (this.value === '3') {
+                    // 789 Elm Drive
+                    document.getElementById('address').value = '789 Elm Drive';
+                    document.getElementById('city').value = 'Austin';
+                    document.getElementById('propertyType').value = 'Single Family';
+                    document.getElementById('condition').value = 'Excellent';
+                    document.getElementById('squareFeet').value = '3200';
+                    document.getElementById('basePricePerSqFt').value = '380';
+                    document.getElementById('bedrooms').value = '4';
+                    document.getElementById('bathrooms').value = '3.5';
+                    document.getElementById('yearBuilt').value = '2018';
+                    document.getElementById('lotSize').value = '10500';
+                } else if (this.value === '4') {
+                    // 101 Pine Road
+                    document.getElementById('address').value = '101 Pine Road';
+                    document.getElementById('city').value = 'Austin';
+                    document.getElementById('propertyType').value = 'Townhouse';
+                    document.getElementById('condition').value = 'Fair';
+                    document.getElementById('squareFeet').value = '1950';
+                    document.getElementById('basePricePerSqFt').value = '320';
+                    document.getElementById('bedrooms').value = '3';
+                    document.getElementById('bathrooms').value = '2';
+                    document.getElementById('yearBuilt').value = '2000';
+                    document.getElementById('lotSize').value = '2500';
+                }
+                
+                // Update the property summary
+                updatePropertySummary();
+                
+                // Calculate the value based on new property
+                calculateValue();
+            });
+            
+            // Reset button functionality
+            resetButton.addEventListener('click', function() {
+                // Reset all adjustment factors to default values
+                document.querySelectorAll('.adjustment-factor.enabled').forEach(factor => {
+                    const rangeInput = factor.querySelector('input[type="range"]');
+                    const numberInput = factor.querySelector('input[type="number"]');
+                    
+                    if (rangeInput && numberInput) {
+                        rangeInput.value = rangeInput.defaultValue;
+                        numberInput.value = numberInput.defaultValue;
+                    }
+                });
+                
+                calculateValue();
+            });
+            
+            // Recalculate button functionality
+            recalculateButton.addEventListener('click', calculateValue);
+            
+            // Main calculation function
+            function calculateValue() {
+                // Get base values
+                const squareFeet = parseFloat(squareFeetInput.value) || 0;
+                const basePricePerSqFt = parseFloat(basePricePerSqFtInput.value) || 0;
+                
+                // Calculate base value
+                const baseValue = squareFeet * basePricePerSqFt;
+                
+                // Calculate adjustments
+                let totalAdjustmentPercent = 0;
+                let totalAdjustmentFixed = 0;
+                
+                document.querySelectorAll('.adjustment-factor.enabled').forEach(factor => {
+                    const adjustmentType = factor.querySelector('.adjustment-badge').classList.contains('badge-percentage') ? 'percentage' : 'fixed';
+                    const adjustmentValue = parseFloat(factor.querySelector('input[type="number"]').value) || 0;
+                    
+                    if (adjustmentType === 'percentage') {
+                        totalAdjustmentPercent += adjustmentValue;
+                    } else {
+                        totalAdjustmentFixed += adjustmentValue;
+                    }
+                });
+                
+                // Calculate total adjustment amount
+                const percentageAdjustment = baseValue * (totalAdjustmentPercent / 100);
+                const totalAdjustment = percentageAdjustment + totalAdjustmentFixed;
+                
+                // Calculate total value
+                const totalValue = baseValue + totalAdjustment;
+                
+                // Calculate price per sqft
+                const pricePerSqFt = totalValue / squareFeet;
+                
+                // Update the UI
+                baseValueElement.textContent = formatCurrency(baseValue);
+                
+                if (totalAdjustment >= 0) {
+                    adjustmentsElement.textContent = '+' + formatCurrency(totalAdjustment);
+                    adjustmentsElement.classList.add('positive');
+                    adjustmentsElement.classList.remove('negative');
+                } else {
+                    adjustmentsElement.textContent = formatCurrency(totalAdjustment);
+                    adjustmentsElement.classList.add('negative');
+                    adjustmentsElement.classList.remove('positive');
+                }
+                
+                totalValueElement.textContent = formatCurrency(totalValue);
+                pricePerSqFtElement.textContent = formatCurrency(pricePerSqFt, false) + ' per sq.ft.';
+                
+                // Add to history (simple simulation)
+                addToHistory(totalValue);
+            }
+            
+            // Helper function to format currency
+            function formatCurrency(value, withSymbol = true) {
+                const formatter = new Intl.NumberFormat('en-US', {
+                    style: withSymbol ? 'currency' : 'decimal',
+                    currency: 'USD',
+                    minimumFractionDigits: withSymbol ? 0 : 2,
+                    maximumFractionDigits: 2
+                });
+                
+                return withSymbol ? formatter.format(value) : formatter.format(value);
+            }
+            
+            // Update property summary based on form values
+            function updatePropertySummary() {
+                // Update property summary on the right sidebar
+                document.querySelector('.property-info-item:nth-child(1) .property-value').textContent = document.getElementById('address').value;
+                document.querySelector('.property-info-item:nth-child(2) .property-value').textContent = document.getElementById('city').value + ', TX';
+                document.querySelector('.property-info-item:nth-child(3) .property-value').textContent = document.getElementById('propertyType').value;
+                document.querySelector('.property-info-item:nth-child(4) .property-value').textContent = document.getElementById('squareFeet').value + ' sq.ft.';
+                document.querySelector('.property-info-item:nth-child(5) .property-value').textContent = document.getElementById('bedrooms').value;
+                document.querySelector('.property-info-item:nth-child(6) .property-value').textContent = document.getElementById('bathrooms').value;
+                document.querySelector('.property-info-item:nth-child(7) .property-value').textContent = document.getElementById('yearBuilt').value;
+                document.querySelector('.property-info-item:nth-child(8) .property-value').textContent = document.getElementById('condition').value;
+            }
+            
+            // Simulated history functionality
+            function addToHistory(value) {
+                const historyContainer = document.querySelector('.card:nth-child(1)');
+                const historyItems = historyContainer.querySelectorAll('.history-item');
+                
+                // If there's at least one history item that's not "current", update it
+                if (historyItems.length > 1) {
+                    // Mark all items as non-current
+                    historyItems.forEach(item => {
+                        item.classList.remove('current');
+                    });
+                    
+                    // Create new current history item
+                    const newItem = document.createElement('div');
+                    newItem.classList.add('history-item', 'current');
+                    newItem.textContent = formatCurrency(value) + ' (Current)';
+                    
+                    // Insert at the top
+                    historyContainer.insertBefore(newItem, historyItems[0]);
+                } else {
+                    // Just update the current item
+                    historyItems[0].textContent = formatCurrency(value) + ' (Current)';
+                }
+            }
+            
+            // Initial calculation
+            calculateValue();
+            updatePropertySummary();
         });
     </script>
 </body>
