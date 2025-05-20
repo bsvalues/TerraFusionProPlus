@@ -384,19 +384,11 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../client/dist/index.html'));
 });
 
-// Serve the standalone HTML file directly
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/index-standalone.html'));
-});
-
 // Serve static files
 app.use(express.static(path.join(__dirname, '../client')));
 
-// For any other requests not handled by the API, serve the standalone HTML
+// Simple catch-all route for all other requests
 app.get('*', (req, res) => {
-  if (req.path.startsWith('/api')) {
-    return res.status(404).send('API endpoint not found');
-  }
   res.sendFile(path.join(__dirname, '../client/index-standalone.html'));
 });
 
