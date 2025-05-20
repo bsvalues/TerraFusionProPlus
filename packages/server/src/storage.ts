@@ -1,10 +1,19 @@
-import { 
-  users, properties, appraisals, comparables,
-  type User, type InsertUser,
-  type Property, type InsertProperty,
-  type Appraisal, type InsertAppraisal,
-  type Comparable, type InsertComparable
-} from "../shared/schema";
+import { CoreSchema } from "../../shared/src";
+
+// Extract types and tables from CoreSchema
+const { 
+  users, properties, appraisals, comparables
+} = CoreSchema;
+
+// Type imports
+type User = CoreSchema.User;
+type InsertUser = CoreSchema.InsertUser;
+type Property = CoreSchema.Property;
+type InsertProperty = CoreSchema.InsertProperty;
+type Appraisal = CoreSchema.Appraisal;
+type InsertAppraisal = CoreSchema.InsertAppraisal;
+type Comparable = CoreSchema.Comparable;
+type InsertComparable = CoreSchema.InsertComparable;
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
