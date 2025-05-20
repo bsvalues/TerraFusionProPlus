@@ -1,32 +1,30 @@
 {
-  "name": "@terrafusion/client",
-  "private": true,
+  "name": "terrafusion-pro-client",
   "version": "1.0.0",
-  "type": "module",
+  "description": "TerraFusion Professional - Frontend",
+  "main": "src/main.tsx",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@hookform/resolvers": "*",
-    "@tanstack/react-query": "*",
-    "date-fns": "*",
-    "lucide-react": "*",
-    "react": "*",
-    "react-dom": "*",
-    "react-router-dom": "*",
-    "recharts": "*",
-    "zod": "*"
+    "@tanstack/react-query": "^5.8.7",
+    "date-fns": "^2.30.0",
+    "lucide-react": "^0.288.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.18.0",
+    "recharts": "^2.9.0"
   },
   "devDependencies": {
-    "@types/react": "*",
-    "@types/react-dom": "*",
-    "@vitejs/plugin-react": "*",
-    "autoprefixer": "*",
-    "postcss": "*",
-    "tailwindcss": "*",
-    "typescript": "*",
-    "vite": "*"
+    "@types/react": "^18.2.15",
+    "@types/react-dom": "^18.2.7",
+    "@vitejs/plugin-react": "^4.2.0",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.31",
+    "tailwindcss": "^3.3.5",
+    "typescript": "^5.0.2",
+    "vite": "^5.0.0"
   }
 }
