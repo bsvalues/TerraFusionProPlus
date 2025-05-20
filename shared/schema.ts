@@ -1,126 +1,98 @@
-import { pgTable, serial, varchar, integer, decimal, timestamp, boolean, json, text } from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, integer, doublePrecision, timestamp, boolean, jsonb } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
-import { relations } from 'drizzle-orm';
 
-// Users table definition
+// Users table
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  username: varchar("username", { length: 100 }).notNull().unique(),
-  firstName: varchar("first_name", { length: 100 }).notNull(),
-  lastName: varchar("last_name", { length: 100 }).notNull(),
-  email: varchar("email", { length: 100 }).notNull().unique(),
-  password: varchar("password", { length: 255 }).notNull(),
-  role: varchar("role", { length: 50 }).notNull().default("appraiser"),
-  isActive: boolean("is_active").notNull().default(true),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow()
+  username: text("username").notNull().unique(),
+  email: text("email").notNull().unique(),
+  password: text("password").notNull(),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  role: text("role").notNull(),
+  licenseNumber: text("license_number"),
+  company: text("company"),
+  createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
-// Define user relations
 export const usersRelations = relations(users, ({ many }) => ({
-  appraisals: many(appraisals),
-  uploadedAttachments: many(attachments, { relationName: "uploader" })
+  appraisals: many(appraisals)
 }));
 
-// Properties table definition
+// Properties table
 export const properties = pgTable("properties", {
   id: serial("id").primaryKey(),
-  address: varchar("address", { length: 255 }).notNull(),
-  city: varchar("city", { length: 100 }).notNull(),
-  state: varchar("state", { length: 50 }).notNull(),
-  zip_code: varchar("zip_code", { length: 20 }).notNull(),
-  property_type: varchar("property_type", { length: 50 }).notNull(),
-  year_built: integer("year_built").notNull(),
-  square_feet: integer("square_feet").notNull(),
-  bedrooms: decimal("bedrooms", { precision: 3, scale: 1 }).notNull(),
-  bathrooms: decimal("bathrooms", { precision: 3, scale: 1 }).notNull(),
-  lot_size: integer("lot_size").notNull(),
+  address: text("address").notNull(),
+  city: text("city").notNull(),
+  state: text("state").notNull(),
+  zipCode: text("zip_code").notNull(),
+  propertyType: text("property_type").notNull(),
+  yearBuilt: integer("year_built"),
+  squareFeet: integer("square_feet"),
+  bedrooms: integer("bedrooms"),
+  bathrooms: doublePrecision("bathrooms"),
+  lotSize: doublePrecision("lot_size"),
   description: text("description"),
-  created_at: timestamp("created_at").notNull().defaultNow(),
-  updated_at: timestamp("updated_at").notNull().defaultNow(),
-  parcel_number: varchar("parcel_number", { length: 50 }),
-  zoning: varchar("zoning", { length: 50 }),
-  lot_unit: varchar("lot_unit", { length: 20 }),
-  latitude: decimal("latitude", { precision: 10, scale: 6 }),
-  longitude: decimal("longitude", { precision: 10, scale: 6 }),
-  features: json("features"),
-  created_by: integer("created_by").references(() => users.id)
+  lastSalePrice: integer("last_sale_price"),
+  lastSaleDate: timestamp("last_sale_date"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
-// Define property relations
 export const propertiesRelations = relations(properties, ({ many, one }) => ({
   appraisals: many(appraisals),
-  creator: one(users, {
-    fields: [properties.created_by],
+  owner: one(users, {
+    fields: [properties.id],
     references: [users.id]
-  }),
-  attachments: many(attachments, { relationName: "property_attachments" })
+  })
 }));
 
-// Appraisals table definition
+// Appraisals table
 export const appraisals = pgTable("appraisals", {
   id: serial("id").primaryKey(),
   propertyId: integer("property_id").notNull().references(() => properties.id),
   appraiserId: integer("appraiser_id").notNull().references(() => users.id),
-  status: varchar("status", { length: 50 }).notNull().default("Draft"),
-  purpose: varchar("purpose", { length: 100 }).notNull(),
-  marketValue: integer("market_value"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
   completedAt: timestamp("completed_at"),
-  inspectionDate: timestamp("inspection_date"),
+  status: text("status").notNull().default("draft"),
+  purpose: text("purpose"),
+  marketValue: integer("market_value"),
+  valuationMethod: text("valuation_method"),
   effectiveDate: timestamp("effective_date"),
-  reportType: varchar("report_type", { length: 50 }),
-  clientName: varchar("client_name", { length: 100 }),
-  clientEmail: varchar("client_email", { length: 100 }),
-  clientPhone: varchar("client_phone", { length: 50 }),
-  lenderName: varchar("lender_name", { length: 100 }),
-  loanNumber: varchar("loan_number", { length: 50 }),
-  intendedUse: varchar("intended_use", { length: 255 }),
-  valuationMethod: varchar("valuation_method", { length: 50 }),
-  scopeOfWork: text("scope_of_work"),
-  notes: text("notes")
+  reportDate: timestamp("report_date")
 });
 
-// Define appraisal relations
 export const appraisalsRelations = relations(appraisals, ({ one, many }) => ({
   property: one(properties, {
     fields: [appraisals.propertyId],
-    references: [properties.id],
+    references: [properties.id]
   }),
   appraiser: one(users, {
     fields: [appraisals.appraiserId],
-    references: [users.id],
+    references: [users.id]
   }),
-  comparables: many(comparables),
-  attachments: many(attachments, { relationName: "appraisal_attachments" })
+  comparables: many(comparables)
 }));
 
-// Comparables table definition
+// Comparables table
 export const comparables = pgTable("comparables", {
   id: serial("id").primaryKey(),
   appraisalId: integer("appraisal_id").notNull().references(() => appraisals.id),
-  address: varchar("address", { length: 255 }).notNull(),
-  city: varchar("city", { length: 100 }).notNull(),
-  state: varchar("state", { length: 50 }).notNull(),
-  zipCode: varchar("zip_code", { length: 20 }).notNull(),
+  address: text("address").notNull(),
   salePrice: integer("sale_price").notNull(),
   saleDate: timestamp("sale_date").notNull(),
   squareFeet: integer("square_feet").notNull(),
-  bedrooms: decimal("bedrooms", { precision: 3, scale: 1 }),
-  bathrooms: decimal("bathrooms", { precision: 3, scale: 1 }),
+  bedrooms: integer("bedrooms"),
+  bathrooms: doublePrecision("bathrooms"),
   yearBuilt: integer("year_built"),
-  propertyType: varchar("property_type", { length: 50 }).notNull(),
-  lotSize: integer("lot_size"),
-  condition: varchar("condition", { length: 50 }),
-  daysOnMarket: integer("days_on_market"),
-  source: varchar("source", { length: 100 }),
+  adjustments: jsonb("adjustments"),
   adjustedPrice: integer("adjusted_price"),
-  adjustmentNotes: text("adjustment_notes"),
-  createdAt: timestamp("created_at").notNull().defaultNow()
+  notes: text("notes"),
+  distanceFromSubject: doublePrecision("distance_from_subject")
 });
 
-// Define comparables relations
 export const comparablesRelations = relations(comparables, ({ one, many }) => ({
   appraisal: one(appraisals, {
     fields: [comparables.appraisalId],
@@ -129,19 +101,15 @@ export const comparablesRelations = relations(comparables, ({ one, many }) => ({
   adjustments: many(adjustments)
 }));
 
-// Adjustments table definition
+// Adjustments table for comparable properties
 export const adjustments = pgTable("adjustments", {
   id: serial("id").primaryKey(),
   comparableId: integer("comparable_id").notNull().references(() => comparables.id),
-  category: varchar("category", { length: 50 }).notNull(),
-  description: varchar("description", { length: 255 }).notNull(),
+  name: text("name").notNull(),
   amount: integer("amount").notNull(),
-  isPercentage: boolean("is_percentage").notNull().default(false),
-  notes: text("notes"),
-  createdAt: timestamp("created_at").notNull().defaultNow()
+  description: text("description")
 });
 
-// Define adjustment relations
 export const adjustmentsRelations = relations(adjustments, ({ one }) => ({
   comparable: one(comparables, {
     fields: [adjustments.comparableId],
@@ -149,86 +117,73 @@ export const adjustmentsRelations = relations(adjustments, ({ one }) => ({
   })
 }));
 
-// Attachments table definition
+// Attachments for appraisals (photos, documents, etc.)
 export const attachments = pgTable("attachments", {
   id: serial("id").primaryKey(),
-  propertyId: integer("property_id").references(() => properties.id),
-  appraisalId: integer("appraisal_id").references(() => appraisals.id),
-  fileName: varchar("file_name", { length: 255 }).notNull(),
-  fileType: varchar("file_type", { length: 50 }).notNull(),
+  appraisalId: integer("appraisal_id").notNull().references(() => appraisals.id),
+  fileName: text("file_name").notNull(),
+  fileType: text("file_type").notNull(),
   fileSize: integer("file_size").notNull(),
-  fileUrl: varchar("file_url", { length: 255 }).notNull(),
-  uploadedBy: integer("uploaded_by").notNull().references(() => users.id),
-  category: varchar("category", { length: 50 }),
-  description: text("description"),
-  uploadDate: timestamp("upload_date").notNull().defaultNow()
+  fileUrl: text("file_url").notNull(),
+  uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
+  description: text("description")
 });
 
-// Define attachments relations
 export const attachmentsRelations = relations(attachments, ({ one }) => ({
-  property: one(properties, {
-    fields: [attachments.propertyId],
-    references: [properties.id],
-    relationName: "property_attachments"
-  }),
   appraisal: one(appraisals, {
     fields: [attachments.appraisalId],
-    references: [appraisals.id],
-    relationName: "appraisal_attachments"
-  }),
-  uploader: one(users, {
-    fields: [attachments.uploadedBy],
-    references: [users.id],
-    relationName: "uploader"
+    references: [appraisals.id]
   })
 }));
 
-// Market data table definition
+// Market data for reference
 export const marketData = pgTable("market_data", {
   id: serial("id").primaryKey(),
-  location: varchar("location", { length: 100 }).notNull(),
-  dataType: varchar("data_type", { length: 50 }).notNull(),
-  time: varchar("time", { length: 50 }).notNull(),
-  value: decimal("value", { precision: 12, scale: 2 }).notNull(),
-  comparisonValue: decimal("comparison_value", { precision: 12, scale: 2 }),
-  percentChange: decimal("percent_change", { precision: 6, scale: 2 }),
-  source: varchar("source", { length: 100 }),
-  notes: text("notes"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow()
+  zipCode: text("zip_code").notNull(),
+  date: timestamp("date").notNull(),
+  medianSalePrice: integer("median_sale_price"),
+  averageSalePrice: integer("average_sale_price"),
+  totalSales: integer("total_sales"),
+  averageDaysOnMarket: integer("average_days_on_market"),
+  pricePerSquareFoot: doublePrecision("price_per_square_foot")
 });
 
-// Create insert schemas with zod
+// Create insertion schemas with validation
 export const insertUserSchema = createInsertSchema(users, {
   email: z.string().email(),
-  password: z.string().min(8)
+  password: z.string().min(8),
+  role: z.enum(['admin', 'appraiser', 'reviewer', 'client'])
+}).omit({ 
+  id: true,
+  createdAt: true 
 });
 
 export const insertPropertySchema = createInsertSchema(properties).omit({ 
-  created_at: true,
-  updated_at: true
+  id: true, 
+  createdAt: true,
+  updatedAt: true 
 });
 
 export const insertAppraisalSchema = createInsertSchema(appraisals).omit({ 
-  createdAt: true,
-  completedAt: true
+  id: true, 
+  createdAt: true 
 });
 
 export const insertComparableSchema = createInsertSchema(comparables).omit({ 
-  createdAt: true
+  id: true 
 });
 
 export const insertAdjustmentSchema = createInsertSchema(adjustments).omit({
-  createdAt: true
+  id: true
 });
 
 export const insertAttachmentSchema = createInsertSchema(attachments).omit({
-  uploadDate: true
+  id: true,
+  uploadedAt: true
 });
 
 export const insertMarketDataSchema = createInsertSchema(marketData).omit({
-  createdAt: true,
-  updatedAt: true
+  id: true
 });
 
 // Export types
