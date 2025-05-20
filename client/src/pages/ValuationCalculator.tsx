@@ -10,7 +10,8 @@ import {
   MinusSquare,
   Save,
   RefreshCw,
-  FileText
+  FileText,
+  MapPin
 } from 'lucide-react';
 
 // Interface for adjustment factors
