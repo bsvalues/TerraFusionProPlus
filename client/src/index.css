@@ -2,45 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-.gradient-heading {
-  background: linear-gradient(to right, #3b82f6, #2563eb);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.sidebar {
-  background: linear-gradient(to bottom, #1e40af, #1e3a8a);
-}
-
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
-}
-
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
-}
-
-/* TerraFusionProfessional Theme */
+/* TerraFusionProfessional Real Estate Appraisal Platform Theme */
 :root {
   --primary-color: #1e40af;
   --primary-dark: #1e3a8a;
@@ -51,16 +13,49 @@ code {
   --text-light: #f9fafb;
   --background-light: #f9fafb;
   --background-dark: #111827;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+  --info-color: #3b82f6;
 }
 
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--background-light);
+  color: var(--text-dark);
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* ===== TerraFusionProfessional UI Components ===== */
+
+/* Text and Headers */
 .gradient-heading {
   background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
 }
 
+/* Layout Elements */
+.sidebar {
+  background: linear-gradient(to bottom, var(--primary-color), var(--primary-dark));
+}
+
+/* Property Cards */
 .property-card {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .property-card:hover {
@@ -68,12 +63,42 @@ code {
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
 
+/* Appraisal UI */
 .appraisal-form-container {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   border-radius: 8px;
   background-color: white;
 }
 
+.appraisal-status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.status-draft {
+  background-color: #e5e7eb;
+  color: #4b5563;
+}
+
+.status-in-progress {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.status-pending-review {
+  background-color: #fff7ed;
+  color: #c2410c;
+}
+
+.status-completed {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+/* Market Data Visualization */
 .market-data-card {
   background: white;
   border-radius: 8px;
@@ -81,6 +106,12 @@ code {
   overflow: hidden;
 }
 
+.chart-container {
+  height: 300px;
+  position: relative;
+}
+
+/* Comparable Properties */
 .comparable-property-row {
   transition: background-color 0.2s ease;
 }
@@ -89,7 +120,27 @@ code {
   background-color: #f1f5f9;
 }
 
-/* Form Styling */
+.comparable-adjustment {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  background-color: #f1f5f9;
+  font-size: 0.875rem;
+  display: inline-block;
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.comparable-adjustment.positive {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.comparable-adjustment.negative {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+/* Form Components */
 .form-input {
   @apply w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
 }
@@ -102,7 +153,48 @@ code {
   @apply px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
 }
 
+.form-button-secondary {
+  @apply px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+}
+
+.form-button-success {
+  @apply px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2;
+}
+
+.form-button-danger {
+  @apply px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2;
+}
+
 /* Dashboard Cards */
 .dashboard-card {
   @apply bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-300;
+}
+
+.dashboard-stat {
+  @apply text-2xl font-bold;
+}
+
+.dashboard-stat-label {
+  @apply text-sm text-gray-500;
+}
+
+/* Data Tables */
+.data-table {
+  @apply min-w-full divide-y divide-gray-200;
+}
+
+.data-table thead {
+  @apply bg-gray-50;
+}
+
+.data-table th {
+  @apply px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+}
+
+.data-table tbody {
+  @apply bg-white divide-y divide-gray-200;
+}
+
+.data-table td {
+  @apply px-6 py-4 whitespace-nowrap;
 }

@@ -5,14 +5,7 @@ import {
 } from '../types';
 import { z } from 'zod';
 
-// Insert types for API requests
-export type InsertProperty = Omit<Property, 'id' | 'created_at' | 'updated_at'>;
-export type InsertAppraisal = Omit<Appraisal, 'id' | 'created_at' | 'completed_at'>;
-export type InsertComparable = Omit<Comparable, 'id' | 'created_at'>;
-export type InsertAdjustment = Omit<Adjustment, 'id' | 'created_at'>;
-export type InsertUser = Omit<User, 'id' | 'created_at' | 'updated_at'>;
-export type InsertMarketData = Omit<MarketData, 'id' | 'created_at' | 'updated_at'>;
-export type InsertAttachment = Omit<Attachment, 'id' | 'uploaded_at'>;
+// These types are now imported from '../types'
 
 // Base API fetch function
 const apiFetch = async <T>(
