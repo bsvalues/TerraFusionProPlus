@@ -1,141 +1,149 @@
 import { apiRequest } from '../lib/queryClient';
 
-// API base URL
-const API_BASE_URL = '/api';
-
-// Deployments API
-const deployments = {
-  getAll: () => 
-    apiRequest({ url: `${API_BASE_URL}/deployments` }),
-  
-  getById: (id: string) => 
-    apiRequest({ url: `${API_BASE_URL}/deployments/${id}` }),
-  
-  create: (data: any) => 
-    apiRequest({ 
-      url: `${API_BASE_URL}/deployments`, 
-      method: 'POST', 
-      body: data 
-    }),
-  
-  update: (id: string, data: any) => 
-    apiRequest({ 
-      url: `${API_BASE_URL}/deployments/${id}`, 
-      method: 'PUT', 
-      body: data 
-    }),
-  
-  delete: (id: string) => 
-    apiRequest({ 
-      url: `${API_BASE_URL}/deployments/${id}`, 
-      method: 'DELETE' 
-    }),
+/*
+ * Deployment API endpoints
+ */
+// Get all deployments
+export const getDeployments = async () => {
+  return apiRequest('/api/deployments');
 };
 
-// Pipelines API
-const pipelines = {
-  getAll: () => 
-    apiRequest({ url: `${API_BASE_URL}/pipelines` }),
-  
-  getById: (id: string) => 
-    apiRequest({ url: `${API_BASE_URL}/pipelines/${id}` }),
-  
-  create: (data: any) => 
-    apiRequest({ 
-      url: `${API_BASE_URL}/pipelines`, 
-      method: 'POST', 
-      body: data 
-    }),
-  
-  update: (id: string, data: any) => 
-    apiRequest({ 
-      url: `${API_BASE_URL}/pipelines/${id}`, 
-      method: 'PUT', 
-      body: data 
-    }),
-  
-  delete: (id: string) => 
-    apiRequest({ 
-      url: `${API_BASE_URL}/pipelines/${id}`, 
-      method: 'DELETE' 
-    }),
-    
-  run: (id: string) => 
-    apiRequest({ 
-      url: `${API_BASE_URL}/pipelines/${id}/run`, 
-      method: 'POST' 
-    }),
+// Get a specific deployment
+export const getDeployment = async (id: string) => {
+  return apiRequest(`/api/deployments/${id}`);
 };
 
-// Monitoring API
-const monitoring = {
-  getMetrics: () => 
-    apiRequest({ url: `${API_BASE_URL}/monitoring/metrics` }),
-  
-  getAlerts: () => 
-    apiRequest({ url: `${API_BASE_URL}/monitoring/alerts` }),
-  
-  getLogs: (params?: any) => 
-    apiRequest({ 
-      url: `${API_BASE_URL}/monitoring/logs${params ? `?${new URLSearchParams(params)}` : ''}` 
-    }),
-  
-  acknowledgeAlert: (id: string) => 
-    apiRequest({ 
-      url: `${API_BASE_URL}/monitoring/alerts/${id}/acknowledge`, 
-      method: 'POST' 
-    }),
+// Create a new deployment
+export const createDeployment = async (deploymentData: any) => {
+  return apiRequest(`/api/deployments`, {
+    method: 'POST',
+    body: JSON.stringify(deploymentData),
+  });
 };
 
-// Environments API
-const environments = {
-  getAll: () => 
-    apiRequest({ url: `${API_BASE_URL}/environments` }),
-  
-  getById: (id: string) => 
-    apiRequest({ url: `${API_BASE_URL}/environments/${id}` }),
-  
-  create: (data: any) => 
-    apiRequest({ 
-      url: `${API_BASE_URL}/environments`, 
-      method: 'POST', 
-      body: data 
-    }),
-  
-  update: (id: string, data: any) => 
-    apiRequest({ 
-      url: `${API_BASE_URL}/environments/${id}`, 
-      method: 'PUT', 
-      body: data 
-    }),
-  
-  delete: (id: string) => 
-    apiRequest({ 
-      url: `${API_BASE_URL}/environments/${id}`, 
-      method: 'DELETE' 
-    }),
+// Update a deployment
+export const updateDeployment = async (id: string, deploymentData: any) => {
+  return apiRequest(`/api/deployments/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(deploymentData),
+  });
 };
 
-// Settings API
-const settings = {
-  get: () => 
-    apiRequest({ url: `${API_BASE_URL}/settings` }),
-  
-  update: (data: any) => 
-    apiRequest({ 
-      url: `${API_BASE_URL}/settings`, 
-      method: 'PUT', 
-      body: data 
-    }),
+// Delete a deployment
+export const deleteDeployment = async (id: string) => {
+  return apiRequest(`/api/deployments/${id}`, {
+    method: 'DELETE',
+  });
 };
 
-// Export all API services
-const api = {
-  deployments,
-  pipelines,
-  monitoring,
-  environments,
-  settings
+/*
+ * Pipeline API endpoints
+ */
+// Get all pipelines
+export const getPipelines = async () => {
+  return apiRequest('/api/pipelines');
 };
 
-export default api;
+// Get a specific pipeline
+export const getPipeline = async (id: string) => {
+  return apiRequest(`/api/pipelines/${id}`);
+};
+
+// Create a new pipeline
+export const createPipeline = async (pipelineData: any) => {
+  return apiRequest(`/api/pipelines`, {
+    method: 'POST',
+    body: JSON.stringify(pipelineData),
+  });
+};
+
+// Update a pipeline
+export const updatePipeline = async (id: string, pipelineData: any) => {
+  return apiRequest(`/api/pipelines/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(pipelineData),
+  });
+};
+
+// Delete a pipeline
+export const deletePipeline = async (id: string) => {
+  return apiRequest(`/api/pipelines/${id}`, {
+    method: 'DELETE',
+  });
+};
+
+// Trigger a pipeline
+export const triggerPipeline = async (id: string) => {
+  return apiRequest(`/api/pipelines/${id}/trigger`, {
+    method: 'POST',
+  });
+};
+
+/*
+ * Monitoring API endpoints
+ */
+// Get monitoring metrics
+export const getMonitoringMetrics = async () => {
+  return apiRequest('/api/monitoring/metrics');
+};
+
+// Get alerts
+export const getAlerts = async (filters?: { acknowledged: boolean }) => {
+  const queryString = filters ? `?acknowledged=${filters.acknowledged}` : '';
+  return apiRequest(`/api/monitoring/alerts${queryString}`);
+};
+
+// Acknowledge an alert
+export const acknowledgeAlert = async (id: string) => {
+  return apiRequest(`/api/monitoring/alerts/${id}/acknowledge`, {
+    method: 'POST',
+  });
+};
+
+/*
+ * Environment API endpoints
+ */
+// Get all environments
+export const getEnvironments = async () => {
+  return apiRequest('/api/environments');
+};
+
+// Get a specific environment
+export const getEnvironment = async (id: string) => {
+  return apiRequest(`/api/environments/${id}`);
+};
+
+// Create a new environment
+export const createEnvironment = async (environmentData: any) => {
+  return apiRequest(`/api/environments`, {
+    method: 'POST',
+    body: JSON.stringify(environmentData),
+  });
+};
+
+// Update an environment
+export const updateEnvironment = async (id: string, environmentData: any) => {
+  return apiRequest(`/api/environments/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(environmentData),
+  });
+};
+
+// Delete an environment
+export const deleteEnvironment = async (id: string) => {
+  return apiRequest(`/api/environments/${id}`, {
+    method: 'DELETE',
+  });
+};
+
+// Get pipeline execution status
+export const getPipelineStatus = async (id: string) => {
+  return apiRequest(`/api/pipelines/${id}/status`);
+};
+
+// Update deployment configuration
+export const updateDeploymentConfig = async (id: string, configData: any) => {
+  return apiRequest(`/api/deployments/${id}/config`, {
+    method: 'PUT',
+    body: JSON.stringify(configData),
+  });
