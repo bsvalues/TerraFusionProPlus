@@ -1,14 +1,15 @@
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
+const { createServer: createViteServer } = require('vite');
 const deployments = require('./routes/deployments');
 const pipelines = require('./routes/pipelines');
 const monitoring = require('./routes/monitoring');
 
 async function startServer() {
   const app = express();
-  const PORT = process.env.PORT || 3000;
-
+  const PORT = process.env.PORT || 5000;
+  
   // Middleware
   app.use(cors());
   app.use(express.json());
@@ -34,18 +35,29 @@ async function startServer() {
     res.json({ status: 'healthy', version: '1.0.0' });
   });
 
-  // Serve static files from the client build directory in production
-  if (process.env.NODE_ENV === 'production') {
+  // Development setup with Vite middleware
+  if (process.env.NODE_ENV !== 'production') {
+    // Create Vite server in middleware mode
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      root: path.resolve(__dirname, '../client'),
+      appType: 'spa'
+    });
+
+    // Use vite's connect instance as middleware
+    app.use(vite.middlewares);
+    
+    // Log requests in development
+    app.use((req, res, next) => {
+      console.log(`${req.method} ${req.url}`);
+      next();
+    });
+  } else {
+    // Production: serve static files
     app.use(express.static(path.join(__dirname, '../client/dist')));
     
     app.get('*', (req, res) => {
       res.sendFile(path.join(__dirname, '../client/dist/index.html'));
-    });
-  } else {
-    // Development-specific middleware
-    app.use((req, res, next) => {
-      console.log(`${req.method} ${req.url}`);
-      next();
     });
   }
 
