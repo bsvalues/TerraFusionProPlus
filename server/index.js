@@ -14,9 +14,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files from the client/dist directory
-app.use(express.static(path.join(__dirname, '../client/dist')));
-
 // API Routes
 // Test route
 app.get('/api/test', (req, res) => {
@@ -180,9 +177,16 @@ app.post('/api/comparables', async (req, res) => {
   }
 });
 
-// For all other requests, serve the client app
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+// For all other requests, just respond with an API message for now
+// until client is built
+app.get('/*', (req, res) => {
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ error: 'API endpoint not found' });
+  }
+  res.json({ 
+    message: 'TerraFusion Professional API Server is running', 
+    info: 'Client application is not yet built'
+  });
 });
 
 // Initialize the database before starting the server
