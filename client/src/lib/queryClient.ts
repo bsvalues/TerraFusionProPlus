@@ -1,37 +1,48 @@
 import { QueryClient } from '@tanstack/react-query';
 
-// Create a query client
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
+      staleTime: 60 * 1000, // 1 minute
+      retry: 1,
       refetchOnWindowFocus: false,
     },
   },
 });
 
-// Helper function for API requests
-export async function apiRequest(url: string, options: RequestInit = {}) {
-  const response = await fetch(url, {
+export const apiRequest = async <T>({
+  url,
+  method = 'GET',
+  body,
+  headers = {},
+}: {
+  url: string;
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  body?: any;
+  headers?: Record<string, string>;
+}): Promise<T> => {
+  const options: RequestInit = {
+    method,
     headers: {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...headers,
     },
-    ...options,
-  });
+  };
+
+  if (body) {
+    options.body = JSON.stringify(body);
+  }
+
+  const response = await fetch(url, options);
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'An unknown error occurred' }));
-    throw new Error(error.message || 'An error occurred while fetching data');
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(
+      errorData.error || `API error: ${response.status} ${response.statusText}`
+    );
   }
 
   return response.json();
-}
-
-// Commonly used fetch function for queries
-export async function defaultQueryFn({ queryKey }: { queryKey: string[] }) {
-  const [url] = queryKey;
-  return apiRequest(url);
-}
+};
 
 export default queryClient;

@@ -1,445 +1,231 @@
-import { queryClient, apiRequest } from '../lib/queryClient';
-import {
-  Property,
-  Appraisal,
-  Comparable,
-  User,
-  Attachment,
-  MarketData,
-  PriceTrendDataPoint,
-  DomTrendDataPoint,
-  SalesTrendDataPoint,
-  PropertyTypeDataPoint,
-  NeighborhoodPriceDataPoint
+import { 
+  Property, Appraisal, Comparable, Adjustment, User, MarketData, Attachment,
+  InsertProperty, InsertAppraisal, InsertComparable, InsertAdjustment, 
+  InsertUser, InsertMarketData, InsertAttachment
 } from '../types';
+import { z } from 'zod';
 
-// Types for insert operations (simplified)
-type InsertProperty = Omit<Property, 'id' | 'created_at' | 'updated_at'>;
-type InsertAppraisal = Omit<Appraisal, 'id' | 'createdAt' | 'completedAt'>;
-type InsertComparable = Omit<Comparable, 'id' | 'createdAt'>;
-type InsertUser = Omit<User, 'id' | 'createdAt' | 'updatedAt'>;
-type InsertAttachment = Omit<Attachment, 'id' | 'uploadDate'>;
+// Insert types for API requests
+export type InsertProperty = Omit<Property, 'id' | 'created_at' | 'updated_at'>;
+export type InsertAppraisal = Omit<Appraisal, 'id' | 'created_at' | 'completed_at'>;
+export type InsertComparable = Omit<Comparable, 'id' | 'created_at'>;
+export type InsertAdjustment = Omit<Adjustment, 'id' | 'created_at'>;
+export type InsertUser = Omit<User, 'id' | 'created_at' | 'updated_at'>;
+export type InsertMarketData = Omit<MarketData, 'id' | 'created_at' | 'updated_at'>;
+export type InsertAttachment = Omit<Attachment, 'id' | 'uploaded_at'>;
 
-// API endpoints for Properties
+// Base API fetch function
+const apiFetch = async <T>(
+  endpoint: string,
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET',
+  body?: any
+): Promise<T> => {
+  const options: RequestInit = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  };
+
+  if (body) {
+    options.body = JSON.stringify(body);
+  }
+
+  const response = await fetch(`/api/${endpoint}`, options);
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(
+      errorData.error || `API error: ${response.status} ${response.statusText}`
+    );
+  }
+
+  return response.json();
+};
+
+// Property API endpoints
 export const propertyApi = {
-  // Get all properties
   getProperties: async (): Promise<Property[]> => {
-    return apiRequest('/api/properties');
+    return apiFetch<Property[]>('properties');
   },
-  
-  // Get a single property by ID
+
   getProperty: async (id: number): Promise<Property> => {
-    return apiRequest(`/api/properties/${id}`);
+    return apiFetch<Property>(`properties/${id}`);
   },
-  
-  // Create a new property
+
   createProperty: async (property: InsertProperty): Promise<Property> => {
-    return apiRequest('/api/properties', {
-      method: 'POST',
-      body: JSON.stringify(property),
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
+    return apiFetch<Property>('properties', 'POST', property);
   },
-  
-  // Update a property
+
   updateProperty: async (id: number, property: Partial<InsertProperty>): Promise<Property> => {
-    return apiRequest(`/api/properties/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(property),
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
+    return apiFetch<Property>(`properties/${id}`, 'PUT', property);
   },
-  
-  // Delete a property
+
   deleteProperty: async (id: number): Promise<void> => {
-    await apiRequest(`/api/properties/${id}`, {
-      method: 'DELETE'
-    });
-    
-    // Invalidate properties cache
-    queryClient.invalidateQueries({ queryKey: ['/api/properties'] });
+    return apiFetch<void>(`properties/${id}`, 'DELETE');
   },
-  
-  // Get properties by search term
-  searchProperties: async (searchTerm: string): Promise<Property[]> => {
-    return apiRequest(`/api/properties/search?q=${encodeURIComponent(searchTerm)}`);
-  },
-  
-  // Get attachments for a property
-  getPropertyAttachments: async (propertyId: number): Promise<Attachment[]> => {
-    return apiRequest(`/api/properties/${propertyId}/attachments`);
-  }
 };
 
-// API endpoints for Appraisals
+// Appraisal API endpoints
 export const appraisalApi = {
-  // Get all appraisals
-  getAppraisals: async (): Promise<Appraisal[]> => {
-    return apiRequest('/api/appraisals');
-  },
-  
-  // Get a single appraisal by ID
-  getAppraisal: async (id: number): Promise<Appraisal> => {
-    return apiRequest(`/api/appraisals/${id}`);
-  },
-  
-  // Create a new appraisal
-  createAppraisal: async (appraisal: InsertAppraisal): Promise<Appraisal> => {
-    return apiRequest('/api/appraisals', {
-      method: 'POST',
-      body: JSON.stringify(appraisal),
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-  },
-  
-  // Update an appraisal
-  updateAppraisal: async (id: number, appraisal: Partial<InsertAppraisal>): Promise<Appraisal> => {
-    return apiRequest(`/api/appraisals/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(appraisal),
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-  },
-  
-  // Delete an appraisal
-  deleteAppraisal: async (id: number): Promise<void> => {
-    await apiRequest(`/api/appraisals/${id}`, {
-      method: 'DELETE'
-    });
-    
-    // Invalidate appraisals cache
-    queryClient.invalidateQueries({ queryKey: ['/api/appraisals'] });
-  },
-  
-  // Get appraisals for a specific property
-  getAppraisalsByProperty: async (propertyId: number): Promise<Appraisal[]> => {
-    return apiRequest(`/api/properties/${propertyId}/appraisals`);
-  },
-  
-  // Get appraisals by appraiser ID
-  getAppraisalsByAppraiser: async (appraiserId: number): Promise<Appraisal[]> => {
-    return apiRequest(`/api/appraisals?appraiserId=${appraiserId}`);
-  },
-  
-  // Submit an appraisal for review
-  submitForReview: async (id: number): Promise<Appraisal> => {
-    return apiRequest(`/api/appraisals/${id}/submit`, {
-      method: 'POST'
-    });
-  },
-  
-  // Approve an appraisal
-  approveAppraisal: async (id: number, comments?: string): Promise<Appraisal> => {
-    return apiRequest(`/api/appraisals/${id}/approve`, {
-      method: 'POST',
-      body: JSON.stringify({ comments }),
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-  },
-  
-  // Get attachments for an appraisal
-  getAppraisalAttachments: async (appraisalId: number): Promise<Attachment[]> => {
-    return apiRequest(`/api/appraisals/${appraisalId}/attachments`);
-  }
-};
-
-// API endpoints for Comparables
-export const comparableApi = {
-  // Get all comparables
-  getComparables: async (): Promise<Comparable[]> => {
-    return apiRequest('/api/comparables');
-  },
-  
-  // Get a single comparable by ID
-  getComparable: async (id: number): Promise<Comparable> => {
-    return apiRequest(`/api/comparables/${id}`);
-  },
-  
-  // Create a new comparable
-  createComparable: async (comparable: InsertComparable): Promise<Comparable> => {
-    return apiRequest('/api/comparables', {
-      method: 'POST',
-      body: JSON.stringify(comparable),
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-  },
-  
-  // Update a comparable
-  updateComparable: async (id: number, comparable: Partial<InsertComparable>): Promise<Comparable> => {
-    return apiRequest(`/api/comparables/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(comparable),
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-  },
-  
-  // Delete a comparable
-  deleteComparable: async (id: number): Promise<void> => {
-    await apiRequest(`/api/comparables/${id}`, {
-      method: 'DELETE'
-    });
-    
-    // Invalidate comparables cache
-    queryClient.invalidateQueries({ queryKey: ['/api/comparables'] });
-  },
-  
-  // Get comparables for a specific appraisal
-  getComparablesByAppraisal: async (appraisalId: number): Promise<Comparable[]> => {
-    return apiRequest(`/api/appraisals/${appraisalId}/comparables`);
-  },
-  
-  // Search for comparable properties
-  searchComparables: async (params: {
-    propertyType?: string;
-    city?: string;
-    zip?: string;
-    minPrice?: number;
-    maxPrice?: number;
-    minSqFt?: number;
-    maxSqFt?: number;
-    radius?: number;
-    lat?: number;
-    lng?: number;
-  }): Promise<Comparable[]> => {
+  getAppraisals: async (filters?: { property_id?: number; appraiser_id?: number; status?: string }): Promise<Appraisal[]> => {
     const queryParams = new URLSearchParams();
-    
-    // Add all defined parameters to the query string
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined) {
-        queryParams.append(key, value.toString());
-      }
-    });
-    
-    return apiRequest(`/api/comparables/search?${queryParams.toString()}`);
-  }
+
+    if (filters?.property_id) queryParams.append('property_id', filters.property_id.toString());
+    if (filters?.appraiser_id) queryParams.append('appraiser_id', filters.appraiser_id.toString());
+    if (filters?.status) queryParams.append('status', filters.status);
+
+    const queryString = queryParams.toString();
+    const endpoint = queryString ? `appraisals?${queryString}` : 'appraisals';
+
+    return apiFetch<Appraisal[]>(endpoint);
+  },
+
+  getAppraisal: async (id: number): Promise<Appraisal> => {
+    return apiFetch<Appraisal>(`appraisals/${id}`);
+  },
+
+  createAppraisal: async (appraisal: InsertAppraisal): Promise<Appraisal> => {
+    return apiFetch<Appraisal>('appraisals', 'POST', appraisal);
+  },
+
+  updateAppraisal: async (id: number, appraisal: Partial<InsertAppraisal>): Promise<Appraisal> => {
+    return apiFetch<Appraisal>(`appraisals/${id}`, 'PUT', appraisal);
+  },
 };
 
-// API endpoints for Users and Team Management
+// Comparable API endpoints
+export const comparableApi = {
+  getComparables: async (appraisal_id: number): Promise<Comparable[]> => {
+    return apiFetch<Comparable[]>(`comparables?appraisal_id=${appraisal_id}`);
+  },
+
+  getComparable: async (id: number): Promise<Comparable> => {
+    return apiFetch<Comparable>(`comparables/${id}`);
+  },
+
+  createComparable: async (comparable: InsertComparable): Promise<Comparable> => {
+    return apiFetch<Comparable>('comparables', 'POST', comparable);
+  },
+
+  updateComparable: async (id: number, comparable: Partial<InsertComparable>): Promise<Comparable> => {
+    return apiFetch<Comparable>(`comparables/${id}`, 'PUT', comparable);
+  },
+};
+
+// Adjustment API endpoints
+export const adjustmentApi = {
+  getAdjustments: async (comparable_id: number): Promise<Adjustment[]> => {
+    return apiFetch<Adjustment[]>(`adjustments?comparable_id=${comparable_id}`);
+  },
+
+  getAdjustment: async (id: number): Promise<Adjustment> => {
+    return apiFetch<Adjustment>(`adjustments/${id}`);
+  },
+
+  createAdjustment: async (adjustment: InsertAdjustment): Promise<Adjustment> => {
+    return apiFetch<Adjustment>('adjustments', 'POST', adjustment);
+  },
+
+  updateAdjustment: async (id: number, adjustment: Partial<InsertAdjustment>): Promise<Adjustment> => {
+    return apiFetch<Adjustment>(`adjustments/${id}`, 'PUT', adjustment);
+  },
+
+  deleteAdjustment: async (id: number): Promise<void> => {
+    return apiFetch<void>(`adjustments/${id}`, 'DELETE');
+  },
+};
+
+// User API endpoints
 export const userApi = {
-  // Get all users
   getUsers: async (): Promise<User[]> => {
-    return apiRequest('/api/users');
+    return apiFetch<User[]>('users');
   },
-  
-  // Get a single user by ID
+
   getUser: async (id: number): Promise<User> => {
-    return apiRequest(`/api/users/${id}`);
+    return apiFetch<User>(`users/${id}`);
   },
-  
-  // Get current user profile
-  getCurrentUser: async (): Promise<User> => {
-    return apiRequest('/api/users/me');
-  },
-  
-  // Create a new user
+
   createUser: async (user: InsertUser): Promise<User> => {
-    return apiRequest('/api/users', {
-      method: 'POST',
-      body: JSON.stringify(user),
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
+    return apiFetch<User>('users', 'POST', user);
   },
-  
-  // Update a user
+
   updateUser: async (id: number, user: Partial<InsertUser>): Promise<User> => {
-    return apiRequest(`/api/users/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(user),
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
+    return apiFetch<User>(`users/${id}`, 'PUT', user);
   },
-  
-  // Delete a user
-  deleteUser: async (id: number): Promise<void> => {
-    await apiRequest(`/api/users/${id}`, {
-      method: 'DELETE'
-    });
-    
-    // Invalidate users cache
-    queryClient.invalidateQueries({ queryKey: ['/api/users'] });
-  },
-  
-  // Get appraisals assigned to a user
-  getUserAppraisals: async (userId: number): Promise<Appraisal[]> => {
-    return apiRequest(`/api/users/${userId}/appraisals`);
-  },
-  
-  // Send an invitation to join the team
-  sendInvitation: async (email: string, role: string, message?: string): Promise<void> => {
-    return apiRequest('/api/invitations', {
-      method: 'POST',
-      body: JSON.stringify({ email, role, message }),
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-  },
-  
-  // Get all pending invitations
-  getInvitations: async (): Promise<any[]> => {
-    return apiRequest('/api/invitations');
-  },
-  
-  // Cancel an invitation
-  cancelInvitation: async (id: number): Promise<void> => {
-    await apiRequest(`/api/invitations/${id}/cancel`, {
-      method: 'POST'
-    });
-    
-    // Invalidate invitations cache
-    queryClient.invalidateQueries({ queryKey: ['/api/invitations'] });
-  }
 };
 
-// API endpoints for Market Data
+// Market data API endpoints
 export const marketDataApi = {
-  // Get market data for a location
-  getMarketData: async (location: string, period?: string): Promise<MarketData[]> => {
-    const queryParams = new URLSearchParams({ location });
-    if (period) {
-      queryParams.append('period', period);
-    }
-    
-    return apiRequest(`/api/market-data?${queryParams.toString()}`);
+  getMarketData: async (filters?: { location?: string; data_type?: string }): Promise<MarketData[]> => {
+    const queryParams = new URLSearchParams();
+
+    if (filters?.location) queryParams.append('location', filters.location);
+    if (filters?.data_type) queryParams.append('data_type', filters.data_type);
+
+    const queryString = queryParams.toString();
+    const endpoint = queryString ? `market-data?${queryString}` : 'market-data';
+
+    return apiFetch<MarketData[]>(endpoint);
   },
-  
-  // Get price trends
-  getPriceTrends: async (location: string, startDate?: string, endDate?: string): Promise<any[]> => {
-    const queryParams = new URLSearchParams({ location });
-    if (startDate) queryParams.append('startDate', startDate);
-    if (endDate) queryParams.append('endDate', endDate);
-    
-    return apiRequest(`/api/market-data/price-trends?${queryParams.toString()}`);
+
+  createMarketData: async (marketData: InsertMarketData): Promise<MarketData> => {
+    return apiFetch<MarketData>('market-data', 'POST', marketData);
   },
-  
-  // Get days on market trends
-  getDaysOnMarketTrends: async (location: string, startDate?: string, endDate?: string): Promise<any[]> => {
-    const queryParams = new URLSearchParams({ location });
-    if (startDate) queryParams.append('startDate', startDate);
-    if (endDate) queryParams.append('endDate', endDate);
-    
-    return apiRequest(`/api/market-data/dom-trends?${queryParams.toString()}`);
-  },
-  
-  // Get sales volume trends
-  getSalesVolumeTrends: async (location: string, startDate?: string, endDate?: string): Promise<any[]> => {
-    const queryParams = new URLSearchParams({ location });
-    if (startDate) queryParams.append('startDate', startDate);
-    if (endDate) queryParams.append('endDate', endDate);
-    
-    return apiRequest(`/api/market-data/sales-trends?${queryParams.toString()}`);
-  },
-  
-  // Get property type distribution
-  getPropertyTypeDistribution: async (location: string): Promise<any[]> => {
-    return apiRequest(`/api/market-data/property-types?location=${encodeURIComponent(location)}`);
-  },
-  
-  // Get neighborhood price comparison
-  getNeighborhoodPrices: async (location: string): Promise<any[]> => {
-    return apiRequest(`/api/market-data/neighborhood-prices?location=${encodeURIComponent(location)}`);
-  }
 };
 
-// API endpoints for Reports
-export const reportApi = {
-  // Generate an appraisal report
-  generateReport: async (appraisalId: number, options?: {
-    format?: 'pdf' | 'docx';
-    sections?: string[];
-    includeComparables?: boolean;
-    includePhotos?: boolean;
-    includeMarketAnalysis?: boolean;
-  }): Promise<{ reportUrl: string }> => {
-    return apiRequest(`/api/reports/generate/${appraisalId}`, {
-      method: 'POST',
-      body: JSON.stringify(options || {}),
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-  },
-  
-  // Get all generated reports
-  getReports: async (): Promise<any[]> => {
-    return apiRequest('/api/reports');
-  },
-  
-  // Get report templates
-  getReportTemplates: async (): Promise<any[]> => {
-    return apiRequest('/api/reports/templates');
-  },
-  
-  // Get a single report by ID
-  getReport: async (id: number): Promise<any> => {
-    return apiRequest(`/api/reports/${id}`);
-  }
-};
-
-// API endpoints for Attachments
+// Attachment API endpoints
 export const attachmentApi = {
-  // Upload an attachment
+  getAttachments: async (filters: { property_id?: number; appraisal_id?: number }): Promise<Attachment[]> => {
+    const queryParams = new URLSearchParams();
+
+    if (filters.property_id) queryParams.append('property_id', filters.property_id.toString());
+    if (filters.appraisal_id) queryParams.append('appraisal_id', filters.appraisal_id.toString());
+
+    const queryString = queryParams.toString();
+    const endpoint = queryString ? `attachments?${queryString}` : 'attachments';
+
+    return apiFetch<Attachment[]>(endpoint);
+  },
+
+  getAttachment: async (id: number): Promise<Attachment> => {
+    return apiFetch<Attachment>(`attachments/${id}`);
+  },
+
   uploadAttachment: async (
-    file: File, 
-    type: 'property' | 'appraisal', 
-    id: number,
-    category?: string
+    data: { 
+      property_id?: number;
+      appraisal_id?: number;
+      category?: string;
+      description?: string;
+    },
+    file: File
   ): Promise<Attachment> => {
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('type', type);
-    formData.append('id', id.toString());
-    if (category) {
-      formData.append('category', category);
-    }
     
-    return apiRequest('/api/attachments/upload', {
-      method: 'POST',
-      body: formData
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== undefined) {
+        formData.append(key, String(value));
+      }
     });
-  },
-  
-  // Get an attachment
-  getAttachment: async (id: number): Promise<Attachment> => {
-    return apiRequest(`/api/attachments/${id}`);
-  },
-  
-  // Delete an attachment
-  deleteAttachment: async (id: number): Promise<void> => {
-    await apiRequest(`/api/attachments/${id}`, {
-      method: 'DELETE'
-    });
-    
-    // Invalidate attachments cache
-    queryClient.invalidateQueries({ queryKey: ['/api/attachments'] });
-  }
-};
 
-// Export all API endpoints
-export default {
-  property: propertyApi,
-  appraisal: appraisalApi,
-  comparable: comparableApi,
-  user: userApi,
-  marketData: marketDataApi,
-  report: reportApi,
-  attachment: attachmentApi
+    const response = await fetch('/api/attachments', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.error || `API error: ${response.status} ${response.statusText}`
+      );
+    }
+
+    return response.json();
+  },
+
+  deleteAttachment: async (id: number): Promise<void> => {
+    return apiFetch<void>(`attachments/${id}`, 'DELETE');
+  },
 };

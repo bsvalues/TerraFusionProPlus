@@ -1,19 +1,4 @@
-// Define types for the core entities in our application
-
-// User-related types
-export type User = {
-  id: number;
-  username: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  role: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-};
-
-// Property-related types
+// Property types
 export type Property = {
   id: number;
   address: string;
@@ -34,99 +19,127 @@ export type Property = {
   latitude?: number;
   longitude?: number;
   features?: Record<string, any>;
+  created_by?: number;
 };
 
-// Appraisal-related types
+export type InsertProperty = Omit<Property, 'id' | 'created_at' | 'updated_at'>;
+
+// Appraisal types
 export type Appraisal = {
   id: number;
-  propertyId: number;
-  appraiserId: number;
+  property_id: number;
+  appraiser_id: number;
   status: string;
   purpose: string;
-  marketValue: number | null;
-  createdAt: string;
-  completedAt: string | null;
-  inspectionDate: string | null;
-  effectiveDate: string | null;
-  reportType: string | null;
-  clientName: string | null;
-  clientEmail: string | null;
-  clientPhone: string | null;
-  lenderName: string | null;
-  loanNumber: string | null;
-  intendedUse: string | null;
-  valuationMethod: string | null;
-  scopeOfWork: string | null;
+  market_value: number | null;
+  created_at: string;
+  completed_at: string | null;
+  inspection_date: string | null;
+  effective_date: string | null;
+  report_type: string | null;
+  client_name: string | null;
+  client_email: string | null;
+  client_phone: string | null;
+  lender_name: string | null;
+  loan_number: string | null;
+  intended_use: string | null;
+  valuation_method: string | null;
+  scope_of_work: string | null;
   notes: string | null;
 };
 
-// Comparable-related types
+export type InsertAppraisal = Omit<Appraisal, 'id' | 'created_at' | 'completed_at'>;
+
+// Comparable types
 export type Comparable = {
   id: number;
-  appraisalId: number;
+  appraisal_id: number;
   address: string;
   city: string;
   state: string;
-  zipCode: string;
-  salePrice: number;
-  saleDate: string;
-  squareFeet: number;
+  zip_code: string;
+  sale_price: number;
+  sale_date: string;
+  square_feet: number;
   bedrooms?: number;
   bathrooms?: number;
-  yearBuilt?: number;
-  propertyType: string;
-  lotSize?: number;
+  year_built?: number;
+  property_type: string;
+  lot_size?: number;
   condition?: string;
-  daysOnMarket?: number;
+  days_on_market?: number;
   source?: string;
-  adjustedPrice?: number;
-  adjustmentNotes?: string;
-  createdAt: string;
+  adjusted_price?: number;
+  adjustment_notes?: string;
+  created_at: string;
 };
 
-// Adjustment-related types
+export type InsertComparable = Omit<Comparable, 'id' | 'created_at'>;
+
+// Adjustment types
 export type Adjustment = {
   id: number;
-  comparableId: number;
+  comparable_id: number;
   category: string;
   description: string;
   amount: number;
-  isPercentage: boolean;
+  is_percentage: boolean;
   notes?: string;
-  createdAt: string;
+  created_at: string;
 };
 
-// Attachment-related types
+export type InsertAdjustment = Omit<Adjustment, 'id' | 'created_at'>;
+
+// User types
+export type User = {
+  id: number;
+  username: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  role: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type InsertUser = Omit<User, 'id' | 'created_at' | 'updated_at'>;
+
+// Attachment types
 export type Attachment = {
   id: number;
-  propertyId?: number;
-  appraisalId?: number;
-  fileName: string;
-  fileType: string;
-  fileSize: number;
-  fileUrl: string;
-  uploadedBy: number;
+  property_id?: number;
+  appraisal_id?: number;
+  file_name: string;
+  file_type: string;
+  file_size: number;
+  file_url: string;
+  uploaded_by: number;
   category?: string;
   description?: string;
-  uploadDate: string;
+  upload_date: string;
 };
 
-// Market data-related types
+export type InsertAttachment = Omit<Attachment, 'id' | 'upload_date'>;
+
+// Market data types
 export type MarketData = {
   id: number;
   location: string;
-  dataType: string;
-  time: string;
+  data_type: string;
+  time: string; 
   value: number;
-  comparisonValue?: number;
-  percentChange?: number;
+  comparison_value?: number;
+  percent_change?: number;
   source?: string;
   notes?: string;
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
 };
 
-// Special types for market analysis
+export type InsertMarketData = Omit<MarketData, 'id' | 'created_at' | 'updated_at'>;
+
+// UI-specific types for visualization data
 export type PriceTrendDataPoint = {
   month: string;
   value: number;
@@ -154,34 +167,4 @@ export type NeighborhoodPriceDataPoint = {
   name: string;
   medianPrice: number;
   pricePerSqft: number;
-};
-
-// Types for report generation
-export type Report = {
-  id: number;
-  name: string;
-  property: {
-    address: string;
-    type: string;
-  };
-  createdBy: string;
-  date: string;
-  status: 'Final' | 'Draft' | 'In Review' | 'Archived';
-  type: string;
-};
-
-export type ReportTemplate = {
-  id: number;
-  name: string;
-  description: string;
-  isSelected: boolean;
-};
-
-export type ReportOption = {
-  id: string;
-  name: string;
-  description?: string;
-  type: 'select' | 'toggle';
-  options?: string[];
-  value: string | boolean;
 };
