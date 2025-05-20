@@ -1,2 +1,4 @@
 #!/bin/bash
-node server/basic-server.js
+
+# Start our simpler server
+node server/simple-server.js
