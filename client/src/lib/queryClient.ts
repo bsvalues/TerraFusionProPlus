@@ -1,53 +1,47 @@
 import { QueryClient } from '@tanstack/react-query';
 
-// Create a client
+// API request function that handles basic fetch operations
+export const apiRequest = async <T>(
+  url: string,
+  method: 'GET' | 'POST' | 'PATCH' | 'DELETE' = 'GET',
+  data?: any
+): Promise<T> => {
+  const options: RequestInit = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  };
+
+  if (data) {
+    options.body = JSON.stringify(data);
+  }
+
+  const response = await fetch(url, options);
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(
+      errorData.error || `API request failed with status ${response.status}`
+    );
+  }
+
+  return response.json();
+};
+
+// Default fetcher for QueryClient
+const defaultFetcher = async <T>(url: string): Promise<T> => {
+  return apiRequest<T>(url);
+};
+
+// Create and configure query client
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      refetchOnWindowFocus: false,
+      queryFn: ({ queryKey }) => defaultFetcher(queryKey[0] as string),
       retry: 1,
+      refetchOnWindowFocus: false,
       staleTime: 5 * 60 * 1000, // 5 minutes
     },
   },
 });
-
-// Default fetch options
-const defaultFetchOptions: RequestInit = {
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  credentials: 'same-origin',
-};
-
-// API request function for standardizing all API calls
-export async function apiRequest<T>(
-  endpoint: string,
-  options: RequestInit = {}
-): Promise<T> {
-  const mergedOptions = {
-    ...defaultFetchOptions,
-    ...options,
-  };
-
-  const response = await fetch(endpoint, mergedOptions);
-
-  // Handle API errors
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    const errorMessage = errorData.message || response.statusText || 'API request failed';
-    
-    const error = new Error(errorMessage);
-    (error as any).status = response.status;
-    (error as any).data = errorData;
-    
-    throw error;
-  }
-
-  // For successful responses with no content (204)
-  if (response.status === 204) {
-    return {} as T;
-  }
-
-  // For successful responses with content
-  return response.json();
-}

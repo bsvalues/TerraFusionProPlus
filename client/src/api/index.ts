@@ -1,323 +1,194 @@
-import { 
+import { apiRequest } from '../lib/queryClient';
+import {
   Property, InsertProperty,
   Appraisal, InsertAppraisal,
   Comparable, InsertComparable,
   Adjustment, InsertAdjustment,
-  MarketData, InsertMarketData,
   User, InsertUser,
+  MarketData, InsertMarketData,
   Attachment, InsertAttachment
-} from '../types';
+} from '../../shared/schema';
 
-// Properties API
+// Property endpoints
 export const getProperties = async (): Promise<Property[]> => {
-  const response = await fetch('/api/properties');
-  if (!response.ok) {
-    throw new Error('Failed to fetch properties');
-  }
-  return response.json();
+  return apiRequest<Property[]>('/api/properties');
 };
 
 export const getProperty = async (id: number): Promise<Property> => {
-  const response = await fetch(`/api/properties/${id}`);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch property with id ${id}`);
-  }
-  return response.json();
+  return apiRequest<Property>(`/api/properties/${id}`);
 };
 
 export const createProperty = async (property: InsertProperty): Promise<Property> => {
-  const response = await fetch('/api/properties', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(property),
-  });
-  if (!response.ok) {
-    throw new Error('Failed to create property');
-  }
-  return response.json();
+  return apiRequest<Property>('/api/properties', 'POST', property);
 };
 
 export const updateProperty = async (id: number, property: Partial<InsertProperty>): Promise<Property> => {
-  const response = await fetch(`/api/properties/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(property),
-  });
-  if (!response.ok) {
-    throw new Error(`Failed to update property with id ${id}`);
-  }
-  return response.json();
+  return apiRequest<Property>(`/api/properties/${id}`, 'PATCH', property);
 };
 
-// Appraisals API
+// Appraisal endpoints
 export const getAppraisals = async (): Promise<Appraisal[]> => {
-  const response = await fetch('/api/appraisals');
-  if (!response.ok) {
-    throw new Error('Failed to fetch appraisals');
-  }
-  return response.json();
+  return apiRequest<Appraisal[]>('/api/appraisals');
 };
 
 export const getAppraisal = async (id: number): Promise<Appraisal> => {
-  const response = await fetch(`/api/appraisals/${id}`);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch appraisal with id ${id}`);
-  }
-  return response.json();
+  return apiRequest<Appraisal>(`/api/appraisals/${id}`);
 };
 
 export const getAppraisalsByProperty = async (propertyId: number): Promise<Appraisal[]> => {
-  const response = await fetch(`/api/appraisals?property_id=${propertyId}`);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch appraisals for property with id ${propertyId}`);
-  }
-  return response.json();
+  return apiRequest<Appraisal[]>(`/api/appraisals?propertyId=${propertyId}`);
 };
 
 export const getAppraisalsByAppraiser = async (appraiserId: number): Promise<Appraisal[]> => {
-  const response = await fetch(`/api/appraisals?appraiser_id=${appraiserId}`);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch appraisals for appraiser with id ${appraiserId}`);
-  }
-  return response.json();
+  return apiRequest<Appraisal[]>(`/api/appraisals?appraiserId=${appraiserId}`);
 };
 
 export const createAppraisal = async (appraisal: InsertAppraisal): Promise<Appraisal> => {
-  const response = await fetch('/api/appraisals', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(appraisal),
-  });
-  if (!response.ok) {
-    throw new Error('Failed to create appraisal');
-  }
-  return response.json();
+  return apiRequest<Appraisal>('/api/appraisals', 'POST', appraisal);
 };
 
 export const updateAppraisal = async (id: number, appraisal: Partial<InsertAppraisal>): Promise<Appraisal> => {
-  const response = await fetch(`/api/appraisals/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(appraisal),
-  });
-  if (!response.ok) {
-    throw new Error(`Failed to update appraisal with id ${id}`);
-  }
-  return response.json();
+  return apiRequest<Appraisal>(`/api/appraisals/${id}`, 'PATCH', appraisal);
 };
 
-// Comparables API
+// Comparable endpoints
 export const getComparables = async (appraisalId?: number): Promise<Comparable[]> => {
-  let url = '/api/comparables';
-  if (appraisalId) {
-    url += `?appraisal_id=${appraisalId}`;
-  }
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error('Failed to fetch comparables');
-  }
-  return response.json();
+  const url = appraisalId ? `/api/comparables?appraisalId=${appraisalId}` : '/api/comparables';
+  return apiRequest<Comparable[]>(url);
 };
 
 export const getComparable = async (id: number): Promise<Comparable> => {
-  const response = await fetch(`/api/comparables/${id}`);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch comparable with id ${id}`);
-  }
-  return response.json();
+  return apiRequest<Comparable>(`/api/comparables/${id}`);
 };
 
 export const createComparable = async (comparable: InsertComparable): Promise<Comparable> => {
-  const response = await fetch('/api/comparables', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(comparable),
-  });
-  if (!response.ok) {
-    throw new Error('Failed to create comparable');
-  }
-  return response.json();
+  return apiRequest<Comparable>('/api/comparables', 'POST', comparable);
 };
 
 export const updateComparable = async (id: number, comparable: Partial<InsertComparable>): Promise<Comparable> => {
-  const response = await fetch(`/api/comparables/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(comparable),
-  });
-  if (!response.ok) {
-    throw new Error(`Failed to update comparable with id ${id}`);
-  }
-  return response.json();
+  return apiRequest<Comparable>(`/api/comparables/${id}`, 'PATCH', comparable);
 };
 
-// Adjustments API
+// Adjustment endpoints
 export const getAdjustments = async (comparableId: number): Promise<Adjustment[]> => {
-  const response = await fetch(`/api/adjustments?comparable_id=${comparableId}`);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch adjustments for comparable with id ${comparableId}`);
-  }
-  return response.json();
+  return apiRequest<Adjustment[]>(`/api/adjustments?comparableId=${comparableId}`);
 };
 
 export const getAdjustment = async (id: number): Promise<Adjustment> => {
-  const response = await fetch(`/api/adjustments/${id}`);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch adjustment with id ${id}`);
-  }
-  return response.json();
+  return apiRequest<Adjustment>(`/api/adjustments/${id}`);
 };
 
 export const createAdjustment = async (adjustment: InsertAdjustment): Promise<Adjustment> => {
-  const response = await fetch('/api/adjustments', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(adjustment),
-  });
-  if (!response.ok) {
-    throw new Error('Failed to create adjustment');
-  }
-  return response.json();
+  return apiRequest<Adjustment>('/api/adjustments', 'POST', adjustment);
 };
 
 export const updateAdjustment = async (id: number, adjustment: Partial<InsertAdjustment>): Promise<Adjustment> => {
-  const response = await fetch(`/api/adjustments/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(adjustment),
-  });
-  if (!response.ok) {
-    throw new Error(`Failed to update adjustment with id ${id}`);
-  }
-  return response.json();
+  return apiRequest<Adjustment>(`/api/adjustments/${id}`, 'PATCH', adjustment);
 };
 
-// Market Data API
+// Market data endpoints
 export const getMarketData = async (
-  filters?: { location?: string; data_type?: string }
+  location?: string,
+  startDate?: string,
+  endDate?: string
 ): Promise<MarketData[]> => {
   let url = '/api/market-data';
-  const params = new URLSearchParams();
+  const params = [];
   
-  if (filters?.location) {
-    params.append('location', filters.location);
+  if (location) params.push(`location=${encodeURIComponent(location)}`);
+  if (startDate) params.push(`startDate=${encodeURIComponent(startDate)}`);
+  if (endDate) params.push(`endDate=${encodeURIComponent(endDate)}`);
+  
+  if (params.length > 0) {
+    url += `?${params.join('&')}`;
   }
   
-  if (filters?.data_type) {
-    params.append('data_type', filters.data_type);
-  }
-  
-  const queryString = params.toString();
-  if (queryString) {
-    url += `?${queryString}`;
-  }
-  
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error('Failed to fetch market data');
-  }
-  return response.json();
+  return apiRequest<MarketData[]>(url);
 };
 
 export const createMarketData = async (marketData: InsertMarketData): Promise<MarketData> => {
-  const response = await fetch('/api/market-data', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(marketData),
-  });
-  if (!response.ok) {
-    throw new Error('Failed to create market data');
-  }
-  return response.json();
+  return apiRequest<MarketData>('/api/market-data', 'POST', marketData);
 };
 
-// Users API
+// User endpoints
 export const getUser = async (id: number): Promise<User> => {
-  const response = await fetch(`/api/users/${id}`);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch user with id ${id}`);
-  }
-  return response.json();
+  return apiRequest<User>(`/api/users/${id}`);
 };
 
 export const getUserByUsername = async (username: string): Promise<User> => {
-  const response = await fetch(`/api/users?username=${username}`);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch user with username ${username}`);
-  }
-  const users = await response.json();
-  return users[0];
+  return apiRequest<User>(`/api/users/username/${username}`);
 };
 
 export const createUser = async (user: InsertUser): Promise<User> => {
-  const response = await fetch('/api/users', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(user),
-  });
-  if (!response.ok) {
-    throw new Error('Failed to create user');
-  }
-  return response.json();
+  return apiRequest<User>('/api/users', 'POST', user);
 };
 
-// Attachments API
+// Attachment endpoints
 export const getAttachments = async (
-  filters?: { property_id?: number; appraisal_id?: number }
+  entityType: 'property' | 'appraisal' | 'comparable',
+  entityId: number
 ): Promise<Attachment[]> => {
-  let url = '/api/attachments';
-  const params = new URLSearchParams();
-  
-  if (filters?.property_id) {
-    params.append('property_id', filters.property_id.toString());
-  }
-  
-  if (filters?.appraisal_id) {
-    params.append('appraisal_id', filters.appraisal_id.toString());
-  }
-  
-  const queryString = params.toString();
-  if (queryString) {
-    url += `?${queryString}`;
-  }
-  
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error('Failed to fetch attachments');
-  }
-  return response.json();
+  return apiRequest<Attachment[]>(`/api/attachments?entityType=${entityType}&entityId=${entityId}`);
 };
 
 export const createAttachment = async (attachment: InsertAttachment): Promise<Attachment> => {
-  const response = await fetch('/api/attachments', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(attachment),
-  });
-  if (!response.ok) {
-    throw new Error('Failed to create attachment');
+  return apiRequest<Attachment>('/api/attachments', 'POST', attachment);
+};
+
+// DevOps specific API endpoints
+export const getDeploymentStatus = async () => {
+  return apiRequest('/api/deployments/status');
+};
+
+export const createDeployment = async (deploymentData: any) => {
+  return apiRequest('/api/deployments', 'POST', deploymentData);
+};
+
+export const getDeploymentLogs = async (deploymentId: string) => {
+  return apiRequest(`/api/deployments/${deploymentId}/logs`);
+};
+
+export const getEnvironments = async () => {
+  return apiRequest('/api/environments');
+};
+
+export const getInfrastructure = async () => {
+  return apiRequest('/api/infrastructure');
+};
+
+export const getMonitoring = async () => {
+  return apiRequest('/api/monitoring/metrics');
+};
+
+export const getTerraformState = async () => {
+  return apiRequest('/api/terraform/state');
+};
+
+export const runTerraformPlan = async (planData: any) => {
+  return apiRequest('/api/terraform/plan', 'POST', planData);
+};
+
+export const applyTerraformChanges = async (terraformId: string) => {
+  return apiRequest(`/api/terraform/${terraformId}/apply`, 'POST');
+};
+
+export const getPipelineStatus = async () => {
+  return apiRequest('/api/pipelines/status');
+};
+
+export const triggerPipeline = async (pipelineData: any) => {
+  return apiRequest('/api/pipelines/trigger', 'POST', pipelineData);
+};
+
+export const getAuditLogs = async (params?: { startDate?: string, endDate?: string }) => {
+  let url = '/api/audit-logs';
+  if (params) {
+    const queryParams = [];
+    if (params.startDate) queryParams.push(`startDate=${encodeURIComponent(params.startDate)}`);
+    if (params.endDate) queryParams.push(`endDate=${encodeURIComponent(params.endDate)}`);
+    if (queryParams.length > 0) {
+      url += `?${queryParams.join('&')}`;
+    }
   }
-  return response.json();
+  return apiRequest(url);
 };
