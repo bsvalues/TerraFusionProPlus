@@ -171,6 +171,14 @@ const App = () => {
     switch (activePath) {
       case '/':
         return <Dashboard />;
+      case '/market-analysis-new':
+        return <MarketAnalysisComponent />;
+      case '/valuation-calculator-new':
+        return <ValuationCalculatorComponent />;
+      case '/reports':
+        return <ReportsComponent />;
+      case '/property-detail-new':
+        return <PropertyDetailComponent />;
       default:
         return (
           <div className="flex flex-col items-center justify-center h-64">
@@ -268,6 +276,15 @@ const App = () => {
           
           <div className="pt-4 mt-6 border-t border-blue-700">
             <ul>
+              <li className="mb-1">
+                <button 
+                  onClick={() => navigate('/reports')} 
+                  className={`flex items-center w-full px-6 py-3 text-white hover:bg-blue-700 ${isActive('/reports') ? 'bg-blue-700' : ''}`}
+                >
+                  <ClipboardList className="mr-3" size={20} />
+                  <span>Reports</span>
+                </button>
+              </li>
               <li className="mb-1">
                 <button 
                   onClick={() => navigate('/users')} 

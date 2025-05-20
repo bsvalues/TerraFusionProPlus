@@ -1,4 +1,4 @@
-import React, { useState, useEffect, ChangeEvent } from 'react';
+import React, { useState, useEffect } from 'react';
 import { formatCurrency, formatNumber } from '../lib/utils';
 
 // Define interfaces for our data structures
@@ -43,7 +43,7 @@ interface ValuationHistory {
   isCurrent: boolean;
 }
 
-const ValuationCalculatorComponent: React.FC = () => {
+const ValuationCalculatorComponent = () => {
   // State for the subject property
   const [properties, setProperties] = useState<SubjectProperty[]>([]);
   const [selectedPropertyId, setSelectedPropertyId] = useState<number | null>(null);
