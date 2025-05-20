@@ -1,7 +1,6 @@
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
-const { createServer: createViteServer } = require('vite');
 const deployments = require('./routes/deployments');
 const pipelines = require('./routes/pipelines');
 const monitoring = require('./routes/monitoring');
@@ -15,6 +14,12 @@ async function startServer() {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
+  // Log requests
+  app.use((req, res, next) => {
+    console.log(`${req.method} ${req.url}`);
+    next();
+  });
+
   // API Routes
   app.use('/api/deployments', deployments);
   app.use('/api/pipelines', pipelines);
@@ -22,7 +27,7 @@ async function startServer() {
 
   // Environment info endpoint
   app.get('/api/environments', (req, res) => {
-    // For now, returning mock data until we implement actual environments endpoints
+    // For now, returning data until we implement actual environments endpoints
     res.json([
       { id: 'env-1', name: 'Production', status: 'success', region: 'us-west-1', type: 'kubernetes' },
       { id: 'env-2', name: 'Staging', status: 'success', region: 'us-west-1', type: 'kubernetes' },
@@ -34,33 +39,7 @@ async function startServer() {
   app.get('/api/health', (req, res) => {
     res.json({ status: 'healthy', version: '1.0.0' });
   });
-
-  // Development setup with Vite middleware
-  if (process.env.NODE_ENV !== 'production') {
-    // Create Vite server in middleware mode
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      root: path.resolve(__dirname, '../client'),
-      appType: 'spa'
-    });
-
-    // Use vite's connect instance as middleware
-    app.use(vite.middlewares);
-    
-    // Log requests in development
-    app.use((req, res, next) => {
-      console.log(`${req.method} ${req.url}`);
-      next();
-    });
-  } else {
-    // Production: serve static files
-    app.use(express.static(path.join(__dirname, '../client/dist')));
-    
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(__dirname, '../client/dist/index.html'));
-    });
-  }
-
+  
   // Error handling middleware
   app.use((err, req, res, next) => {
     console.error('Server error:', err);
