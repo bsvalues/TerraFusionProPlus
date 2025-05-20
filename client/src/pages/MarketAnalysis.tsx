@@ -14,13 +14,70 @@ import {
   Bar,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  TooltipProps
 } from 'recharts';
 
+// Define interface for price trend data point
+interface PriceTrendDataPoint {
+  month: string;
+  value: number;
+  year: number;
+}
+
+// Define interface for days on market data point
+interface DomTrendDataPoint {
+  month: string;
+  days: number;
+  year: number;
+}
+
+// Define interface for sales trend data point
+interface SalesTrendDataPoint {
+  month: string;
+  sales: number;
+  year: number;
+}
+
+// Define interface for property type data point
+interface PropertyTypeDataPoint {
+  name: string;
+  value: number;
+}
+
+// Define interface for neighborhood price data point
+interface NeighborhoodPriceDataPoint {
+  name: string;
+  medianPrice: number;
+  pricePerSqft: number;
+}
+
+// Define interface for market data
+interface MarketData {
+  priceTrends: PriceTrendDataPoint[];
+  domTrends: DomTrendDataPoint[];
+  salesTrends: SalesTrendDataPoint[];
+  propertyTypes: PropertyTypeDataPoint[];
+  neighborhoodPrices: NeighborhoodPriceDataPoint[];
+  medianPrices: {
+    currentYear: number;
+    previousYear: number;
+    percentChange: number;
+  };
+}
+
+// Interface for custom legend props
+interface CustomLegendProps {
+  payload?: {
+    value: string;
+    color: string;
+  }[];
+}
+
 // Sample market data for now
-const generateMarketData = () => {
+const generateMarketData = (): MarketData => {
   // Price trends over last 12 months
-  const priceTrends = [];
+  const priceTrends: PriceTrendDataPoint[] = [];
   const now = new Date();
   const currentYear = now.getFullYear();
   let basePrice = 350; // Starting price per sq ft
@@ -41,7 +98,7 @@ const generateMarketData = () => {
   }
 
   // Days on market trends
-  const domTrends = [];
+  const domTrends: DomTrendDataPoint[] = [];
   let baseDom = 45; // Starting days on market
 
   for (let i = 11; i >= 0; i--) {
@@ -60,7 +117,7 @@ const generateMarketData = () => {
   }
 
   // Sales volume trends
-  const salesTrends = [];
+  const salesTrends: SalesTrendDataPoint[] = [];
   let baseSales = 120; // Starting monthly sales
 
   for (let i = 11; i >= 0; i--) {
@@ -92,7 +149,7 @@ const generateMarketData = () => {
   }
   
   // Property types distribution
-  const propertyTypes = [
+  const propertyTypes: PropertyTypeDataPoint[] = [
     { name: 'Single Family', value: 65 },
     { name: 'Condo', value: 18 },
     { name: 'Multi-Family', value: 10 },
@@ -100,7 +157,7 @@ const generateMarketData = () => {
   ];
   
   // Median prices by neighborhood
-  const neighborhoodPrices = [
+  const neighborhoodPrices: NeighborhoodPriceDataPoint[] = [
     { name: 'Downtown', medianPrice: 625000, pricePerSqft: 450 },
     { name: 'North End', medianPrice: 875000, pricePerSqft: 520 },
     { name: 'South Side', medianPrice: 425000, pricePerSqft: 320 },
@@ -126,7 +183,7 @@ export const MarketAnalysis = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [selectedPropertyType, setSelectedPropertyType] = useState('all');
-  const [marketData, setMarketData] = useState(null);
+  const [marketData, setMarketData] = useState<MarketData | null>(null);
   const [selectedTimePeriod, setSelectedTimePeriod] = useState('12m');
   
   // Colors for charts
@@ -146,7 +203,7 @@ export const MarketAnalysis = () => {
   }, [selectedTimePeriod]);
 
   // Function to format currency
-  const formatCurrency = (value) => {
+  const formatCurrency = (value: number): string => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
@@ -156,12 +213,19 @@ export const MarketAnalysis = () => {
   };
   
   // Format price per square foot
-  const formatPricePerSqFt = (value) => {
+  const formatPricePerSqFt = (value: number): string => {
     return `$${value}/sqft`;
   };
 
+  // Interface for custom tooltip props
+  interface CustomTooltipProps {
+    active?: boolean;
+    payload?: any[];
+    label?: string;
+  }
+
   // Get custom tooltip for price trends chart
-  const PriceTrendTooltip = ({ active, payload, label }) => {
+  const PriceTrendTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-3 border border-gray-200 shadow-md rounded-md">
@@ -174,7 +238,7 @@ export const MarketAnalysis = () => {
   };
   
   // Get custom tooltip for DOM trends chart
-  const DomTrendTooltip = ({ active, payload, label }) => {
+  const DomTrendTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-3 border border-gray-200 shadow-md rounded-md">
@@ -187,7 +251,7 @@ export const MarketAnalysis = () => {
   };
   
   // Get custom tooltip for sales volume chart
-  const SalesTooltip = ({ active, payload, label }) => {
+  const SalesTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-3 border border-gray-200 shadow-md rounded-md">
@@ -200,7 +264,9 @@ export const MarketAnalysis = () => {
   };
 
   // Custom Legend for Pie Chart
-  const CustomLegend = ({ payload }) => {
+  const CustomLegend: React.FC<CustomLegendProps> = ({ payload }) => {
+    if (!payload || !marketData) return null;
+    
     return (
       <ul className="flex flex-wrap justify-center gap-4 mt-4">
         {payload.map((entry, index) => (
@@ -209,14 +275,14 @@ export const MarketAnalysis = () => {
               className="w-3 h-3 mr-2" 
               style={{ backgroundColor: entry.color }}
             />
-            <span className="text-sm">{entry.value} ({marketData?.propertyTypes[index].value}%)</span>
+            <span className="text-sm">{entry.value} ({marketData.propertyTypes[index].value}%)</span>
           </li>
         ))}
       </ul>
     );
   };
 
-  if (loading) {
+  if (loading || !marketData) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
