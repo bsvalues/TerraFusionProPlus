@@ -1,44 +1,32 @@
-import { QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import queryClient from './lib/queryClient';
-
-// Import pages
-import Dashboard from './pages/Dashboard';
-import Deployments from './pages/Deployments';
-import DeploymentDetail from './pages/DeploymentDetail';
-import Pipelines from './pages/Pipelines';
-import PipelineDetail from './pages/PipelineDetail';
-import Monitoring from './pages/Monitoring';
-import Settings from './pages/Settings';
-
-// App Layout Components
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from './lib/queryClient';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
+import Dashboard from './pages/Dashboard';
 
-function App() {
+const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <div className="app-container bg-gray-100 min-h-screen">
+        <div className="app-container">
           <Navbar />
-          <div className="flex">
-            <Sidebar />
-            <main className="flex-1 p-6">
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/deployments" element={<Deployments />} />
-                <Route path="/deployments/:id" element={<DeploymentDetail />} />
-                <Route path="/pipelines" element={<Pipelines />} />
-                <Route path="/pipelines/:id" element={<PipelineDetail />} />
-                <Route path="/monitoring" element={<Monitoring />} />
-                <Route path="/settings" element={<Settings />} />
-              </Routes>
-            </main>
-          </div>
+          <Sidebar />
+          <main className="main-content">
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/deployments" element={<div className="p-4">Deployments page coming soon...</div>} />
+              <Route path="/pipelines" element={<div className="p-4">Pipelines page coming soon...</div>} />
+              <Route path="/monitoring" element={<div className="p-4">Monitoring page coming soon...</div>} />
+              <Route path="/analytics" element={<div className="p-4">Analytics page coming soon...</div>} />
+              <Route path="/settings" element={<div className="p-4">Settings page coming soon...</div>} />
+              <Route path="*" element={<div className="p-4">Page not found</div>} />
+            </Routes>
+          </main>
         </div>
       </Router>
     </QueryClientProvider>
   );
-}
+};
 
 export default App;

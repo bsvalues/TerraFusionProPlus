@@ -1,182 +1,135 @@
 const express = require('express');
 const router = express.Router();
 
-// GET /api/deployments - List all deployments
-router.get('/', async (req, res) => {
-  try {
-    // Mock data for now - will be replaced with actual DB calls
-    const deployments = [
-      {
-        id: 1,
-        name: 'Production API',
-        status: 'active',
-        version: 'v1.2.5',
-        environment: 'production',
-        lastDeployed: '2023-01-15T08:30:00Z',
-        deployedBy: 'jenkins-pipeline',
-        health: {
-          status: 'healthy',
-          uptime: '15d 7h 23m',
-          responseTime: 85,
-          errorRate: 0.02
-        }
-      },
-      {
-        id: 2,
-        name: 'Staging API',
-        status: 'active',
-        version: 'v1.3.0-rc2',
-        environment: 'staging',
-        lastDeployed: '2023-01-20T10:15:00Z',
-        deployedBy: 'jenkins-pipeline',
-        health: {
-          status: 'degraded',
-          uptime: '5d 12h 40m',
-          responseTime: 120,
-          errorRate: 0.15
-        }
-      },
-      {
-        id: 3,
-        name: 'User Portal Frontend',
-        status: 'active',
-        version: 'v2.1.0',
-        environment: 'production',
-        lastDeployed: '2023-01-18T14:45:00Z',
-        deployedBy: 'manual-release',
-        health: {
-          status: 'healthy',
-          uptime: '7d 5h 12m',
-          responseTime: 95,
-          errorRate: 0.01
-        }
-      }
-    ];
-    
-    res.json(deployments);
-  } catch (error) {
-    console.error('Error fetching deployments:', error);
-    res.status(500).json({ error: 'Failed to fetch deployments' });
+// Sample deployment data
+const deployments = [
+  {
+    id: '1',
+    name: 'Production API Gateway',
+    status: 'active',
+    environment: 'production',
+    lastDeployed: '2025-05-15T10:30:00Z',
+    version: 'v1.2.3',
+    health: 'healthy',
+    instances: 3
+  },
+  {
+    id: '2',
+    name: 'Customer Portal Frontend',
+    status: 'active',
+    environment: 'production',
+    lastDeployed: '2025-05-14T15:45:00Z',
+    version: 'v2.1.0',
+    health: 'healthy',
+    instances: 2
+  },
+  {
+    id: '3',
+    name: 'Billing Service',
+    status: 'active',
+    environment: 'production',
+    lastDeployed: '2025-05-10T08:15:00Z',
+    version: 'v1.5.2',
+    health: 'healthy',
+    instances: 2
+  },
+  {
+    id: '4',
+    name: 'Analytics Engine',
+    status: 'inactive',
+    environment: 'staging',
+    lastDeployed: '2025-05-01T14:20:00Z',
+    version: 'v0.9.1',
+    health: 'degraded',
+    instances: 1
+  },
+  {
+    id: '5',
+    name: 'Admin Dashboard',
+    status: 'active',
+    environment: 'production',
+    lastDeployed: '2025-05-12T11:10:00Z',
+    version: 'v1.1.7',
+    health: 'healthy',
+    instances: 2
+  },
+  {
+    id: '6',
+    name: 'Authentication Service',
+    status: 'active',
+    environment: 'production',
+    lastDeployed: '2025-05-08T09:30:00Z',
+    version: 'v2.0.1',
+    health: 'healthy',
+    instances: 3
+  },
+  {
+    id: '7',
+    name: 'Notification Service',
+    status: 'active',
+    environment: 'staging',
+    lastDeployed: '2025-05-16T13:25:00Z',
+    version: 'v0.8.5',
+    health: 'healthy',
+    instances: 1
   }
+];
+
+// Get all deployments
+router.get('/', (req, res) => {
+  res.json(deployments);
 });
 
-// GET /api/deployments/:id - Get deployment details
-router.get('/:id', async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    
-    // Mock data - will be replaced with DB lookup
-    const deployment = {
-      id,
-      name: 'Production API',
-      status: 'active',
-      version: 'v1.2.5',
-      environment: 'production',
-      lastDeployed: '2023-01-15T08:30:00Z',
-      deployedBy: 'jenkins-pipeline',
-      health: {
-        status: 'healthy',
-        uptime: '15d 7h 23m',
-        responseTime: 85,
-        errorRate: 0.02
-      },
-      history: [
-        { 
-          version: 'v1.2.5', 
-          deployedAt: '2023-01-15T08:30:00Z',
-          status: 'success',
-          duration: '3m 45s'
-        },
-        { 
-          version: 'v1.2.4', 
-          deployedAt: '2023-01-10T14:15:00Z',
-          status: 'success',
-          duration: '4m 10s'
-        },
-        { 
-          version: 'v1.2.3', 
-          deployedAt: '2023-01-05T10:30:00Z',
-          status: 'failed',
-          duration: '2m 55s'
-        }
-      ],
-      config: {
-        replicas: 3,
-        resources: {
-          cpu: '500m',
-          memory: '1Gi'
-        },
-        autoscaling: {
-          enabled: true,
-          minReplicas: 2,
-          maxReplicas: 5,
-          targetCPU: 75
-        }
-      }
-    };
-    
-    res.json(deployment);
-  } catch (error) {
-    console.error(`Error fetching deployment ${req.params.id}:`, error);
-    res.status(500).json({ error: 'Failed to fetch deployment details' });
+// Get deployment by id
+router.get('/:id', (req, res) => {
+  const deployment = deployments.find(d => d.id === req.params.id);
+  
+  if (!deployment) {
+    return res.status(404).json({ message: 'Deployment not found' });
   }
+  
+  res.json(deployment);
 });
 
-// POST /api/deployments - Create new deployment
-router.post('/', async (req, res) => {
-  try {
-    const newDeployment = req.body;
-    
-    // Validation would happen here
-    if (!newDeployment.name || !newDeployment.version) {
-      return res.status(400).json({ error: 'Name and version are required' });
-    }
-    
-    // Mock response - would normally save to DB and return
-    res.status(201).json({
-      id: 4,
-      ...newDeployment,
-      status: 'pending',
-      createdAt: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error('Error creating deployment:', error);
-    res.status(500).json({ error: 'Failed to create deployment' });
-  }
+// Create new deployment
+router.post('/', (req, res) => {
+  // In a real implementation, this would validate and create a new deployment
+  const newDeployment = {
+    id: String(deployments.length + 1),
+    ...req.body,
+    lastDeployed: new Date().toISOString()
+  };
+  
+  deployments.push(newDeployment);
+  res.status(201).json(newDeployment);
 });
 
-// PUT /api/deployments/:id - Update deployment
-router.put('/:id', async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    const updates = req.body;
-    
-    // Mock response - would normally update in DB
-    res.json({
-      id,
-      ...updates,
-      updatedAt: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error(`Error updating deployment ${req.params.id}:`, error);
-    res.status(500).json({ error: 'Failed to update deployment' });
+// Update deployment
+router.put('/:id', (req, res) => {
+  const index = deployments.findIndex(d => d.id === req.params.id);
+  
+  if (index === -1) {
+    return res.status(404).json({ message: 'Deployment not found' });
   }
+  
+  deployments[index] = {
+    ...deployments[index],
+    ...req.body,
+  };
+  
+  res.json(deployments[index]);
 });
 
-// DELETE /api/deployments/:id - Delete deployment
-router.delete('/:id', async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    
-    // Mock success - would normally delete from DB
-    res.json({ 
-      success: true, 
-      message: `Deployment ${id} has been deleted` 
-    });
-  } catch (error) {
-    console.error(`Error deleting deployment ${req.params.id}:`, error);
-    res.status(500).json({ error: 'Failed to delete deployment' });
+// Delete deployment
+router.delete('/:id', (req, res) => {
+  const index = deployments.findIndex(d => d.id === req.params.id);
+  
+  if (index === -1) {
+    return res.status(404).json({ message: 'Deployment not found' });
   }
+  
+  const deleted = deployments.splice(index, 1);
+  res.json(deleted[0]);
 });
 
 module.exports = router;

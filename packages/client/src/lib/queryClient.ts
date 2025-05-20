@@ -1,65 +1,63 @@
 import { QueryClient } from '@tanstack/react-query';
 
-// Set up default query client options
-const defaultQueryClientOptions = {
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      refetchOnWindowFocus: false,
-      retry: 1,
-    },
-    mutations: {
-      retry: 1,
-    },
-  },
+// Define query keys for better cache management
+export const QUERY_KEYS = {
+  DEPLOYMENTS: 'deployments',
+  DEPLOYMENT_DETAIL: 'deployment-detail',
+  PIPELINES: 'pipelines',
+  PIPELINE_DETAIL: 'pipeline-detail',
+  ENVIRONMENTS: 'environments',
+  MONITORING_METRICS: 'monitoring-metrics',
+  MONITORING_ALERTS: 'monitoring-alerts',
+  MONITORING_LOGS: 'monitoring-logs',
+  SETTINGS: 'settings',
 };
 
-// Create and export the query client instance
-export const queryClient = new QueryClient(defaultQueryClientOptions);
+// Create a client
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
-// Helper function for making API requests in mutations
-export const apiRequest = async ({
-  url,
-  method,
-  data,
+// Helper for making API requests with proper error handling
+export const apiRequest = async ({ 
+  url, 
+  method = 'GET', 
+  body = undefined, 
+  headers = {} 
 }: {
   url: string;
-  method: 'POST' | 'PUT' | 'DELETE';
-  data?: any;
+  method?: string;
+  body?: any;
+  headers?: Record<string, string>;
 }) => {
   const options: RequestInit = {
     method,
     headers: {
       'Content-Type': 'application/json',
+      ...headers,
     },
+    credentials: 'include',
   };
 
-  if (data) {
-    options.body = JSON.stringify(data);
+  if (body) {
+    options.body = JSON.stringify(body);
   }
 
   const response = await fetch(url, options);
   
   if (!response.ok) {
-    const errorData = await response.json().catch(() => null);
-    const errorMessage = errorData?.error || response.statusText || 'Unknown error';
-    throw new Error(errorMessage);
+    const error = await response.json().catch(() => ({
+      message: response.statusText,
+    }));
+    
+    throw new Error(error.message || 'An error occurred');
   }
   
   return response.json();
 };
-
-// Cache key prefixes for consistent cache management
-export const QUERY_KEYS = {
-  DEPLOYMENTS: '/api/deployments',
-  DEPLOYMENT: (id: number) => ['/api/deployments', id],
-  MONITORING_METRICS: '/api/monitoring/metrics',
-  MONITORING_ALERTS: '/api/monitoring/alerts',
-  MONITORING_LOGS: '/api/monitoring/logs',
-  MONITORING_SERVICES: '/api/monitoring/services',
-  PIPELINES: '/api/pipelines',
-  PIPELINE: (id: number) => ['/api/pipelines', id],
-  PIPELINE_RUNS: (id: number) => ['/api/pipelines', id, 'runs'],
-};
-
-export default queryClient;
