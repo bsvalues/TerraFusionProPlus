@@ -384,6 +384,22 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../client/dist/index.html'));
 });
 
+// Serve the standalone HTML file directly
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/index-standalone.html'));
+});
+
+// Serve static files
+app.use(express.static(path.join(__dirname, '../client')));
+
+// For any other requests not handled by the API, serve the standalone HTML
+app.get('*', (req, res) => {
+  if (req.path.startsWith('/api')) {
+    return res.status(404).send('API endpoint not found');
+  }
+  res.sendFile(path.join(__dirname, '../client/index-standalone.html'));
+});
+
 // Start the server
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`TerraFusionProfessional server is running on port ${PORT}`);
