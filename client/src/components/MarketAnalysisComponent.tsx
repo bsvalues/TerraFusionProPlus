@@ -257,32 +257,34 @@ const MarketAnalysisComponent = () => {
         <div className="bg-white p-5 rounded-lg shadow mb-6">
           <h2 className="text-lg font-medium mb-4">Price Per Square Foot Trends</h2>
           <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              {marketData.priceTrends && (
-                <LineChart
-                  data={marketData.priceTrends}
-                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis 
-                    tickFormatter={(value) => `$${value}`}
-                    domain={['dataMin - 20', 'dataMax + 20']}
-                  />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="value" 
-                    stroke="#3b82f6" 
-                    name="Price/sqft"
-                    strokeWidth={2}
-                    dot={{ r: 4 }}
-                    activeDot={{ r: 6 }}
-                  />
-                </LineChart>
-              )}
-            </ResponsiveContainer>
+            <div style={{ width: '100%', height: '100%' }}>
+              <ResponsiveContainer>
+                {(marketData?.priceTrends || priceTrendsData) && (
+                  <LineChart
+                    data={marketData?.priceTrends || priceTrendsData || []}
+                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis 
+                      tickFormatter={(value) => `$${value}`}
+                      domain={['dataMin - 20', 'dataMax + 20']}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend />
+                    <Line 
+                      type="monotone" 
+                      dataKey="value" 
+                      stroke="#3b82f6" 
+                      name="Price/sqft"
+                      strokeWidth={2}
+                      dot={{ r: 4 }}
+                      activeDot={{ r: 6 }}
+                    />
+                  </LineChart>
+                )}
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
         
@@ -291,57 +293,61 @@ const MarketAnalysisComponent = () => {
           <div className="bg-white p-5 rounded-lg shadow">
             <h2 className="text-lg font-medium mb-4">Days on Market Trends</h2>
             <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                {marketData.domTrends && (
-                  <LineChart
-                    data={marketData.domTrends}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis 
-                      domain={['dataMin - 5', 'dataMax + 5']}
-                      tickFormatter={(value) => `${value}`}
-                    />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Line 
-                      type="monotone" 
-                      dataKey="days" 
-                      stroke="#a855f7" 
-                      name="Days"
-                      strokeWidth={2}
-                    />
-                  </LineChart>
-                )}
-              </ResponsiveContainer>
+              <div style={{ width: '100%', height: '100%' }}>
+                <ResponsiveContainer>
+                  {(marketData?.domTrends || domTrendsData) && (
+                    <LineChart
+                      data={marketData?.domTrends || domTrendsData || []}
+                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis 
+                        domain={['dataMin - 5', 'dataMax + 5']}
+                        tickFormatter={(value) => `${value}`}
+                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Line 
+                        type="monotone" 
+                        dataKey="days" 
+                        stroke="#a855f7" 
+                        name="Days"
+                        strokeWidth={2}
+                      />
+                    </LineChart>
+                  )}
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
           
           <div className="bg-white p-5 rounded-lg shadow">
             <h2 className="text-lg font-medium mb-4">Monthly Sales Volume</h2>
             <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                {marketData.salesTrends && (
-                  <BarChart
-                    data={marketData.salesTrends}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis 
-                      domain={[0, 'dataMax + 10']}
-                      tickFormatter={(value) => `${value}`}
-                    />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Bar 
-                      dataKey="sales" 
-                      fill="#22c55e" 
-                      name="Sales"
-                      radius={[4, 4, 0, 0]}
-                    />
-                  </BarChart>
-                )}
-              </ResponsiveContainer>
+              <div style={{ width: '100%', height: '100%' }}>
+                <ResponsiveContainer>
+                  {(marketData?.salesTrends || salesTrendsData) && (
+                    <BarChart
+                      data={marketData?.salesTrends || salesTrendsData || []}
+                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis 
+                        domain={[0, 'dataMax + 10']}
+                        tickFormatter={(value) => `${value}`}
+                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Bar 
+                        dataKey="sales" 
+                        fill="#22c55e" 
+                        name="Sales"
+                        radius={[4, 4, 0, 0]}
+                      />
+                    </BarChart>
+                  )}
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
         </div>
@@ -351,34 +357,36 @@ const MarketAnalysisComponent = () => {
           <div className="bg-white p-5 rounded-lg shadow">
             <h2 className="text-lg font-medium mb-4">Property Types Distribution</h2>
             <div className="h-64 flex items-center justify-center">
-              <ResponsiveContainer width="100%" height="100%">
-                {marketData.propertyTypes && (
-                  <PieChart>
-                    <Pie
-                      data={marketData.propertyTypes}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                      nameKey="name"
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    >
-                      {marketData.propertyTypes.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      formatter={(value, name) => [
-                        `${value}%`, 
-                        `${name}`
-                      ]}
-                    />
-                    <Legend />
-                  </PieChart>
-                )}
-              </ResponsiveContainer>
+              <div style={{ width: '100%', height: '100%' }}>
+                <ResponsiveContainer>
+                  {(marketData?.propertyTypes || propertyTypesData) && (
+                    <PieChart>
+                      <Pie
+                        data={marketData?.propertyTypes || propertyTypesData || []}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                        nameKey="name"
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      >
+                        {(marketData?.propertyTypes || propertyTypesData || []).map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value, name) => [
+                          `${value}%`, 
+                          `${name}`
+                        ]}
+                      />
+                      <Legend />
+                    </PieChart>
+                  )}
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
           

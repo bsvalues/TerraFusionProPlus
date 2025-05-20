@@ -21,11 +21,11 @@ import {
   Star 
 } from 'lucide-react';
 
-interface PropertyDetailProps {
+type PropertyDetailProps = {
   propertyId?: string;
 }
 
-const PropertyDetailComponent: React.FC<PropertyDetailProps> = ({ propertyId }) => {
+const PropertyDetailComponent = ({ propertyId }: PropertyDetailProps) => {
   const params = useParams();
   const id = propertyId || params.id;
   
@@ -55,9 +55,193 @@ const PropertyDetailComponent: React.FC<PropertyDetailProps> = ({ propertyId }) 
         console.error('Error fetching property data:', error);
         
         // For demo purposes, set mock data if the API is not available
-        setProperty(mockProperty);
-        setAppraisals(mockAppraisals);
-        setComparables(mockComparables);
+        // Add all required properties to match our types
+        setProperty({
+          id: 1,
+          address: '123 Main Street',
+          city: 'Austin',
+          state: 'TX',
+          zip_code: '78701',
+          property_type: 'Single Family',
+          year_built: 2005,
+          square_feet: 2450,
+          bedrooms: 3,
+          bathrooms: 2.5,
+          lot_size: 8500,
+          description: 'Beautiful family home in a desirable neighborhood',
+          created_at: '2024-01-15T00:00:00Z',
+          updated_at: '2024-01-15T00:00:00Z',
+          parcel_number: '10-4567-89',
+          zoning: 'Residential (R-1)',
+          latitude: 30.267153,
+          longitude: -97.743057,
+          features: {
+            pool: true,
+            garage: '2-Car Attached',
+            fireplace: true,
+            stories: 2
+          }
+        });
+        
+        setAppraisals([
+          {
+            id: 1,
+            propertyId: 1,
+            appraiserId: 1,
+            status: 'Completed',
+            purpose: 'Refinance',
+            marketValue: 975000,
+            createdAt: '2024-05-15T00:00:00Z',
+            completedAt: '2024-05-20T00:00:00Z',
+            inspectionDate: '2024-05-18T00:00:00Z',
+            effectiveDate: '2024-05-20T00:00:00Z',
+            reportType: 'Form 1004',
+            clientName: 'First National Bank',
+            clientEmail: 'loans@firstnational.example',
+            clientPhone: '555-123-4567',
+            lenderName: 'First National Bank',
+            loanNumber: 'L-12345',
+            intendedUse: 'Refinance transaction',
+            valuationMethod: 'Sales Comparison Approach',
+            scopeOfWork: 'Full appraisal with interior and exterior inspection',
+            notes: null
+          },
+          {
+            id: 2,
+            propertyId: 1,
+            appraiserId: 2,
+            status: 'In Review',
+            purpose: 'Sale',
+            marketValue: 950000,
+            createdAt: '2023-10-10T00:00:00Z',
+            completedAt: '2023-10-15T00:00:00Z',
+            inspectionDate: '2023-10-12T00:00:00Z',
+            effectiveDate: '2023-10-15T00:00:00Z',
+            reportType: 'Form 1004',
+            clientName: 'Capital Mortgage Co.',
+            clientEmail: 'underwriting@capitalmortgage.example',
+            clientPhone: '555-987-6543',
+            lenderName: 'Capital Mortgage Co.',
+            loanNumber: 'L-56789',
+            intendedUse: 'Purchase transaction',
+            valuationMethod: 'Sales Comparison Approach',
+            scopeOfWork: 'Full appraisal with interior and exterior inspection',
+            notes: null
+          },
+          {
+            id: 3,
+            propertyId: 1,
+            appraiserId: 3,
+            status: 'Draft',
+            purpose: 'Home Equity',
+            marketValue: null,
+            createdAt: '2022-06-01T00:00:00Z',
+            completedAt: null,
+            inspectionDate: null,
+            effectiveDate: null,
+            reportType: 'Form 1004',
+            clientName: 'Homeowners Bank',
+            clientEmail: 'equity@homeowners.example',
+            clientPhone: '555-456-7890',
+            lenderName: 'Homeowners Bank',
+            loanNumber: 'HELOC-8765',
+            intendedUse: 'Home equity line of credit',
+            valuationMethod: null,
+            scopeOfWork: null,
+            notes: 'Client requested rush service'
+          }
+        ]);
+        
+        setComparables([
+          {
+            id: 1,
+            appraisalId: 1,
+            address: '456 Oak Avenue',
+            city: 'Austin',
+            state: 'TX',
+            zipCode: '78701',
+            salePrice: 925000,
+            saleDate: '2024-03-15T00:00:00Z',
+            squareFeet: 2350,
+            bedrooms: 3,
+            bathrooms: 2,
+            yearBuilt: 2003,
+            propertyType: 'Single Family',
+            lotSize: 7500,
+            condition: 'Good',
+            daysOnMarket: 28,
+            source: 'MLS',
+            adjustedPrice: 952000,
+            adjustmentNotes: 'Adjusted for smaller square footage and lot size',
+            createdAt: '2024-05-18T00:00:00Z'
+          },
+          {
+            id: 2,
+            appraisalId: 1,
+            address: '789 Elm Drive',
+            city: 'Austin',
+            state: 'TX',
+            zipCode: '78704',
+            salePrice: 1050000,
+            saleDate: '2024-04-02T00:00:00Z',
+            squareFeet: 2650,
+            bedrooms: 4,
+            bathrooms: 3,
+            yearBuilt: 2008,
+            propertyType: 'Single Family',
+            lotSize: 9000,
+            condition: 'Excellent',
+            daysOnMarket: 14,
+            source: 'MLS',
+            adjustedPrice: 985000,
+            adjustmentNotes: 'Adjusted for larger square footage and newer construction',
+            createdAt: '2024-05-18T00:00:00Z'
+          },
+          {
+            id: 3,
+            appraisalId: 1,
+            address: '101 Pine Road',
+            city: 'Austin',
+            state: 'TX',
+            zipCode: '78703',
+            salePrice: 910000,
+            saleDate: '2024-02-20T00:00:00Z',
+            squareFeet: 2250,
+            bedrooms: 3,
+            bathrooms: 2.5,
+            yearBuilt: 2002,
+            propertyType: 'Single Family',
+            lotSize: 8000,
+            condition: 'Average',
+            daysOnMarket: 35,
+            source: 'MLS',
+            adjustedPrice: 935000,
+            adjustmentNotes: 'Adjusted for location and condition differences',
+            createdAt: '2024-05-18T00:00:00Z'
+          },
+          {
+            id: 4,
+            appraisalId: 1,
+            address: '222 Cedar Lane',
+            city: 'Austin',
+            state: 'TX',
+            zipCode: '78705',
+            salePrice: 980000,
+            saleDate: '2024-04-12T00:00:00Z',
+            squareFeet: 2400,
+            bedrooms: 3,
+            bathrooms: 2.5,
+            yearBuilt: 2006,
+            propertyType: 'Single Family',
+            lotSize: 8200,
+            condition: 'Good',
+            daysOnMarket: 21,
+            source: 'MLS',
+            adjustedPrice: 965000,
+            adjustmentNotes: 'Adjusted for slight differences in condition and features',
+            createdAt: '2024-05-18T00:00:00Z'
+          }
+        ]);
       } finally {
         setLoading(false);
       }
