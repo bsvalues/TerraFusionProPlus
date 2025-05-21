@@ -1,105 +1,137 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { 
-  Home, 
-  FileSpreadsheet, 
-  Plus, 
-  Clock, 
-  CheckCircle, 
-  ArrowUpRight,
-  Calendar,
-  DollarSign,
-  BarChart4
-} from 'lucide-react';
 import { apiRequest } from '../lib/query-client';
+import { Calendar, Home, CheckCircle, Clock, TrendingUp } from 'lucide-react';
 
-// Mock data interfaces
-interface DashboardStats {
+type DashboardData = {
   activeAppraisals: number;
   completedAppraisals: number;
   totalProperties: number;
   avgCompletionTime: number;
-  recentActivity: Activity[];
-  upcomingAppraisals: UpcomingAppraisal[];
-  performanceSummary: PerformanceSummary;
+  performanceSummary: {
+    completedThisMonth: number;
+    changeFromLastMonth: number;
+    averageValue: number;
+    valueChangePercent: number;
+  };
+  recentActivity: Array<{
+    id: number;
+    type: string;
+    title: string;
+    description: string;
+    timestamp: string;
+  }>;
+  upcomingAppraisals: Array<{
+    id: number;
+    propertyId: number;
+    address: string;
+    clientName: string;
+    dueDate: string;
+    status: string;
+  }>;
+};
+
+function StatCard({ title, value, icon, change }: { title: string; value: string | number; icon: React.ReactNode; change?: { value: number; positive: boolean } }) {
+  return (
+    <div className="p-6 bg-white rounded-lg shadow-sm border border-gray-100">
+      <div className="flex justify-between items-start">
+        <div>
+          <h3 className="text-sm font-medium text-gray-500">{title}</h3>
+          <p className="text-2xl font-bold mt-1">{value}</p>
+          
+          {change && (
+            <div className={`mt-2 text-xs inline-flex items-center rounded-full px-2 py-1 ${change.positive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+              <span className="mr-1">{change.positive ? '↑' : '↓'}</span> 
+              {Math.abs(change.value)}%
+            </div>
+          )}
+        </div>
+        <div className="p-3 rounded-full bg-blue-50 text-blue-500">
+          {icon}
+        </div>
+      </div>
+    </div>
+  );
 }
 
-interface Activity {
-  id: number;
-  type: 'property_added' | 'appraisal_submitted' | 'appraisal_completed' | 'market_update';
-  title: string;
-  description: string;
-  timestamp: string;
+function ActivityItem({ item }: { item: DashboardData['recentActivity'][0] }) {
+  const iconMap: Record<string, React.ReactNode> = {
+    'appraisal_completed': <CheckCircle size={16} className="text-green-500" />,
+    'property_added': <Home size={16} className="text-blue-500" />,
+    'appraisal_scheduled': <Calendar size={16} className="text-purple-500" />,
+  };
+
+  const getTimeString = (timestamp: string) => {
+    const date = new Date(timestamp);
+    return date.toLocaleDateString();
+  };
+
+  return (
+    <div className="flex items-start py-3 border-b border-gray-100 last:border-0">
+      <div className="p-2 mr-3 rounded-full bg-gray-100">
+        {iconMap[item.type] || <Clock size={16} />}
+      </div>
+      <div className="flex-1">
+        <h4 className="text-sm font-medium">{item.title}</h4>
+        <p className="text-xs text-gray-500 mt-1">{item.description}</p>
+      </div>
+      <div className="text-xs text-gray-400">
+        {getTimeString(item.timestamp)}
+      </div>
+    </div>
+  );
 }
 
-interface UpcomingAppraisal {
-  id: number;
-  address: string;
-  propertyId: number;
-  clientName: string;
-  dueDate: string;
-  status: 'scheduled' | 'in_progress';
-}
-
-interface PerformanceSummary {
-  completedThisMonth: number;
-  changeFromLastMonth: number;
-  averageValue: number;
-  valueChangePercent: number;
-}
-
-const Dashboard = () => {
-  // In a real app, this would fetch from the API
-  const { data: dashboardData, isLoading } = useQuery({
+function Dashboard() {
+  const { data, isLoading, error } = useQuery({
     queryKey: ['/api/dashboard'],
-    queryFn: () => apiRequest<DashboardStats>('/api/dashboard'),
-    // For demo purposes, disable this query and use mock data instead
-    enabled: false,
+    queryFn: () => apiRequest<DashboardData>('/dashboard')
   });
-  
-  // Mock data
-  const mockData: DashboardStats = {
+
+  if (isLoading) {
+    return (
+      <div className="py-12 flex justify-center">
+        <div className="animate-pulse text-gray-500">Loading dashboard data...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="py-12 text-center">
+        <h3 className="text-lg font-semibold text-red-600">Error loading dashboard</h3>
+        <p className="text-gray-500 mt-2">Please try again later</p>
+      </div>
+    );
+  }
+
+  // Fallback for development - we'll use mock data if the API call fails
+  const dashboardData = data || {
     activeAppraisals: 24,
     completedAppraisals: 37,
     totalProperties: 418,
     avgCompletionTime: 3.2,
+    performanceSummary: {
+      completedThisMonth: 37,
+      changeFromLastMonth: 4,
+      averageValue: 450000,
+      valueChangePercent: 2.5
+    },
     recentActivity: [
       {
         id: 1,
         type: 'appraisal_completed',
         title: 'Appraisal completed',
         description: '456 Oak Drive, Austin, TX 78704',
-        timestamp: '2025-05-20T14:30:00Z',
+        timestamp: new Date().toISOString(),
       },
       {
         id: 2,
         type: 'property_added',
         title: 'New property added',
         description: '789 Pine Street, Austin, TX 78701',
-        timestamp: '2025-05-20T12:15:00Z',
-      },
-      {
-        id: 3,
-        type: 'appraisal_submitted',
-        title: 'Appraisal submitted for review',
-        description: '321 Cedar Lane, Austin, TX 78702',
-        timestamp: '2025-05-19T16:45:00Z',
-      },
-      {
-        id: 4,
-        type: 'market_update',
-        title: 'Market data updated',
-        description: 'Q2 2025 Austin metropolitan area',
-        timestamp: '2025-05-19T09:10:00Z',
-      },
-      {
-        id: 5,
-        type: 'appraisal_completed',
-        title: 'Appraisal completed',
-        description: '123 Main Street, Austin, TX 78701',
-        timestamp: '2025-05-18T15:20:00Z',
-      },
+        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+      }
     ],
     upcomingAppraisals: [
       {
@@ -107,7 +139,7 @@ const Dashboard = () => {
         propertyId: 201,
         address: '123 Main Street, Austin, TX 78701',
         clientName: 'ABC Mortgage',
-        dueDate: '2025-05-23T00:00:00Z',
+        dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
         status: 'scheduled',
       },
       {
@@ -115,335 +147,96 @@ const Dashboard = () => {
         propertyId: 202,
         address: '456 Oak Drive, Austin, TX 78704',
         clientName: 'First Credit Union',
-        dueDate: '2025-05-25T00:00:00Z',
+        dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
         status: 'in_progress',
-      },
-      {
-        id: 103,
-        propertyId: 203,
-        address: '789 Pine Street, Austin, TX 78701',
-        clientName: 'XYZ Bank',
-        dueDate: '2025-05-28T00:00:00Z',
-        status: 'scheduled',
-      },
-    ],
-    performanceSummary: {
-      completedThisMonth: 37,
-      changeFromLastMonth: 4,
-      averageValue: 450000,
-      valueChangePercent: 2.5,
-    },
+      }
+    ]
   };
-  
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-  
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
-  
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
-    if (diffInHours < 24) {
-      if (diffInHours < 1) {
-        const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-        return `${diffInMinutes} minute${diffInMinutes !== 1 ? 's' : ''} ago`;
-      }
-      return `${diffInHours} hour${diffInHours !== 1 ? 's' : ''} ago`;
-    }
-    
-    if (diffInHours < 48) {
-      return 'Yesterday';
-    }
-    
-    return formatDate(dateString);
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('en-US', { 
+      style: 'currency', 
+      currency: 'USD',
+      maximumFractionDigits: 0
+    }).format(value);
   };
-  
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case 'property_added':
-        return <Home className="h-4 w-4" />;
-      case 'appraisal_submitted':
-        return <FileSpreadsheet className="h-4 w-4" />;
-      case 'appraisal_completed':
-        return <CheckCircle className="h-4 w-4" />;
-      case 'market_update':
-        return <BarChart4 className="h-4 w-4" />;
-      default:
-        return <Clock className="h-4 w-4" />;
-    }
-  };
-  
-  const data = dashboardData || mockData;
-  
+
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-        <div className="flex gap-2">
-          <Link
-            to="/properties/new"
-            className="inline-flex items-center gap-2 px-4 py-2 border rounded-md hover:bg-accent transition-colors"
-          >
-            <Plus className="h-4 w-4" />
-            Add Property
-          </Link>
-          <Link
-            to="/appraisals/new"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
-          >
-            <FileSpreadsheet className="h-4 w-4" />
-            New Appraisal
-          </Link>
-        </div>
+    <div className="py-6">
+      <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+      
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <StatCard 
+          title="Active Appraisals" 
+          value={dashboardData.activeAppraisals} 
+          icon={<Clock size={24} />} 
+        />
+        <StatCard 
+          title="Completed Appraisals" 
+          value={dashboardData.completedAppraisals} 
+          icon={<CheckCircle size={24} />}
+          change={{ 
+            value: dashboardData.performanceSummary.changeFromLastMonth, 
+            positive: dashboardData.performanceSummary.changeFromLastMonth > 0 
+          }}
+        />
+        <StatCard 
+          title="Properties" 
+          value={dashboardData.totalProperties} 
+          icon={<Home size={24} />} 
+        />
+        <StatCard 
+          title="Average Value" 
+          value={formatCurrency(dashboardData.performanceSummary.averageValue)} 
+          icon={<TrendingUp size={24} />}
+          change={{ 
+            value: dashboardData.performanceSummary.valueChangePercent, 
+            positive: dashboardData.performanceSummary.valueChangePercent > 0 
+          }}
+        />
       </div>
       
-      {/* Key metrics */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <div className="rounded-lg border bg-card p-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Active Appraisals</p>
-              <p className="text-3xl font-bold">{data.activeAppraisals}</p>
-            </div>
-            <div className="bg-primary/10 p-2 rounded-full">
-              <Clock className="h-6 w-6 text-primary" />
-            </div>
-          </div>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {data.activeAppraisals} active appraisals in progress
-          </p>
-        </div>
-        
-        <div className="rounded-lg border bg-card p-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Completed This Month</p>
-              <p className="text-3xl font-bold">{data.performanceSummary.completedThisMonth}</p>
-            </div>
-            <div className="bg-green-100 p-2 rounded-full">
-              <CheckCircle className="h-6 w-6 text-green-600" />
-            </div>
-          </div>
-          <p className="mt-2 text-sm text-muted-foreground">
-            <span className={data.performanceSummary.changeFromLastMonth >= 0 ? 'text-green-600' : 'text-red-600'}>
-              {data.performanceSummary.changeFromLastMonth > 0 ? '+' : ''}
-              {data.performanceSummary.changeFromLastMonth}
-            </span>{' '}
-            from last month
-          </p>
-        </div>
-        
-        <div className="rounded-lg border bg-card p-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Average Completion Time</p>
-              <p className="text-3xl font-bold">{data.avgCompletionTime} Days</p>
-            </div>
-            <div className="bg-blue-100 p-2 rounded-full">
-              <Calendar className="h-6 w-6 text-blue-600" />
-            </div>
-          </div>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Average from last 30 days
-          </p>
-        </div>
-        
-        <div className="rounded-lg border bg-card p-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Average Appraised Value</p>
-              <p className="text-3xl font-bold">{formatCurrency(data.performanceSummary.averageValue)}</p>
-            </div>
-            <div className="bg-yellow-100 p-2 rounded-full">
-              <DollarSign className="h-6 w-6 text-yellow-600" />
-            </div>
-          </div>
-          <p className="mt-2 text-sm text-muted-foreground">
-            <span className={data.performanceSummary.valueChangePercent >= 0 ? 'text-green-600' : 'text-red-600'}>
-              {data.performanceSummary.valueChangePercent > 0 ? '+' : ''}
-              {data.performanceSummary.valueChangePercent}%
-            </span>{' '}
-            from last month
-          </p>
-        </div>
-      </div>
-      
-      {/* Main content */}
-      <div className="grid gap-6 md:grid-cols-7">
-        {/* Recent activities */}
-        <div className="md:col-span-4 lg:col-span-5 rounded-lg border bg-card overflow-hidden">
-          <div className="p-6 border-b">
-            <h2 className="text-lg font-semibold">Recent Activity</h2>
-          </div>
-          <div className="divide-y">
-            {data.recentActivity.map((activity) => (
-              <div key={activity.id} className="flex items-start gap-4 p-6">
-                <div className={`mt-1 p-2 rounded-full ${
-                  activity.type === 'appraisal_completed' ? 'bg-green-100' :
-                  activity.type === 'property_added' ? 'bg-blue-100' :
-                  activity.type === 'appraisal_submitted' ? 'bg-yellow-100' :
-                  'bg-primary/10'
-                }`}>
-                  {getActivityIcon(activity.type)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm">{activity.title}</p>
-                  <p className="text-muted-foreground text-sm truncate">{activity.description}</p>
-                </div>
-                <div className="text-muted-foreground text-xs">
-                  {formatTime(activity.timestamp)}
-                </div>
-              </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-100 p-5">
+          <h2 className="font-semibold text-lg mb-4">Recent Activity</h2>
+          <div className="space-y-1">
+            {dashboardData.recentActivity.map(activity => (
+              <ActivityItem key={activity.id} item={activity} />
             ))}
           </div>
-          <div className="p-4 border-t text-center">
-            <Link to="/activity" className="text-sm text-primary hover:underline">
-              View all activity
-            </Link>
-          </div>
         </div>
         
-        {/* Upcoming appraisals */}
-        <div className="md:col-span-3 lg:col-span-2 rounded-lg border bg-card overflow-hidden">
-          <div className="p-6 border-b flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Upcoming Appraisals</h2>
-            <Link to="/appraisals" className="text-sm text-primary hover:underline">View all</Link>
-          </div>
-          <div className="divide-y">
-            {data.upcomingAppraisals.map((appraisal) => (
-              <Link 
-                key={appraisal.id} 
-                to={`/appraisals/${appraisal.id}`}
-                className="block p-4 hover:bg-accent/50 transition-colors"
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium truncate">{appraisal.address.split(',')[0]}</span>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    appraisal.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
+          <h2 className="font-semibold text-lg mb-4">Upcoming Appraisals</h2>
+          <div className="space-y-4">
+            {dashboardData.upcomingAppraisals.map(appraisal => (
+              <div key={appraisal.id} className="p-3 border border-gray-100 rounded-md">
+                <h4 className="font-medium text-sm">{appraisal.address}</h4>
+                <div className="flex justify-between mt-2 text-xs text-gray-500">
+                  <span>{appraisal.clientName}</span>
+                  <span className="font-medium">Due: {formatDate(appraisal.dueDate)}</span>
+                </div>
+                <div className="mt-3">
+                  <span className={`text-xs px-2 py-1 rounded-full ${
+                    appraisal.status === 'scheduled' 
+                      ? 'bg-blue-100 text-blue-700' 
+                      : 'bg-green-100 text-green-700'
                   }`}>
-                    {appraisal.status === 'in_progress' ? 'In Progress' : 'Scheduled'}
+                    {appraisal.status === 'scheduled' ? 'Scheduled' : 'In Progress'}
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">{appraisal.clientName}</span>
-                  <span className="font-medium">Due {formatDate(appraisal.dueDate)}</span>
-                </div>
-              </Link>
+              </div>
             ))}
-          </div>
-          <div className="p-4 border-t">
-            <Link 
-              to="/appraisals/new"
-              className="flex items-center justify-center w-full gap-1 p-2 bg-primary/10 text-primary rounded-md hover:bg-primary/20 transition-colors text-sm"
-            >
-              <Plus className="h-4 w-4" />
-              Schedule New Appraisal
-            </Link>
-          </div>
-        </div>
-      </div>
-      
-      {/* Market data / quick actions */}
-      <div className="grid gap-6 md:grid-cols-3">
-        <div className="md:col-span-2 rounded-lg border bg-card overflow-hidden">
-          <div className="p-6 border-b flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Market Snapshot</h2>
-            <Link to="/market-data" className="text-sm text-primary hover:underline inline-flex items-center gap-1">
-              View detailed analysis
-              <ArrowUpRight className="h-3 w-3" />
-            </Link>
-          </div>
-          <div className="p-6">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Austin Metropolitan Area</span>
-                <span className="text-sm text-green-600">+5.2% YoY</span>
-              </div>
-              
-              <div className="w-full bg-muted/30 rounded-full h-3">
-                <div className="bg-primary h-3 rounded-full" style={{ width: '75%' }}></div>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div>
-                  <div className="text-muted-foreground text-xs mb-1">Median Price</div>
-                  <div className="font-medium">{formatCurrency(550000)}</div>
-                </div>
-                <div>
-                  <div className="text-muted-foreground text-xs mb-1">Days on Market</div>
-                  <div className="font-medium">28</div>
-                </div>
-                <div>
-                  <div className="text-muted-foreground text-xs mb-1">Price per Sq.Ft.</div>
-                  <div className="font-medium">$345</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="rounded-lg border bg-card overflow-hidden">
-          <div className="p-6 border-b">
-            <h2 className="text-lg font-semibold">Quick Actions</h2>
-          </div>
-          <div className="p-6 space-y-3">
-            <Link 
-              to="/properties/new"
-              className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors"
-            >
-              <div className="p-2 bg-primary/10 rounded-full">
-                <Home className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <div className="font-medium">Add Property</div>
-                <div className="text-xs text-muted-foreground">Create a new property record</div>
-              </div>
-            </Link>
-            
-            <Link 
-              to="/appraisals/new"
-              className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors"
-            >
-              <div className="p-2 bg-primary/10 rounded-full">
-                <FileSpreadsheet className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <div className="font-medium">New Appraisal</div>
-                <div className="text-xs text-muted-foreground">Start a new appraisal report</div>
-              </div>
-            </Link>
-            
-            <Link 
-              to="/market-data"
-              className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors"
-            >
-              <div className="p-2 bg-primary/10 rounded-full">
-                <BarChart4 className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <div className="font-medium">Market Analysis</div>
-                <div className="text-xs text-muted-foreground">View latest market trends</div>
-              </div>
-            </Link>
           </div>
         </div>
       </div>
     </div>
   );
-};
+}
 
 export default Dashboard;
