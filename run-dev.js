@@ -1,40 +1,54 @@
 const { spawn } = require('child_process');
-const path = require('path');
 
-// Helper function to spawn a process and pipe output
 function spawnProcess(command, args, options, name) {
   const proc = spawn(command, args, options);
   
+  console.log(`${name} process started`);
+  
   proc.stdout.on('data', (data) => {
-    console.log(`[${name}] ${data.toString().trim()}`);
+    console.log(`[${name}] ${data}`);
   });
   
   proc.stderr.on('data', (data) => {
-    console.error(`[${name}] ${data.toString().trim()}`);
+    console.error(`[${name}] ${data}`);
   });
   
   proc.on('close', (code) => {
-    console.log(`[${name}] Process exited with code ${code}`);
+    console.log(`${name} process exited with code ${code}`);
+    if (name === 'SERVER' && code !== 0) {
+      console.log('Server crashed, restarting...');
+      startServer();
+    }
   });
   
   return proc;
 }
 
-// Start client dev server (Vite)
-console.log('Starting client development server...');
-const clientProc = spawnProcess('npx', ['vite'], { cwd: path.join(__dirname, 'client') }, 'CLIENT');
+function startServer() {
+  return spawnProcess(
+    'node',
+    ['server/server.js'],
+    { stdio: 'pipe', shell: process.platform === 'win32' },
+    'SERVER'
+  );
+}
 
-// Start server with nodemon for auto-reloading
-console.log('Starting server...');
-const serverProc = spawnProcess('node', ['index.js'], { cwd: path.join(__dirname, 'server') }, 'SERVER');
+// Start both server and client
+const serverProc = startServer();
+const clientProc = spawnProcess(
+  process.platform === 'win32' ? 'npx.cmd' : 'npx',
+  ['vite', '--config', 'client/vite.config.ts', 'client'],
+  { stdio: 'pipe', shell: process.platform === 'win32', cwd: process.cwd() },
+  'CLIENT'
+);
 
-// Handle process termination
-process.on('SIGINT', () => {
-  console.log('Shutting down development servers...');
-  clientProc.kill();
-  serverProc.kill();
+// Handle graceful shutdown
+const shutdown = () => {
+  console.log('Shutting down all processes...');
+  if (serverProc && !serverProc.killed) serverProc.kill();
+  if (clientProc && !clientProc.killed) clientProc.kill();
   process.exit(0);
-});
+};
 
-console.log('\nTerraFusionProfessional development environment running');
-console.log('Press Ctrl+C to stop all processes\n');
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
