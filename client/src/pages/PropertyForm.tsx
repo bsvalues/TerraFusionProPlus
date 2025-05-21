@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { 
   Building2, 
@@ -33,7 +33,7 @@ const PropertyForm = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [formSubmitted, setFormSubmitted] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState<PropertyFormData>({
@@ -52,7 +52,7 @@ const PropertyForm = () => {
   });
 
   // Load property data if editing
-  useState(() => {
+  useEffect(() => {
     if (isEditing) {
       const fetchPropertyData = async () => {
         setIsLoading(true);
@@ -182,7 +182,7 @@ const PropertyForm = () => {
       }
 
       const data = await response.json();
-      setFormSubmitted(true);
+      setSubmitted(true);
       
       // Navigate back to properties list or property detail
       if (isEditing) {
@@ -372,7 +372,7 @@ const PropertyForm = () => {
                       type="number"
                       id="bedrooms"
                       name="bedrooms"
-                      value={formData.bedrooms}
+                      value={formData.bedrooms === null ? '' : formData.bedrooms}
                       onChange={handleInputChange}
                       className="block w-full border-gray-300 rounded-md"
                       min="0"
@@ -389,7 +389,7 @@ const PropertyForm = () => {
                   type="number"
                   id="bathrooms"
                   name="bathrooms"
-                  value={formData.bathrooms}
+                  value={formData.bathrooms === null ? '' : formData.bathrooms}
                   onChange={handleInputChange}
                   className="block w-full border-gray-300 rounded-md"
                   min="0"
@@ -405,7 +405,7 @@ const PropertyForm = () => {
                   type="number"
                   id="yearBuilt"
                   name="yearBuilt"
-                  value={formData.yearBuilt}
+                  value={formData.yearBuilt === null ? '' : formData.yearBuilt}
                   onChange={handleInputChange}
                   className="block w-full border-gray-300 rounded-md"
                   min="1800"
