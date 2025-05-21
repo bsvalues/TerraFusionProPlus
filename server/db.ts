@@ -1,40 +1,29 @@
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
+import { drizzle } from 'drizzle-orm/neon-serverless';
+import { neon, neonConfig } from '@neondatabase/serverless';
 import * as schema from '../shared/schema';
-import dotenv from 'dotenv';
 
-// Load environment variables
-dotenv.config();
+// Use environment variable for database connection
+const DATABASE_URL = process.env.DATABASE_URL || '';
 
-// Get the database URL from the environment variable
-const connectionString = process.env.DATABASE_URL || '';
+// Configure Neon to work in serverless environment
+neonConfig.fetchConnectionCache = true;
 
-// Create a PostgreSQL connection
-const client = postgres(connectionString, {
-  max: 10,
-  idle_timeout: 20,
-  connect_timeout: 10
-});
+// Create a Neon client
+const sql = neon(DATABASE_URL);
 
-// Create a drizzle database instance with our schema
-export const db = drizzle(client, { schema });
+// Create a Drizzle ORM instance with the schema
+export const db = drizzle(sql, { schema });
 
-// Initialize the database
+// Initialize database by establishing a connection
 export async function initDatabase() {
   try {
-    // Test connection
-    console.log('Testing database connection...');
-    await db.select().from(schema.properties).limit(1);
-    console.log('Database connection successful!');
-    
-    // If you want to check if tables exist and are properly set up
-    console.log('Checking database tables...');
-    const propertyCount = await db.select().from(schema.properties);
-    console.log(`Found ${propertyCount.length} properties in the database.`);
-    
+    // Test the connection
+    const result = await sql`SELECT NOW()`;
+    console.log('Database connection successful');
+    console.log('Database connected successfully at:', new Date().toISOString());
     return true;
   } catch (error) {
-    console.error('Database initialization failed:', error);
-    throw error;
+    console.error('Database connection failed:', error);
+    return false;
   }
 }

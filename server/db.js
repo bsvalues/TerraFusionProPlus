@@ -1,33 +1,34 @@
-const { drizzle } = require('drizzle-orm/node-postgres');
-const { Pool } = require('pg');
+const { drizzle } = require('drizzle-orm/neon-serverless');
+const { neon, neonConfig } = require('@neondatabase/serverless');
 const schema = require('../shared/schema');
 
-// Set up PostgreSQL connection
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+// Use environment variable for database connection
+const DATABASE_URL = process.env.DATABASE_URL || '';
 
-// Create Drizzle instance with schema
-const db = drizzle(pool, { schema });
+// Configure Neon to work in serverless environment
+neonConfig.fetchConnectionCache = true;
 
+// Create a Neon client
+const sql = neon(DATABASE_URL);
+
+// Create a Drizzle ORM instance with the schema
+const db = drizzle(sql, { schema });
+
+// Initialize database by establishing a connection
 async function initDatabase() {
   try {
-    console.log('Initializing database connection...');
-    
-    // Test database connection
-    const client = await pool.connect();
+    // Test the connection
+    const result = await sql`SELECT NOW()`;
     console.log('Database connection successful');
-    client.release();
-    
+    console.log('Database connected successfully at:', new Date().toISOString());
     return true;
   } catch (error) {
-    console.error('Database initialization error:', error);
-    throw error;
+    console.error('Database connection failed:', error);
+    return false;
   }
 }
 
 module.exports = {
   db,
-  pool,
   initDatabase
 };
