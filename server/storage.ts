@@ -102,14 +102,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getProperties(filters?: Partial<Property>): Promise<Property[]> {
+    // Base query with no filters
     if (!filters) {
       return await db.select().from(properties).orderBy(desc(properties.createdAt));
     }
     
-    let query = db.select().from(properties);
+    // Build conditions for filtering
+    const conditions: any[] = [];
     
-    // Build conditions array
-    const conditions = [];
     if (filters.propertyType) {
       conditions.push(eq(properties.propertyType, filters.propertyType));
     }
@@ -123,15 +123,20 @@ export class DatabaseStorage implements IStorage {
       conditions.push(eq(properties.zipCode, filters.zipCode));
     }
     
-    // Apply conditions
-    if (conditions.length === 1) {
-      query = query.where(conditions[0]);
-    } else if (conditions.length > 1) {
-      query = query.where(and(...conditions));
+    // Execute query with appropriate conditions
+    if (conditions.length === 0) {
+      return await db.select().from(properties).orderBy(desc(properties.createdAt));
+    } else if (conditions.length === 1) {
+      return await db.select()
+        .from(properties)
+        .where(conditions[0])
+        .orderBy(desc(properties.createdAt));
+    } else {
+      return await db.select()
+        .from(properties)
+        .where(and(...conditions))
+        .orderBy(desc(properties.createdAt));
     }
-    
-    const result = await query.orderBy(desc(properties.createdAt));
-    return result;
   }
 
   async createProperty(insertProperty: InsertProperty): Promise<Property> {
