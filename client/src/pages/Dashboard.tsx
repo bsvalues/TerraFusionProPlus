@@ -1,235 +1,304 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  PieChart, 
-  Clock, 
-  LineChart, 
+  Home, 
+  FileText, 
+  TrendingUp, 
   AlertTriangle, 
-  ArrowUpRight, 
+  Clock, 
   Building2, 
-  FileText,
-  Calendar 
+  Users, 
+  Calendar, 
+  BarChart4,
+  CheckCircle
 } from 'lucide-react';
 
 const Dashboard = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [dashboardData, setDashboardData] = useState({
-    recentProperties: [],
-    upcomingAppraisals: [],
-    propertyTypes: { 
-      'Single Family': 12,
-      'Multi-Family': 5,
-      'Commercial': 8,
-      'Land': 3
+  const [dashboardData, setDashboardData] = useState({});
+
+  // Sample data for the dashboard
+  const stats = {
+    totalAppraisals: 124,
+    pendingAppraisals: 18,
+    completedThisMonth: 21,
+    overdue: 3,
+    avgCompletionTime: '4.2 days',
+    propertiesManaged: 236,
+    activeClients: 42,
+    revenue: {
+      current: 36500,
+      previous: 29800
+    }
+  };
+
+  // Recent appraisals data
+  const recentAppraisals = [
+    {
+      id: 1,
+      address: '123 Main St, Austin, TX 78701',
+      client: 'Cornerstone Bank',
+      dueDate: '2025-05-25',
+      status: 'In Progress',
+      type: 'Residential',
+      appraiser: 'Michael Rodriguez'
     },
-    marketTrends: [
-      { month: 'Jan', residential: 350, commercial: 420 },
-      { month: 'Feb', residential: 355, commercial: 415 },
-      { month: 'Mar', residential: 370, commercial: 425 },
-      { month: 'Apr', residential: 375, commercial: 430 },
-      { month: 'May', residential: 385, commercial: 435 },
-      { month: 'Jun', residential: 390, commercial: 440 },
-    ]
-  });
+    {
+      id: 2,
+      address: '456 Market Ave, Dallas, TX 75201',
+      client: 'Evergreen Mortgage',
+      dueDate: '2025-05-23',
+      status: 'Scheduled',
+      type: 'Commercial',
+      appraiser: 'Sarah Johnson'
+    },
+    {
+      id: 3,
+      address: '789 Oak Blvd, Houston, TX 77002',
+      client: 'First Capital',
+      dueDate: '2025-05-20',
+      status: 'Completed',
+      type: 'Multi-Family',
+      appraiser: 'David Thompson'
+    },
+    {
+      id: 4,
+      address: '101 Pine Lane, San Antonio, TX 78205',
+      client: 'Summit Financial',
+      dueDate: '2025-05-18',
+      status: 'Completed',
+      type: 'Residential',
+      appraiser: 'Jennifer Lee'
+    }
+  ];
 
-  useEffect(() => {
-    // Simulate loading
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
+  // Team activity data
+  const teamActivity = [
+    {
+      id: 1,
+      user: 'Sarah Johnson',
+      action: 'Completed appraisal',
+      property: '456 Market Ave, Dallas, TX',
+      timestamp: '2 hours ago'
+    },
+    {
+      id: 2,
+      user: 'Michael Rodriguez',
+      action: 'Started new appraisal',
+      property: '123 Main St, Austin, TX',
+      timestamp: '3 hours ago'
+    },
+    {
+      id: 3,
+      user: 'David Thompson',
+      action: 'Added comparable property',
+      property: '789 Oak Blvd, Houston, TX',
+      timestamp: '5 hours ago'
+    },
+    {
+      id: 4,
+      user: 'Jennifer Lee',
+      action: 'Updated market data',
+      property: '101 Pine Lane, San Antonio, TX',
+      timestamp: 'Yesterday'
+    }
+  ];
 
-    // Cleanup
-    return () => clearTimeout(timer);
-  }, []);
+  // Status badge style helper
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case 'Completed':
+        return 'bg-green-100 text-green-800';
+      case 'In Progress':
+        return 'bg-blue-100 text-blue-800';
+      case 'Scheduled':
+        return 'bg-purple-100 text-purple-800';
+      case 'Overdue':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
 
-  if (isLoading) {
-    return <div className="flex justify-center items-center h-full">
-      <div className="loading-spinner" />
-    </div>;
-  }
+  // Calculate revenue growth percentage
+  const revenueGrowth = ((stats.revenue.current - stats.revenue.previous) / stats.revenue.previous) * 100;
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Dashboard</h1>
-      
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="card flex items-center">
-          <div className="p-3 rounded-full bg-blue-100 text-blue-600 mr-4">
-            <Building2 size={24} />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Properties</p>
-            <p className="text-2xl font-bold">28</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2">
+        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <div className="flex items-center space-x-2 text-sm text-gray-500">
+          <Calendar className="w-4 h-4" />
+          <span>{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+        </div>
+      </div>
+
+      {/* Key Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="stat-card">
+          <div className="flex items-center">
+            <div className="icon-circle bg-primary-50 text-primary-600">
+              <FileText className="w-6 h-6" />
+            </div>
+            <div className="ml-4">
+              <h3 className="stat-title">Total Appraisals</h3>
+              <div className="stat-value">{stats.totalAppraisals}</div>
+              <div className="flex items-center text-xs text-gray-500 mt-1">
+                <span className="text-green-600 font-medium flex items-center">
+                  <TrendingUp className="w-3 h-3 mr-1" />
+                  12% 
+                </span>
+                <span className="ml-1">vs. last month</span>
+              </div>
+            </div>
           </div>
         </div>
-        
-        <div className="card flex items-center">
-          <div className="p-3 rounded-full bg-purple-100 text-purple-600 mr-4">
-            <FileText size={24} />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Active Appraisals</p>
-            <p className="text-2xl font-bold">14</p>
-          </div>
-        </div>
-        
-        <div className="card flex items-center">
-          <div className="p-3 rounded-full bg-green-100 text-green-600 mr-4">
-            <LineChart size={24} />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Market Growth</p>
-            <p className="text-2xl font-bold">+3.2%</p>
+
+        <div className="stat-card">
+          <div className="flex items-center">
+            <div className="icon-circle bg-amber-50 text-amber-600">
+              <Clock className="w-6 h-6" />
+            </div>
+            <div className="ml-4">
+              <h3 className="stat-title">Pending Appraisals</h3>
+              <div className="stat-value">{stats.pendingAppraisals}</div>
+              <div className="flex items-center text-xs text-gray-500 mt-1">
+                <span>{stats.completedThisMonth} completed this month</span>
+              </div>
+            </div>
           </div>
         </div>
-        
-        <div className="card flex items-center">
-          <div className="p-3 rounded-full bg-yellow-100 text-yellow-600 mr-4">
-            <Clock size={24} />
+
+        <div className="stat-card">
+          <div className="flex items-center">
+            <div className="icon-circle bg-red-50 text-red-600">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            <div className="ml-4">
+              <h3 className="stat-title">Overdue</h3>
+              <div className="stat-value">{stats.overdue}</div>
+              <div className="flex items-center text-xs text-gray-500 mt-1">
+                <span>Avg. completion time: {stats.avgCompletionTime}</span>
+              </div>
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Pending Reviews</p>
-            <p className="text-2xl font-bold">7</p>
+        </div>
+
+        <div className="stat-card">
+          <div className="flex items-center">
+            <div className="icon-circle bg-green-50 text-green-600">
+              <BarChart4 className="w-6 h-6" />
+            </div>
+            <div className="ml-4">
+              <h3 className="stat-title">Monthly Revenue</h3>
+              <div className="stat-value">${stats.revenue.current.toLocaleString()}</div>
+              <div className="flex items-center text-xs text-gray-500 mt-1">
+                <span className="text-green-600 font-medium flex items-center">
+                  <TrendingUp className="w-3 h-3 mr-1" />
+                  {revenueGrowth.toFixed(1)}% 
+                </span>
+                <span className="ml-1">vs. last month</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-      
-      {/* Main Content */}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Properties */}
-        <div className="card lg:col-span-2">
+        {/* Recent Appraisals */}
+        <div className="lg:col-span-2 card">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-bold">Recent Properties</h2>
-            <Link to="/properties" className="text-primary-600 hover:text-primary-800 text-sm flex items-center">
-              View All <ArrowUpRight className="ml-1 w-4 h-4" />
+            <h2 className="text-lg font-bold">Recent Appraisals</h2>
+            <Link to="/appraisals" className="text-primary-600 hover:text-primary-800 text-sm">
+              View All
             </Link>
           </div>
+          
           <div className="overflow-x-auto">
-            <table className="min-w-full">
+            <table className="w-full">
               <thead>
-                <tr className="bg-gray-50">
-                  <th>Address</th>
-                  <th>Type</th>
-                  <th>Added</th>
-                  <th>Status</th>
+                <tr className="text-left text-xs uppercase text-gray-500 border-b">
+                  <th className="pb-2">Property</th>
+                  <th className="pb-2">Client</th>
+                  <th className="pb-2">Due Date</th>
+                  <th className="pb-2">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
-                <tr>
-                  <td className="py-3">
-                    <Link to="/properties/1" className="text-primary-600 hover:text-primary-800">
-                      123 Main St, Austin, TX
-                    </Link>
-                  </td>
-                  <td>Single Family</td>
-                  <td>May 18, 2025</td>
-                  <td><span className="status-badge status-badge-success">Active</span></td>
-                </tr>
-                <tr>
-                  <td className="py-3">
-                    <Link to="/properties/2" className="text-primary-600 hover:text-primary-800">
-                      456 Oak Ave, Dallas, TX
-                    </Link>
-                  </td>
-                  <td>Condominium</td>
-                  <td>May 15, 2025</td>
-                  <td><span className="status-badge status-badge-success">Active</span></td>
-                </tr>
-                <tr>
-                  <td className="py-3">
-                    <Link to="/properties/3" className="text-primary-600 hover:text-primary-800">
-                      789 Pine Blvd, Houston, TX
-                    </Link>
-                  </td>
-                  <td>Multi-Family</td>
-                  <td>May 10, 2025</td>
-                  <td><span className="status-badge status-badge-in-progress">In Progress</span></td>
-                </tr>
+              <tbody className="divide-y divide-gray-100">
+                {recentAppraisals.map(appraisal => (
+                  <tr key={appraisal.id} className="text-sm">
+                    <td className="py-3">
+                      <div>
+                        <div className="font-medium">{appraisal.address.split(',')[0]}</div>
+                        <div className="text-xs text-gray-500">{appraisal.type}</div>
+                      </div>
+                    </td>
+                    <td className="py-3">{appraisal.client}</td>
+                    <td className="py-3">
+                      {new Date(appraisal.dueDate).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                    </td>
+                    <td className="py-3">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getStatusBadgeClass(appraisal.status)}`}>
+                        {appraisal.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
         </div>
-        
-        {/* Upcoming Appraisals */}
-        <div className="card">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-bold">Upcoming Appraisals</h2>
-            <Link to="/appraisals" className="text-primary-600 hover:text-primary-800 text-sm flex items-center">
-              View All <ArrowUpRight className="ml-1 w-4 h-4" />
-            </Link>
-          </div>
-          <div className="space-y-4">
-            <div className="flex items-start p-3 bg-gray-50 rounded-lg">
-              <Calendar className="w-5 h-5 text-gray-500 mt-0.5 mr-3" />
-              <div>
-                <p className="font-medium">May 24, 2025</p>
-                <p className="text-sm text-gray-600">123 Main St, Austin</p>
-                <p className="text-xs text-gray-500">Client: First National Bank</p>
+
+        {/* Secondary Stats and Team Activity */}
+        <div className="space-y-6">
+          {/* Additional Stats */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="stat-card-sm">
+              <div className="flex items-center">
+                <Building2 className="w-5 h-5 text-primary-500 mr-3" />
+                <div>
+                  <h3 className="text-xs font-medium text-gray-500">Properties</h3>
+                  <div className="text-xl font-semibold">{stats.propertiesManaged}</div>
+                </div>
               </div>
             </div>
             
-            <div className="flex items-start p-3 bg-gray-50 rounded-lg">
-              <Calendar className="w-5 h-5 text-gray-500 mt-0.5 mr-3" />
-              <div>
-                <p className="font-medium">May 27, 2025</p>
-                <p className="text-sm text-gray-600">456 Oak Ave, Dallas</p>
-                <p className="text-xs text-gray-500">Client: Heritage Trust</p>
-              </div>
-            </div>
-            
-            <div className="flex items-start p-3 bg-yellow-50 rounded-lg">
-              <AlertTriangle className="w-5 h-5 text-yellow-500 mt-0.5 mr-3" />
-              <div>
-                <p className="font-medium">May 30, 2025</p>
-                <p className="text-sm text-gray-600">789 Pine Blvd, Houston</p>
-                <p className="text-xs text-yellow-600">Urgent: Due in 9 days</p>
+            <div className="stat-card-sm">
+              <div className="flex items-center">
+                <Users className="w-5 h-5 text-primary-500 mr-3" />
+                <div>
+                  <h3 className="text-xs font-medium text-gray-500">Active Clients</h3>
+                  <div className="text-xl font-semibold">{stats.activeClients}</div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-      
-      {/* Bottom Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Property Types */}
-        <div className="card">
-          <h2 className="text-lg font-bold mb-4">Property Types</h2>
-          <div className="flex items-center justify-center">
-            <div className="w-48 h-48 relative">
-              <PieChart size={48} className="absolute inset-0 m-auto text-gray-300" />
-              <div className="mt-16 text-center">
-                <p className="text-lg font-bold">28</p>
-                <p className="text-sm text-gray-500">Total Properties</p>
-              </div>
+          
+          {/* Team Activity */}
+          <div className="card">
+            <h2 className="text-lg font-bold mb-4">Team Activity</h2>
+            <div className="space-y-4">
+              {teamActivity.map(activity => (
+                <div key={activity.id} className="flex items-start">
+                  <div className="p-2 rounded-full bg-gray-100 text-gray-700 mr-3">
+                    {activity.action.includes('Completed') ? (
+                      <CheckCircle className="w-4 h-4" />
+                    ) : (
+                      <Clock className="w-4 h-4" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">
+                      <span className="text-primary-600">{activity.user}</span> {activity.action}
+                    </p>
+                    <p className="text-xs text-gray-500">{activity.property}</p>
+                    <p className="text-xs text-gray-400 mt-1">{activity.timestamp}</p>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="space-y-2">
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-                <p className="text-sm">Single Family (43%)</p>
-              </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                <p className="text-sm">Multi-Family (18%)</p>
-              </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-purple-500 rounded-full mr-2"></div>
-                <p className="text-sm">Commercial (29%)</p>
-              </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
-                <p className="text-sm">Land (10%)</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Market Trends */}
-        <div className="card">
-          <h2 className="text-lg font-bold mb-4">Market Trends (2025)</h2>
-          <div className="h-64 flex items-center justify-center">
-            <LineChart size={48} className="text-gray-300" />
-            <p className="ml-4 text-gray-500">Interactive chart will be displayed here</p>
           </div>
         </div>
       </div>

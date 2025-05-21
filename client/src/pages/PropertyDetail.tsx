@@ -13,7 +13,7 @@ import {
   Bath,
   Bed,
   Clock,
-  SquareGantt
+  AreaChart
 } from 'lucide-react';
 
 interface Property {
@@ -172,7 +172,7 @@ const PropertyDetail = () => {
               {property.lotSize && property.lotSizeUnit && (
                 <div className="flex items-start">
                   <div className="p-2 rounded-full bg-emerald-100 text-emerald-600 mr-3">
-                    <SquareGantt className="w-5 h-5" />
+                    <AreaChart className="w-5 h-5" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-500">Lot Size</p>
@@ -271,7 +271,7 @@ const PropertyDetail = () => {
               </Link>
               <Link to={`/market-data?zipCode=${property.zipCode}`} className="block w-full py-2 px-3 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-md">
                 <div className="flex items-center">
-                  <SquareGantt className="w-5 h-5 mr-2" />
+                  <AreaChart className="w-5 h-5 mr-2" />
                   View Market Data
                 </div>
               </Link>
