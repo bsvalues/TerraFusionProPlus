@@ -78,15 +78,50 @@ app.get('/api/properties/:id', (req, res) => {
   res.json(property);
 });
 
-// Serve static assets in production
-if (process.env.NODE_ENV === 'production') {
-  // Set static folder
-  app.use(express.static('client/dist'));
+// Create a new property
+app.post('/api/properties', (req, res) => {
+  const newProperty = {
+    id: properties.length > 0 ? Math.max(...properties.map(p => p.id)) + 1 : 1,
+    ...req.body,
+    lastAppraisalValue: req.body.lastAppraisalValue || null,
+    lastAppraisalDate: req.body.lastAppraisalDate || null
+  };
   
-  app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, '../client', 'dist', 'index.html'));
-  });
-}
+  properties.push(newProperty);
+  res.status(201).json(newProperty);
+});
+
+// Update an existing property
+app.put('/api/properties/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const propertyIndex = properties.findIndex(p => p.id === id);
+  
+  if (propertyIndex === -1) {
+    return res.status(404).json({ message: 'Property not found' });
+  }
+  
+  const updatedProperty = {
+    ...properties[propertyIndex],
+    ...req.body
+  };
+  
+  properties[propertyIndex] = updatedProperty;
+  res.json(updatedProperty);
+});
+
+// Serve static assets - enabling this for all environments for development
+// Set static folder
+app.use(express.static(path.join(__dirname, '../client/dist')));
+
+// Serve the index.html for any other routes (client-side routing)
+app.get('*', (req, res) => {
+  // Exclude API routes from this catch-all handler
+  if (req.path.startsWith('/api')) {
+    return res.status(404).json({ message: 'API endpoint not found' });
+  }
+  
+  res.sendFile(path.resolve(__dirname, '../client/dist/index.html'));
+});
 
 // Start the server
 app.listen(PORT, '0.0.0.0', () => {
