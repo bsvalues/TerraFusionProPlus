@@ -1,136 +1,137 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, Bell, User, X, LogOut, Search } from 'lucide-react';
+import { Bell, User, Search, Menu } from 'lucide-react';
 
 interface NavbarProps {
-  toggleSidebar: () => void;
+  // Add any props here if needed
 }
 
-const Navbar = ({ toggleSidebar }: NavbarProps) => {
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
-  
+const Navbar: React.FC<NavbarProps> = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Handle search functionality
+    console.log('Searching for:', searchQuery);
+  };
+
   return (
-    <nav className="bg-white border-b border-gray-200 fixed z-30 w-full">
-      <div className="px-3 py-3 lg:px-5 lg:pl-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center justify-start">
-            <button 
-              id="toggleSidebarMobile" 
-              aria-expanded="true" 
-              aria-controls="sidebar" 
-              className="lg:hidden mr-2 text-gray-600 hover:text-gray-900 cursor-pointer p-2 hover:bg-gray-100 focus:bg-gray-100 focus:ring-2 focus:ring-gray-100 rounded"
-              onClick={toggleSidebar}
-            >
-              <Menu className="w-6 h-6" />
-            </button>
-            <Link to="/" className="flex items-center">
-              <span className="self-center text-xl font-semibold whitespace-nowrap text-primary-700">TerraFusionPro</span>
-            </Link>
-            <div className="hidden lg:flex ml-10">
-              <div className="flex items-center border border-gray-200 rounded-lg px-3 py-1.5 bg-gray-50">
-                <Search className="h-4 w-4 text-gray-400" />
-                <input 
-                  type="text" 
-                  placeholder="Search..." 
-                  className="bg-transparent ml-2 outline-none text-sm flex-grow"
-                />
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center">
+    <header className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-10 px-4 py-2">
+      <div className="flex items-center justify-between">
+        {/* Logo and Menu Toggle (Mobile) */}
+        <div className="flex items-center">
+          <button 
+            className="mr-4 p-1 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100 md:hidden"
+            aria-label="Toggle menu"
+          >
+            <Menu size={24} />
+          </button>
+          <Link to="/" className="flex items-center space-x-2">
+            <span className="text-xl font-bold text-primary-600">TerraFusionPro</span>
+          </Link>
+        </div>
+
+        {/* Search Bar */}
+        <div className="hidden md:flex flex-1 px-6 max-w-xl">
+          <form onSubmit={handleSearch} className="w-full">
             <div className="relative">
-              <button
-                className="p-2 text-gray-600 rounded-lg hover:text-gray-900 hover:bg-gray-100 focus:ring-2 focus:ring-gray-100"
-                onClick={() => setShowNotifications(!showNotifications)}
-              >
-                <span className="absolute top-0 right-0 inline-block w-2.5 h-2.5 bg-red-500 rounded-full"></span>
-                <Bell className="w-5 h-5" />
-              </button>
-              
-              {showNotifications && (
-                <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg py-2 z-50 border border-gray-200">
-                  <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200">
-                    <h3 className="font-semibold text-gray-900">Notifications</h3>
-                    <button 
-                      className="text-gray-500 hover:text-gray-900"
-                      onClick={() => setShowNotifications(false)}
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <div className="px-2 py-1 max-h-64 overflow-y-auto">
-                    <div className="px-2 py-2 hover:bg-gray-50 rounded-lg">
-                      <p className="text-sm text-gray-800 font-medium">New appraisal assignment</p>
-                      <p className="text-xs text-gray-500 mt-1">You have been assigned a new property at 123 Main St.</p>
-                      <p className="text-xs text-gray-400 mt-1">30 minutes ago</p>
-                    </div>
-                    <div className="px-2 py-2 hover:bg-gray-50 rounded-lg">
-                      <p className="text-sm text-gray-800 font-medium">Appraisal review requested</p>
-                      <p className="text-xs text-gray-500 mt-1">John Smith has requested a review for 456 Oak Ave.</p>
-                      <p className="text-xs text-gray-400 mt-1">2 hours ago</p>
-                    </div>
-                    <div className="px-2 py-2 hover:bg-gray-50 rounded-lg">
-                      <p className="text-sm text-gray-800 font-medium">Market data update</p>
-                      <p className="text-xs text-gray-500 mt-1">New market data is available for Houston area.</p>
-                      <p className="text-xs text-gray-400 mt-1">Yesterday</p>
-                    </div>
-                  </div>
-                  <div className="border-t border-gray-200 pt-2 pb-1 px-4">
-                    <Link to="/notifications" className="text-sm text-primary-600 hover:text-primary-700">
-                      View all notifications
-                    </Link>
-                  </div>
-                </div>
-              )}
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <Search className="w-5 h-5 text-gray-400" />
+              </div>
+              <input
+                type="search"
+                className="block w-full p-2 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
+                placeholder="Search properties, appraisals, reports..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
-            
-            <div className="relative ml-3">
-              <button
-                className="flex text-sm bg-gray-100 rounded-full focus:ring-2 focus:ring-primary-600"
-                onClick={() => setShowProfileMenu(!showProfileMenu)}
-              >
-                <span className="sr-only">Open user menu</span>
-                <div className="w-8 h-8 rounded-full flex items-center justify-center bg-primary-100 text-primary-700">
-                  <User className="w-4 h-4" />
-                </div>
-              </button>
-              
-              {showProfileMenu && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 border border-gray-200">
-                  <div className="px-4 py-2 border-b border-gray-200">
-                    <p className="text-sm font-medium text-gray-900">John Appraiser</p>
-                    <p className="text-xs text-gray-500 truncate">john@example.com</p>
+          </form>
+        </div>
+
+        {/* User Nav */}
+        <div className="flex items-center space-x-4">
+          {/* Notifications */}
+          <div className="relative">
+            <button
+              className="p-1 rounded-full text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+              onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+              aria-label="Notifications"
+            >
+              <Bell className="w-6 h-6" />
+              <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500"></span>
+            </button>
+            {isNotificationsOpen && (
+              <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-md shadow-lg py-1 z-20">
+                <div className="px-4 py-2 font-medium border-b border-gray-200">Notifications</div>
+                <div className="max-h-60 overflow-y-auto">
+                  <div className="px-4 py-3 hover:bg-gray-50 border-b border-gray-100">
+                    <p className="text-sm font-medium">New appraisal request</p>
+                    <p className="text-xs text-gray-500">123 Main St, Austin, TX</p>
+                    <p className="text-xs text-gray-500">30 minutes ago</p>
                   </div>
-                  <Link 
-                    to="/profile" 
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    onClick={() => setShowProfileMenu(false)}
-                  >
-                    Your Profile
-                  </Link>
-                  <Link 
-                    to="/settings" 
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    onClick={() => setShowProfileMenu(false)}
-                  >
-                    Settings
-                  </Link>
-                  <div className="border-t border-gray-200 mt-1"></div>
-                  <button 
-                    className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    onClick={() => setShowProfileMenu(false)}
-                  >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Sign out
-                  </button>
+                  <div className="px-4 py-3 hover:bg-gray-50 border-b border-gray-100">
+                    <p className="text-sm font-medium">Market data update</p>
+                    <p className="text-xs text-gray-500">Houston, TX area (77002)</p>
+                    <p className="text-xs text-gray-500">2 hours ago</p>
+                  </div>
+                  <div className="px-4 py-3 hover:bg-gray-50">
+                    <p className="text-sm font-medium">Report ready for review</p>
+                    <p className="text-xs text-gray-500">456 Oak Ave, Dallas, TX</p>
+                    <p className="text-xs text-gray-500">Yesterday</p>
+                  </div>
                 </div>
-              )}
-            </div>
+                <div className="px-4 py-2 text-center text-sm text-primary-600 hover:underline border-t border-gray-200">
+                  <a href="#">View all notifications</a>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Profile */}
+          <div className="relative">
+            <button
+              className="flex items-center text-gray-500 hover:text-gray-900"
+              onClick={() => setIsProfileOpen(!isProfileOpen)}
+              aria-label="User account"
+            >
+              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                <User className="w-5 h-5" />
+              </div>
+            </button>
+            {isProfileOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg py-1 z-20">
+                <div className="px-4 py-2 font-medium text-sm border-b border-gray-200">Michael Rodriguez</div>
+                <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Your Profile</Link>
+                <Link to="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</Link>
+                <div className="border-t border-gray-100"></div>
+                <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Sign out</button>
+              </div>
+            )}
           </div>
         </div>
       </div>
-    </nav>
+
+      {/* Mobile Search (visible on small screens) */}
+      <div className="mt-2 md:hidden">
+        <form onSubmit={handleSearch}>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+              <Search className="w-5 h-5 text-gray-400" />
+            </div>
+            <input
+              type="search"
+              className="block w-full p-2 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </form>
+      </div>
+    </header>
   );
 };
 

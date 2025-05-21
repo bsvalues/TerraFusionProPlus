@@ -1,7 +1,5 @@
-import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { QueryClientProvider } from '@tanstack/react-query';
-import { queryClient } from './lib/query-client';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Layout Components
 import Navbar from './components/Navbar';
@@ -11,36 +9,47 @@ import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Properties from './pages/Properties';
 import PropertyDetail from './pages/PropertyDetail';
+import Appraisals from './pages/Appraisals';
+import MarketData from './pages/MarketData';
+import Reports from './pages/Reports';
+import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
 
-const App = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <div className="min-h-screen bg-gray-50">
-          <Navbar toggleSidebar={toggleSidebar} />
-          <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
-
-          <div className="p-4 lg:ml-64 pt-20">
-            <div className="p-2 md:p-4">
+        <div className="flex h-screen bg-gray-50">
+          <Sidebar />
+          <div className="flex flex-col flex-1 w-full">
+            <Navbar />
+            <main className="flex-1 overflow-y-auto p-4">
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/properties" element={<Properties />} />
                 <Route path="/properties/:id" element={<PropertyDetail />} />
+                <Route path="/appraisals" element={<Appraisals />} />
+                <Route path="/market-data" element={<MarketData />} />
+                <Route path="/reports" element={<Reports />} />
+                <Route path="/settings" element={<Settings />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </div>
+            </main>
           </div>
         </div>
       </Router>
     </QueryClientProvider>
   );
-};
+}
 
 export default App;

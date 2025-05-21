@@ -1,8 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const { db, initDatabase } = require('./db');
-const { storage } = require('./storage');
+require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -10,147 +9,86 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../client/dist')));
+
+// Sample data for the API
+const properties = [
+  { 
+    id: 1, 
+    address: '123 Main St', 
+    city: 'Austin',
+    state: 'TX',
+    zipCode: '78701',
+    propertyType: 'Single Family',
+    squareFeet: 2350,
+    bedrooms: 4,
+    bathrooms: 2.5,
+    yearBuilt: 2008,
+    lotSize: 0.25,
+    lotSizeUnit: 'acres',
+    lastAppraisalValue: 425000,
+    lastAppraisalDate: '2024-12-10',
+    description: 'Beautiful single-family home in a quiet neighborhood with updated kitchen and bathrooms. Features a spacious backyard with mature trees and a covered patio.'
+  },
+  { 
+    id: 2, 
+    address: '456 Oak Ave', 
+    city: 'Dallas',
+    state: 'TX',
+    zipCode: '75201',
+    propertyType: 'Condominium',
+    squareFeet: 1850,
+    bedrooms: 3,
+    bathrooms: 2,
+    yearBuilt: 2015,
+    lastAppraisalValue: 512000,
+    lastAppraisalDate: '2024-11-22',
+    description: 'Modern condo in the heart of downtown with high-end finishes and appliances. Building amenities include a pool, fitness center, and 24-hour concierge.'
+  },
+  { 
+    id: 3, 
+    address: '789 Pine Blvd', 
+    city: 'Houston',
+    state: 'TX',
+    zipCode: '77002',
+    propertyType: 'Multi-Family',
+    squareFeet: 3200,
+    bedrooms: 5,
+    bathrooms: 3,
+    yearBuilt: 2002,
+    lotSize: 0.15,
+    lotSizeUnit: 'acres',
+    lastAppraisalValue: 680000,
+    lastAppraisalDate: '2024-12-05',
+    description: 'Investment opportunity with two separate units. Main house features 3BR/2BA and the attached unit has 2BR/1BA. Both units recently renovated with separate utilities.'
+  },
+];
 
 // API Routes
-// Properties
-app.get('/api/properties', async (req, res) => {
-  try {
-    const properties = await storage.getProperties();
-    res.json(properties);
-  } catch (error) {
-    console.error('Error fetching properties:', error);
-    res.status(500).json({ error: 'Failed to fetch properties' });
-  }
+app.get('/api/properties', (req, res) => {
+  res.json(properties);
 });
 
-app.get('/api/properties/:id', async (req, res) => {
-  try {
-    const property = await storage.getProperty(parseInt(req.params.id));
-    if (!property) {
-      return res.status(404).json({ error: 'Property not found' });
-    }
-    res.json(property);
-  } catch (error) {
-    console.error('Error fetching property:', error);
-    res.status(500).json({ error: 'Failed to fetch property' });
+app.get('/api/properties/:id', (req, res) => {
+  const property = properties.find(p => p.id === parseInt(req.params.id));
+  
+  if (!property) {
+    return res.status(404).json({ message: 'Property not found' });
   }
+  
+  res.json(property);
 });
 
-app.post('/api/properties', async (req, res) => {
-  try {
-    const newProperty = await storage.createProperty(req.body);
-    res.status(201).json(newProperty);
-  } catch (error) {
-    console.error('Error creating property:', error);
-    res.status(500).json({ error: 'Failed to create property' });
-  }
-});
-
-// Appraisals
-app.get('/api/appraisals', async (req, res) => {
-  try {
-    let appraisals;
-    if (req.query.propertyId) {
-      appraisals = await storage.getAppraisalsByProperty(parseInt(req.query.propertyId));
-    } else if (req.query.appraiserId) {
-      appraisals = await storage.getAppraisalsByAppraiser(parseInt(req.query.appraiserId));
-    } else {
-      // Get all appraisals
-      appraisals = await db.select().from('appraisals');
-    }
-    res.json(appraisals);
-  } catch (error) {
-    console.error('Error fetching appraisals:', error);
-    res.status(500).json({ error: 'Failed to fetch appraisals' });
-  }
-});
-
-app.get('/api/appraisals/:id', async (req, res) => {
-  try {
-    const appraisal = await storage.getAppraisal(parseInt(req.params.id));
-    if (!appraisal) {
-      return res.status(404).json({ error: 'Appraisal not found' });
-    }
-    res.json(appraisal);
-  } catch (error) {
-    console.error('Error fetching appraisal:', error);
-    res.status(500).json({ error: 'Failed to fetch appraisal' });
-  }
-});
-
-app.post('/api/appraisals', async (req, res) => {
-  try {
-    const newAppraisal = await storage.createAppraisal(req.body);
-    res.status(201).json(newAppraisal);
-  } catch (error) {
-    console.error('Error creating appraisal:', error);
-    res.status(500).json({ error: 'Failed to create appraisal' });
-  }
-});
-
-// Comparables
-app.get('/api/comparables', async (req, res) => {
-  try {
-    let comparables;
-    if (req.query.appraisalId) {
-      comparables = await storage.getComparablesByAppraisal(parseInt(req.query.appraisalId));
-    } else {
-      // Get all comparables
-      comparables = await db.select().from('comparables');
-    }
-    res.json(comparables);
-  } catch (error) {
-    console.error('Error fetching comparables:', error);
-    res.status(500).json({ error: 'Failed to fetch comparables' });
-  }
-});
-
-app.post('/api/comparables', async (req, res) => {
-  try {
-    const newComparable = await storage.createComparable(req.body);
-    res.status(201).json(newComparable);
-  } catch (error) {
-    console.error('Error creating comparable:', error);
-    res.status(500).json({ error: 'Failed to create comparable' });
-  }
-});
-
-// Market Data
-app.get('/api/market-data', async (req, res) => {
-  try {
-    let marketData;
-    if (req.query.zipCode) {
-      marketData = await storage.getMarketDataByZipCode(req.query.zipCode);
-    } else {
-      // Get all market data
-      marketData = await db.select().from('market_data');
-    }
-    res.json(marketData);
-  } catch (error) {
-    console.error('Error fetching market data:', error);
-    res.status(500).json({ error: 'Failed to fetch market data' });
-  }
-});
-
-// Handle React routing, return all requests to React app
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
-});
-
-// Initialize database and start server
-async function startServer() {
-  try {
-    // Initialize database and create tables if they don't exist
-    await initDatabase();
-    
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
-  }
+// Serve static assets in production
+if (process.env.NODE_ENV === 'production') {
+  // Set static folder
+  app.use(express.static('client/dist'));
+  
+  app.get('*', (req, res) => {
+    res.sendFile(path.resolve(__dirname, '../client', 'dist', 'index.html'));
+  });
 }
 
-startServer();
+// Start the server
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on port ${PORT}`);
+});
