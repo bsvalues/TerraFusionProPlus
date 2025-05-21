@@ -6,18 +6,23 @@ import path from 'path';
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 3001,
+    host: '0.0.0.0',
+    port: 3000,
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'http://localhost:5000',
         changeOrigin: true,
-      }
-    }
+      },
+    },
   },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@components': path.resolve(__dirname, './src/components'),
+      '@pages': path.resolve(__dirname, './src/pages'),
+      '@hooks': path.resolve(__dirname, './src/hooks'),
+      '@lib': path.resolve(__dirname, './src/lib'),
       '@assets': path.resolve(__dirname, '../attached_assets'),
-    }
-  }
-})
+    },
+  },
+});
