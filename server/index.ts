@@ -2,6 +2,8 @@ import express from 'express';
 import { Request, Response } from 'express';
 import cors from 'cors';
 import path from 'path';
+import http from 'http';
+import { WebSocketServer } from 'ws';
 import { initDatabase } from './db';
 import { storage } from './storage';
 import { insertPropertySchema, insertAppraisalSchema, insertComparableSchema } from '../shared/schema';
@@ -9,6 +11,61 @@ import { insertPropertySchema, insertAppraisalSchema, insertComparableSchema } f
 // Initialize the Express application
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Create HTTP server
+const server = http.createServer(app);
+
+// Create WebSocket server with a specific path
+const wss = new WebSocketServer({ server, path: '/ws' });
+
+// Store active connections
+const clients = new Set();
+
+// WebSocket connection handler
+wss.on('connection', (ws) => {
+  console.log('WebSocket client connected');
+  clients.add(ws);
+
+  // Handle incoming messages
+  ws.on('message', (message) => {
+    try {
+      const data = JSON.parse(message.toString());
+      console.log('Received message:', data);
+      
+      // Here you could process messages based on their type
+      // For now, we're just broadcasting them to all clients
+      broadcastMessage(data.type, data.payload);
+    } catch (error) {
+      console.error('Error processing WebSocket message:', error);
+    }
+  });
+
+  // Handle client disconnection
+  ws.on('close', () => {
+    console.log('WebSocket client disconnected');
+    clients.delete(ws);
+  });
+
+  // Send a welcome message
+  ws.send(JSON.stringify({
+    type: 'NOTIFICATION',
+    payload: {
+      message: 'Connected to TerraFusion Professional WebSocket Server',
+      timestamp: new Date().toISOString()
+    }
+  }));
+});
+
+// Broadcast a message to all connected clients
+export function broadcastMessage(type: string, payload: any) {
+  const message = JSON.stringify({ type, payload });
+  
+  clients.forEach((client: any) => {
+    if (client.readyState === 1) { // WebSocket.OPEN
+      client.send(message);
+    }
+  });
+}
 
 // Middlewares
 app.use(cors());
@@ -232,7 +289,7 @@ app.get('*', (req, res) => {
 });
 
 // Start the server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 

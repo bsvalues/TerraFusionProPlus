@@ -10,3 +10,20 @@ if (!process.env.DATABASE_URL) {
 
 export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 export const db = drizzle(pool, { schema });
+
+export async function initDatabase(): Promise<boolean> {
+  try {
+    // Test database connection
+    const client = await pool.connect();
+    console.log('Database connection successful');
+    
+    // Release the client
+    client.release();
+    
+    console.log('Database connected successfully at:', new Date().toISOString());
+    return true;
+  } catch (error) {
+    console.error('Database connection error:', error);
+    return false;
+  }
+}
