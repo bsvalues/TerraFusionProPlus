@@ -1,143 +1,70 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   Home, 
   Building2, 
+  ClipboardCheck, 
+  TrendingUp, 
   FileText, 
-  BarChart4, 
-  Settings, 
-  Users, 
-  ChevronsLeft, 
-  ChevronsRight,
-  Search
+  Settings as SettingsIcon,
+  Menu,
+  X
 } from 'lucide-react';
 
 const Sidebar = () => {
   const location = useLocation();
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isOpen, setIsOpen] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  const navItems = [
+    { path: '/', label: 'Dashboard', icon: <Home className="h-5 w-5" /> },
+    { path: '/properties', label: 'Properties', icon: <Building2 className="h-5 w-5" /> },
+    { path: '/appraisals', label: 'Appraisals', icon: <ClipboardCheck className="h-5 w-5" /> },
+    { path: '/market-data', label: 'Market Data', icon: <TrendingUp className="h-5 w-5" /> },
+    { path: '/reports', label: 'Reports', icon: <FileText className="h-5 w-5" /> },
+    { path: '/settings', label: 'Settings', icon: <SettingsIcon className="h-5 w-5" /> },
+  ];
 
-  // Toggle sidebar on mobile devices
   const toggleSidebar = () => {
-    setIsOpen(!isOpen);
-  };
-
-  // Function to determine if a nav link is active
-  const isActive = (path: string) => {
-    return location.pathname === path;
+    setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
   return (
-    <aside 
-      className={`bg-white border-r border-gray-200 transition-all duration-300 ease-in-out fixed md:relative h-screen z-20 ${
-        isOpen ? 'translate-x-0' : '-translate-x-full'
-      } ${isCollapsed ? 'md:w-16' : 'md:w-64'}`}
-    >
-      {/* Sidebar Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
-        {!isCollapsed && (
-          <div className="flex items-center">
-            <span className="text-lg font-bold text-primary-600">TFPro</span>
-          </div>
-        )}
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="p-1 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100 hidden md:block"
-          aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+    <>
+      {/* Mobile menu button */}
+      <div className="lg:hidden fixed top-4 left-4 z-20">
+        <button 
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="p-2 rounded-md bg-white shadow-md"
         >
-          {isCollapsed ? <ChevronsRight size={20} /> : <ChevronsLeft size={20} />}
+          {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
       </div>
 
-      {/* Navigation Links */}
-      <nav className="p-2 space-y-1">
-        <Link
-          to="/"
-          className={`flex items-center p-2 rounded-md ${
-            isActive('/') 
-              ? 'bg-primary-50 text-primary-600' 
-              : 'text-gray-700 hover:bg-gray-100'
-          }`}
-        >
-          <Home className="w-5 h-5" />
-          {!isCollapsed && <span className="ml-3">Dashboard</span>}
-        </Link>
-
-        <Link
-          to="/properties"
-          className={`flex items-center p-2 rounded-md ${
-            isActive('/properties') || location.pathname.startsWith('/properties/') 
-              ? 'bg-primary-50 text-primary-600' 
-              : 'text-gray-700 hover:bg-gray-100'
-          }`}
-        >
-          <Building2 className="w-5 h-5" />
-          {!isCollapsed && <span className="ml-3">Properties</span>}
-        </Link>
-
-        <Link
-          to="/appraisals"
-          className={`flex items-center p-2 rounded-md ${
-            isActive('/appraisals') 
-              ? 'bg-primary-50 text-primary-600' 
-              : 'text-gray-700 hover:bg-gray-100'
-          }`}
-        >
-          <FileText className="w-5 h-5" />
-          {!isCollapsed && <span className="ml-3">Appraisals</span>}
-        </Link>
-
-        <Link
-          to="/market-data"
-          className={`flex items-center p-2 rounded-md ${
-            isActive('/market-data') 
-              ? 'bg-primary-50 text-primary-600' 
-              : 'text-gray-700 hover:bg-gray-100'
-          }`}
-        >
-          <BarChart4 className="w-5 h-5" />
-          {!isCollapsed && <span className="ml-3">Market Data</span>}
-        </Link>
-        
-        <Link
-          to="/reports"
-          className={`flex items-center p-2 rounded-md ${
-            isActive('/reports') 
-              ? 'bg-primary-50 text-primary-600' 
-              : 'text-gray-700 hover:bg-gray-100'
-          }`}
-        >
-          <Search className="w-5 h-5" />
-          {!isCollapsed && <span className="ml-3">Reports</span>}
-        </Link>
-
-        <div className="pt-4 mt-4 border-t border-gray-200">
-          <Link
-            to="/team"
-            className={`flex items-center p-2 rounded-md ${
-              isActive('/team') 
-                ? 'bg-primary-50 text-primary-600' 
-                : 'text-gray-700 hover:bg-gray-100'
-            }`}
-          >
-            <Users className="w-5 h-5" />
-            {!isCollapsed && <span className="ml-3">Team</span>}
-          </Link>
-
-          <Link
-            to="/settings"
-            className={`flex items-center p-2 rounded-md ${
-              isActive('/settings') 
-                ? 'bg-primary-50 text-primary-600' 
-                : 'text-gray-700 hover:bg-gray-100'
-            }`}
-          >
-            <Settings className="w-5 h-5" />
-            {!isCollapsed && <span className="ml-3">Settings</span>}
-          </Link>
+      {/* Sidebar for desktop */}
+      <div className={`bg-gray-800 text-white w-64 fixed inset-y-0 left-0 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-200 ease-in-out z-10`}>
+        <div className="flex items-center justify-center h-16 border-b border-gray-700">
+          <span className="text-xl font-semibold">TerraFusion Pro</span>
         </div>
-      </nav>
-    </aside>
+        <nav className="mt-5">
+          <div className="px-2 space-y-1">
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex items-center px-4 py-3 text-sm rounded-md ${
+                  location.pathname === item.path
+                    ? 'bg-gray-900 text-white'
+                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                }`}
+              >
+                {item.icon}
+                <span className="ml-3">{item.label}</span>
+              </Link>
+            ))}
+          </div>
+        </nav>
+      </div>
+    </>
   );
 };
 
