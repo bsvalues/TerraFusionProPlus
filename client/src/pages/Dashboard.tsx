@@ -1,256 +1,445 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { 
-  FileText, 
-  Building, 
-  BarChart4, 
+  Home, 
+  FileSpreadsheet, 
+  Plus, 
   Clock, 
-  ArrowUpRight, 
-  ArrowDownRight,
-  Calendar
+  CheckCircle, 
+  ArrowUpRight,
+  Calendar,
+  DollarSign,
+  BarChart4
 } from 'lucide-react';
 import { apiRequest } from '../lib/query-client';
 
-// Temporary mock user - in a real app, this would come from an auth context
-const USER_ID = 1;
-
-interface DashboardCounts {
+// Mock data interfaces
+interface DashboardStats {
   activeAppraisals: number;
   completedAppraisals: number;
   totalProperties: number;
+  avgCompletionTime: number;
+  recentActivity: Activity[];
+  upcomingAppraisals: UpcomingAppraisal[];
+  performanceSummary: PerformanceSummary;
 }
 
-interface RecentAppraisal {
+interface Activity {
   id: number;
-  propertyAddress: string;
-  status: string;
-  orderDate: string;
+  type: 'property_added' | 'appraisal_submitted' | 'appraisal_completed' | 'market_update';
+  title: string;
+  description: string;
+  timestamp: string;
+}
+
+interface UpcomingAppraisal {
+  id: number;
+  address: string;
+  propertyId: number;
   clientName: string;
+  dueDate: string;
+  status: 'scheduled' | 'in_progress';
+}
+
+interface PerformanceSummary {
+  completedThisMonth: number;
+  changeFromLastMonth: number;
+  averageValue: number;
+  valueChangePercent: number;
 }
 
 const Dashboard = () => {
-  // Fetch dashboard data
-  const { data: counts, isLoading: isLoadingCounts } = useQuery({
-    queryKey: ['/api/dashboard/counts', USER_ID],
-    queryFn: () => apiRequest<DashboardCounts>(`/api/dashboard/counts?userId=${USER_ID}`),
-    // In real app we'd implement this endpoint to return counts
-    // For now, just mock the data
+  // In a real app, this would fetch from the API
+  const { data: dashboardData, isLoading } = useQuery({
+    queryKey: ['/api/dashboard'],
+    queryFn: () => apiRequest<DashboardStats>('/api/dashboard'),
+    // For demo purposes, disable this query and use mock data instead
     enabled: false,
   });
-
-  // Fetch recent appraisals
-  const { data: recentAppraisals, isLoading: isLoadingRecent } = useQuery({
-    queryKey: ['/api/appraisals', USER_ID],
-    queryFn: () => apiRequest<RecentAppraisal[]>(`/api/appraisals?appraiserId=${USER_ID}&limit=5`),
-    // In real app we'd fetch from the API
-    // For now, just mock the data
-    enabled: false,
-  });
-
-  // Mock data for demo purposes
-  const mockCounts = {
-    activeAppraisals: 12,
-    completedAppraisals: 48,
-    totalProperties: 125
+  
+  // Mock data
+  const mockData: DashboardStats = {
+    activeAppraisals: 24,
+    completedAppraisals: 37,
+    totalProperties: 418,
+    avgCompletionTime: 3.2,
+    recentActivity: [
+      {
+        id: 1,
+        type: 'appraisal_completed',
+        title: 'Appraisal completed',
+        description: '456 Oak Drive, Austin, TX 78704',
+        timestamp: '2025-05-20T14:30:00Z',
+      },
+      {
+        id: 2,
+        type: 'property_added',
+        title: 'New property added',
+        description: '789 Pine Street, Austin, TX 78701',
+        timestamp: '2025-05-20T12:15:00Z',
+      },
+      {
+        id: 3,
+        type: 'appraisal_submitted',
+        title: 'Appraisal submitted for review',
+        description: '321 Cedar Lane, Austin, TX 78702',
+        timestamp: '2025-05-19T16:45:00Z',
+      },
+      {
+        id: 4,
+        type: 'market_update',
+        title: 'Market data updated',
+        description: 'Q2 2025 Austin metropolitan area',
+        timestamp: '2025-05-19T09:10:00Z',
+      },
+      {
+        id: 5,
+        type: 'appraisal_completed',
+        title: 'Appraisal completed',
+        description: '123 Main Street, Austin, TX 78701',
+        timestamp: '2025-05-18T15:20:00Z',
+      },
+    ],
+    upcomingAppraisals: [
+      {
+        id: 101,
+        propertyId: 201,
+        address: '123 Main Street, Austin, TX 78701',
+        clientName: 'ABC Mortgage',
+        dueDate: '2025-05-23T00:00:00Z',
+        status: 'scheduled',
+      },
+      {
+        id: 102,
+        propertyId: 202,
+        address: '456 Oak Drive, Austin, TX 78704',
+        clientName: 'First Credit Union',
+        dueDate: '2025-05-25T00:00:00Z',
+        status: 'in_progress',
+      },
+      {
+        id: 103,
+        propertyId: 203,
+        address: '789 Pine Street, Austin, TX 78701',
+        clientName: 'XYZ Bank',
+        dueDate: '2025-05-28T00:00:00Z',
+        status: 'scheduled',
+      },
+    ],
+    performanceSummary: {
+      completedThisMonth: 37,
+      changeFromLastMonth: 4,
+      averageValue: 450000,
+      valueChangePercent: 2.5,
+    },
   };
-
-  const mockRecentAppraisals = [
-    { id: 101, propertyAddress: '123 Main St, Austin, TX', status: 'pending', orderDate: '2025-05-15', clientName: 'ABC Mortgage' },
-    { id: 102, propertyAddress: '456 Oak Ave, Dallas, TX', status: 'completed', orderDate: '2025-05-10', clientName: 'First National Bank' },
-    { id: 103, propertyAddress: '789 Pine Rd, Houston, TX', status: 'draft', orderDate: '2025-05-18', clientName: 'Texas Lending' },
-    { id: 104, propertyAddress: '234 Elm St, San Antonio, TX', status: 'pending', orderDate: '2025-05-14', clientName: 'HomeFirst Mortgage' },
-    { id: 105, propertyAddress: '567 Cedar Ln, Fort Worth, TX', status: 'completed', orderDate: '2025-05-08', clientName: 'Liberty Loans' },
-  ];
-
-  // Mock performance data for the chart
-  const mockPerformanceData = [
-    { month: 'Jan', completed: 8 },
-    { month: 'Feb', completed: 10 },
-    { month: 'Mar', completed: 7 },
-    { month: 'Apr', completed: 12 },
-    { month: 'May', completed: 11 },
-  ];
-
-  // Get status class for styling
-  const getStatusClass = (status: string) => {
-    switch (status) {
-      case 'completed': return 'status-completed';
-      case 'pending': return 'status-pending';
-      case 'draft': return 'status-draft';
-      default: return '';
+  
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+  
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  };
+  
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 24) {
+      if (diffInHours < 1) {
+        const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+        return `${diffInMinutes} minute${diffInMinutes !== 1 ? 's' : ''} ago`;
+      }
+      return `${diffInHours} hour${diffInHours !== 1 ? 's' : ''} ago`;
+    }
+    
+    if (diffInHours < 48) {
+      return 'Yesterday';
+    }
+    
+    return formatDate(dateString);
+  };
+  
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'property_added':
+        return <Home className="h-4 w-4" />;
+      case 'appraisal_submitted':
+        return <FileSpreadsheet className="h-4 w-4" />;
+      case 'appraisal_completed':
+        return <CheckCircle className="h-4 w-4" />;
+      case 'market_update':
+        return <BarChart4 className="h-4 w-4" />;
+      default:
+        return <Clock className="h-4 w-4" />;
     }
   };
-
-  // Calculate month-over-month change
-  const currentMonth = mockPerformanceData[mockPerformanceData.length - 1].completed;
-  const prevMonth = mockPerformanceData[mockPerformanceData.length - 2].completed;
-  const changePercent = Math.round(((currentMonth - prevMonth) / prevMonth) * 100);
-  const isPositiveChange = changePercent >= 0;
-
+  
+  const data = dashboardData || mockData;
+  
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Today is</span>
-          <span className="flex items-center gap-1 text-sm font-medium">
-            <Calendar className="h-4 w-4" />
-            {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-          </span>
+        <div className="flex gap-2">
+          <Link
+            to="/properties/new"
+            className="inline-flex items-center gap-2 px-4 py-2 border rounded-md hover:bg-accent transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            Add Property
+          </Link>
+          <Link
+            to="/appraisals/new"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+          >
+            <FileSpreadsheet className="h-4 w-4" />
+            New Appraisal
+          </Link>
         </div>
       </div>
-
-      {/* Stats Overview */}
-      <div className="grid gap-4 md:grid-cols-3">
+      
+      {/* Key metrics */}
+      <div className="grid gap-4 md:grid-cols-4">
         <div className="rounded-lg border bg-card p-6">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Active Appraisals</p>
-              <p className="text-3xl font-bold">{mockCounts.activeAppraisals}</p>
+              <p className="text-3xl font-bold">{data.activeAppraisals}</p>
             </div>
-            <FileText className="h-8 w-8 text-primary" />
+            <div className="bg-primary/10 p-2 rounded-full">
+              <Clock className="h-6 w-6 text-primary" />
+            </div>
           </div>
-          <div className="mt-4">
-            <Link 
-              to="/appraisals?status=pending" 
-              className="text-sm text-primary hover:underline inline-flex items-center gap-1"
-            >
-              View active appraisals
-              <ArrowUpRight className="h-3 w-3" />
-            </Link>
-          </div>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {data.activeAppraisals} active appraisals in progress
+          </p>
         </div>
         
         <div className="rounded-lg border bg-card p-6">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Completed Appraisals</p>
-              <p className="text-3xl font-bold">{mockCounts.completedAppraisals}</p>
+              <p className="text-sm text-muted-foreground">Completed This Month</p>
+              <p className="text-3xl font-bold">{data.performanceSummary.completedThisMonth}</p>
             </div>
-            <BarChart4 className="h-8 w-8 text-primary" />
+            <div className="bg-green-100 p-2 rounded-full">
+              <CheckCircle className="h-6 w-6 text-green-600" />
+            </div>
           </div>
-          <div className="mt-4 flex items-center">
-            <span className={`inline-flex items-center text-sm ${isPositiveChange ? 'text-green-600' : 'text-red-600'}`}>
-              {isPositiveChange ? <ArrowUpRight className="h-3 w-3 mr-1" /> : <ArrowDownRight className="h-3 w-3 mr-1" />}
-              {Math.abs(changePercent)}% from last month
-            </span>
-          </div>
+          <p className="mt-2 text-sm text-muted-foreground">
+            <span className={data.performanceSummary.changeFromLastMonth >= 0 ? 'text-green-600' : 'text-red-600'}>
+              {data.performanceSummary.changeFromLastMonth > 0 ? '+' : ''}
+              {data.performanceSummary.changeFromLastMonth}
+            </span>{' '}
+            from last month
+          </p>
         </div>
         
         <div className="rounded-lg border bg-card p-6">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Properties in Database</p>
-              <p className="text-3xl font-bold">{mockCounts.totalProperties}</p>
+              <p className="text-sm text-muted-foreground">Average Completion Time</p>
+              <p className="text-3xl font-bold">{data.avgCompletionTime} Days</p>
             </div>
-            <Building className="h-8 w-8 text-primary" />
+            <div className="bg-blue-100 p-2 rounded-full">
+              <Calendar className="h-6 w-6 text-blue-600" />
+            </div>
           </div>
-          <div className="mt-4">
+          <p className="mt-2 text-sm text-muted-foreground">
+            Average from last 30 days
+          </p>
+        </div>
+        
+        <div className="rounded-lg border bg-card p-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Average Appraised Value</p>
+              <p className="text-3xl font-bold">{formatCurrency(data.performanceSummary.averageValue)}</p>
+            </div>
+            <div className="bg-yellow-100 p-2 rounded-full">
+              <DollarSign className="h-6 w-6 text-yellow-600" />
+            </div>
+          </div>
+          <p className="mt-2 text-sm text-muted-foreground">
+            <span className={data.performanceSummary.valueChangePercent >= 0 ? 'text-green-600' : 'text-red-600'}>
+              {data.performanceSummary.valueChangePercent > 0 ? '+' : ''}
+              {data.performanceSummary.valueChangePercent}%
+            </span>{' '}
+            from last month
+          </p>
+        </div>
+      </div>
+      
+      {/* Main content */}
+      <div className="grid gap-6 md:grid-cols-7">
+        {/* Recent activities */}
+        <div className="md:col-span-4 lg:col-span-5 rounded-lg border bg-card overflow-hidden">
+          <div className="p-6 border-b">
+            <h2 className="text-lg font-semibold">Recent Activity</h2>
+          </div>
+          <div className="divide-y">
+            {data.recentActivity.map((activity) => (
+              <div key={activity.id} className="flex items-start gap-4 p-6">
+                <div className={`mt-1 p-2 rounded-full ${
+                  activity.type === 'appraisal_completed' ? 'bg-green-100' :
+                  activity.type === 'property_added' ? 'bg-blue-100' :
+                  activity.type === 'appraisal_submitted' ? 'bg-yellow-100' :
+                  'bg-primary/10'
+                }`}>
+                  {getActivityIcon(activity.type)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm">{activity.title}</p>
+                  <p className="text-muted-foreground text-sm truncate">{activity.description}</p>
+                </div>
+                <div className="text-muted-foreground text-xs">
+                  {formatTime(activity.timestamp)}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="p-4 border-t text-center">
+            <Link to="/activity" className="text-sm text-primary hover:underline">
+              View all activity
+            </Link>
+          </div>
+        </div>
+        
+        {/* Upcoming appraisals */}
+        <div className="md:col-span-3 lg:col-span-2 rounded-lg border bg-card overflow-hidden">
+          <div className="p-6 border-b flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Upcoming Appraisals</h2>
+            <Link to="/appraisals" className="text-sm text-primary hover:underline">View all</Link>
+          </div>
+          <div className="divide-y">
+            {data.upcomingAppraisals.map((appraisal) => (
+              <Link 
+                key={appraisal.id} 
+                to={`/appraisals/${appraisal.id}`}
+                className="block p-4 hover:bg-accent/50 transition-colors"
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium truncate">{appraisal.address.split(',')[0]}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${
+                    appraisal.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'
+                  }`}>
+                    {appraisal.status === 'in_progress' ? 'In Progress' : 'Scheduled'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">{appraisal.clientName}</span>
+                  <span className="font-medium">Due {formatDate(appraisal.dueDate)}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+          <div className="p-4 border-t">
             <Link 
-              to="/properties" 
-              className="text-sm text-primary hover:underline inline-flex items-center gap-1"
+              to="/appraisals/new"
+              className="flex items-center justify-center w-full gap-1 p-2 bg-primary/10 text-primary rounded-md hover:bg-primary/20 transition-colors text-sm"
             >
-              View all properties
-              <ArrowUpRight className="h-3 w-3" />
+              <Plus className="h-4 w-4" />
+              Schedule New Appraisal
             </Link>
           </div>
         </div>
       </div>
-
-      {/* Recent Appraisals */}
-      <div className="rounded-lg border bg-card">
-        <div className="p-6 border-b">
-          <h2 className="text-lg font-semibold">Recent Appraisals</h2>
+      
+      {/* Market data / quick actions */}
+      <div className="grid gap-6 md:grid-cols-3">
+        <div className="md:col-span-2 rounded-lg border bg-card overflow-hidden">
+          <div className="p-6 border-b flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Market Snapshot</h2>
+            <Link to="/market-data" className="text-sm text-primary hover:underline inline-flex items-center gap-1">
+              View detailed analysis
+              <ArrowUpRight className="h-3 w-3" />
+            </Link>
+          </div>
+          <div className="p-6">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Austin Metropolitan Area</span>
+                <span className="text-sm text-green-600">+5.2% YoY</span>
+              </div>
+              
+              <div className="w-full bg-muted/30 rounded-full h-3">
+                <div className="bg-primary h-3 rounded-full" style={{ width: '75%' }}></div>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <div className="text-muted-foreground text-xs mb-1">Median Price</div>
+                  <div className="font-medium">{formatCurrency(550000)}</div>
+                </div>
+                <div>
+                  <div className="text-muted-foreground text-xs mb-1">Days on Market</div>
+                  <div className="font-medium">28</div>
+                </div>
+                <div>
+                  <div className="text-muted-foreground text-xs mb-1">Price per Sq.Ft.</div>
+                  <div className="font-medium">$345</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="p-0">
-          <table className="w-full data-grid">
-            <thead>
-              <tr>
-                <th>Property</th>
-                <th>Client</th>
-                <th>Status</th>
-                <th>Order Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {mockRecentAppraisals.map((appraisal) => (
-                <tr key={appraisal.id}>
-                  <td className="font-medium">{appraisal.propertyAddress}</td>
-                  <td>{appraisal.clientName}</td>
-                  <td>
-                    <span className={`status-indicator ${getStatusClass(appraisal.status)}`}>
-                      {appraisal.status.charAt(0).toUpperCase() + appraisal.status.slice(1)}
-                    </span>
-                  </td>
-                  <td>{new Date(appraisal.orderDate).toLocaleDateString()}</td>
-                  <td>
-                    <Link 
-                      to={`/appraisals/${appraisal.id}`}
-                      className="text-sm text-primary hover:underline"
-                    >
-                      View Details
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="p-4 border-t text-center">
-          <Link 
-            to="/appraisals"
-            className="text-sm text-primary hover:underline inline-flex items-center gap-1 justify-center"
-          >
-            View all appraisals
-            <ArrowUpRight className="h-3 w-3" />
-          </Link>
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="rounded-lg border bg-card p-6">
-        <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Link 
-            to="/appraisals/new"
-            className="flex items-center p-4 border rounded-md hover:bg-accent transition-colors"
-          >
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center mr-4">
-              <FileText className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <h3 className="font-medium">New Appraisal</h3>
-              <p className="text-sm text-muted-foreground">Create a new appraisal order</p>
-            </div>
-          </Link>
-          
-          <Link 
-            to="/properties/new"
-            className="flex items-center p-4 border rounded-md hover:bg-accent transition-colors"
-          >
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center mr-4">
-              <Building className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <h3 className="font-medium">Add Property</h3>
-              <p className="text-sm text-muted-foreground">Add a new property to the database</p>
-            </div>
-          </Link>
-          
-          <Link 
-            to="/market-data"
-            className="flex items-center p-4 border rounded-md hover:bg-accent transition-colors"
-          >
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center mr-4">
-              <BarChart4 className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <h3 className="font-medium">Market Analysis</h3>
-              <p className="text-sm text-muted-foreground">View current market trends</p>
-            </div>
-          </Link>
+        
+        <div className="rounded-lg border bg-card overflow-hidden">
+          <div className="p-6 border-b">
+            <h2 className="text-lg font-semibold">Quick Actions</h2>
+          </div>
+          <div className="p-6 space-y-3">
+            <Link 
+              to="/properties/new"
+              className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors"
+            >
+              <div className="p-2 bg-primary/10 rounded-full">
+                <Home className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <div className="font-medium">Add Property</div>
+                <div className="text-xs text-muted-foreground">Create a new property record</div>
+              </div>
+            </Link>
+            
+            <Link 
+              to="/appraisals/new"
+              className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors"
+            >
+              <div className="p-2 bg-primary/10 rounded-full">
+                <FileSpreadsheet className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <div className="font-medium">New Appraisal</div>
+                <div className="text-xs text-muted-foreground">Start a new appraisal report</div>
+              </div>
+            </Link>
+            
+            <Link 
+              to="/market-data"
+              className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors"
+            >
+              <div className="p-2 bg-primary/10 rounded-full">
+                <BarChart4 className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <div className="font-medium">Market Analysis</div>
+                <div className="text-xs text-muted-foreground">View latest market trends</div>
+              </div>
+            </Link>
+          </div>
         </div>
       </div>
     </div>
