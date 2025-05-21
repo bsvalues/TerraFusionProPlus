@@ -113,6 +113,19 @@ app.put('/api/properties/:id', (req, res) => {
 // Set static folder
 app.use(express.static(path.join(__dirname, '../client/dist')));
 
+// Special routes for property form and details
+app.get('/properties/new', (req, res) => {
+  res.sendFile(path.resolve(__dirname, '../client/dist/property-form.html'));
+});
+
+app.get('/properties/:id/edit', (req, res) => {
+  res.sendFile(path.resolve(__dirname, '../client/dist/property-form.html'));
+});
+
+app.get('/properties/:id', (req, res) => {
+  res.sendFile(path.resolve(__dirname, '../client/dist/property-detail.html'));
+});
+
 // Serve the index.html for any other routes (client-side routing)
 app.get('*', (req, res) => {
   // Exclude API routes from this catch-all handler
