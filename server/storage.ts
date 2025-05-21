@@ -102,37 +102,36 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getProperties(filters?: Partial<Property>): Promise<Property[]> {
-    let query = db.select().from(properties);
-
-    if (filters) {
-      const conditions = [];
-      
-      if (filters.propertyType) {
-        conditions.push(eq(properties.propertyType, filters.propertyType));
-      }
-      
-      if (filters.city) {
-        conditions.push(eq(properties.city, filters.city));
-      }
-      
-      if (filters.state) {
-        conditions.push(eq(properties.state, filters.state));
-      }
-      
-      if (filters.zipCode) {
-        conditions.push(eq(properties.zipCode, filters.zipCode));
-      }
-      
-      if (conditions.length > 0) {
-        for (const condition of conditions) {
-          query = query.where(condition);
-        }
-      }
+    if (!filters) {
+      return await db.select().from(properties).orderBy(desc(properties.createdAt));
     }
     
-    query = query.orderBy(desc(properties.createdAt));
+    let query = db.select().from(properties);
     
-    return query;
+    // Build conditions array
+    const conditions = [];
+    if (filters.propertyType) {
+      conditions.push(eq(properties.propertyType, filters.propertyType));
+    }
+    if (filters.city) {
+      conditions.push(eq(properties.city, filters.city));
+    }
+    if (filters.state) {
+      conditions.push(eq(properties.state, filters.state));
+    }
+    if (filters.zipCode) {
+      conditions.push(eq(properties.zipCode, filters.zipCode));
+    }
+    
+    // Apply conditions
+    if (conditions.length === 1) {
+      query = query.where(conditions[0]);
+    } else if (conditions.length > 1) {
+      query = query.where(and(...conditions));
+    }
+    
+    const result = await query.orderBy(desc(properties.createdAt));
+    return result;
   }
 
   async createProperty(insertProperty: InsertProperty): Promise<Property> {
