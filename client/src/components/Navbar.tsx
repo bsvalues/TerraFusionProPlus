@@ -1,51 +1,47 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { User, Bell, Settings, Search } from 'lucide-react';
+import { Menu, Bell, Search, User } from 'lucide-react';
 
-const Navbar = () => {
+interface NavbarProps {
+  toggleSidebar: () => void;
+}
+
+const Navbar = ({ toggleSidebar }: NavbarProps) => {
   return (
-    <nav className="bg-white shadow-sm px-4 py-3">
-      <div className="container mx-auto flex items-center justify-between">
-        <div className="flex items-center">
-          <Link to="/" className="text-xl font-semibold text-blue-600">
-            TerraFusionPro
-          </Link>
-          <div className="ml-10 hidden md:flex space-x-6">
-            <Link to="/" className="text-gray-700 hover:text-blue-600">
-              Dashboard
-            </Link>
-            <Link to="/properties" className="text-gray-700 hover:text-blue-600">
-              Properties
-            </Link>
-            <Link to="/appraisals" className="text-gray-700 hover:text-blue-600">
-              Appraisals
-            </Link>
-            <Link to="/market-data" className="text-gray-700 hover:text-blue-600">
-              Market Data
-            </Link>
+    <div className="navbar">
+      <div className="flex items-center">
+        <button 
+          onClick={toggleSidebar}
+          className="p-2 mr-4 rounded-md hover:bg-gray-100 lg:hidden"
+          aria-label="Toggle sidebar"
+        >
+          <Menu size={20} />
+        </button>
+        <div className="relative hidden md:block">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            <Search className="w-4 h-4 text-gray-400" />
           </div>
+          <input
+            type="text"
+            placeholder="Search..."
+            className="pl-10 pr-4 py-2 w-64 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          />
         </div>
-        <div className="flex items-center space-x-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-            <input
-              type="text"
-              placeholder="Search..."
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-48 lg:w-64"
-            />
-          </div>
-          <button className="p-2 text-gray-500 hover:text-blue-600">
-            <Bell size={20} />
-          </button>
-          <Link to="/settings" className="p-2 text-gray-500 hover:text-blue-600">
-            <Settings size={20} />
-          </Link>
-          <button className="p-2 text-gray-500 hover:text-blue-600">
-            <User size={20} />
+      </div>
+
+      <div className="flex items-center space-x-4">
+        <button className="p-2 rounded-md hover:bg-gray-100" aria-label="Notifications">
+          <Bell size={20} className="text-gray-600" />
+        </button>
+        <div className="relative">
+          <button className="flex items-center space-x-2">
+            <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-medium">
+              <User size={16} />
+            </div>
+            <span className="hidden md:inline-block font-medium text-sm">Admin User</span>
           </button>
         </div>
       </div>
-    </nav>
+    </div>
   );
 };
 

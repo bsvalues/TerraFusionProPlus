@@ -1,56 +1,44 @@
 import { QueryClient } from '@tanstack/react-query';
 
-interface ApiRequestOptions extends RequestInit {
-  params?: Record<string, string>;
-}
+export const apiRequest = async ({ 
+  url, 
+  method = 'GET', 
+  body, 
+  headers = {} 
+}: { 
+  url: string; 
+  method?: string; 
+  body?: any; 
+  headers?: Record<string, string>;
+}) => {
+  const options: RequestInit = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...headers,
+    },
+  };
+
+  if (body) {
+    options.body = JSON.stringify(body);
+  }
+
+  const response = await fetch(url, options);
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || 'An error occurred during the API request');
+  }
+  
+  return response.json();
+};
 
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60, // 1 minute
-      gcTime: 1000 * 60 * 5, // 5 minutes
-      refetchOnWindowFocus: false,
+      staleTime: 1000 * 60 * 5, // 5 minutes
       retry: 1,
+      refetchOnWindowFocus: false,
     },
   },
 });
-
-export async function apiRequest<T>(
-  endpoint: string,
-  { params, ...customConfig }: ApiRequestOptions = {}
-): Promise<T> {
-  const url = new URL(endpoint, window.location.origin);
-  
-  // Add query parameters if they exist
-  if (params) {
-    Object.entries(params).forEach(([key, value]) => {
-      url.searchParams.append(key, value);
-    });
-  }
-
-  const config: RequestInit = {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    ...customConfig,
-  };
-
-  // Convert body to JSON string if it exists and is an object
-  if (config.body && typeof config.body === 'object') {
-    config.body = JSON.stringify(config.body);
-  }
-
-  const response = await fetch(url.toString(), config);
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    return Promise.reject(new Error(errorData.message || `API error: ${response.status}`));
-  }
-
-  if (response.status === 204) {
-    return {} as T;
-  }
-
-  return response.json();
-}

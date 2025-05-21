@@ -1,242 +1,173 @@
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { apiRequest } from '../lib/query-client';
-import { Calendar, Home, CheckCircle, Clock, TrendingUp } from 'lucide-react';
+import { useState } from 'react';
+import { 
+  Building2, 
+  ClipboardList, 
+  LineChart, 
+  Clock, 
+  CheckCircle2, 
+  AlertCircle 
+} from 'lucide-react';
 
-type DashboardData = {
-  activeAppraisals: number;
-  completedAppraisals: number;
-  totalProperties: number;
-  avgCompletionTime: number;
-  performanceSummary: {
-    completedThisMonth: number;
-    changeFromLastMonth: number;
-    averageValue: number;
-    valueChangePercent: number;
-  };
-  recentActivity: Array<{
-    id: number;
-    type: string;
-    title: string;
-    description: string;
-    timestamp: string;
-  }>;
-  upcomingAppraisals: Array<{
-    id: number;
-    propertyId: number;
-    address: string;
-    clientName: string;
-    dueDate: string;
-    status: string;
-  }>;
-};
-
-function StatCard({ title, value, icon, change }: { title: string; value: string | number; icon: React.ReactNode; change?: { value: number; positive: boolean } }) {
-  return (
-    <div className="p-6 bg-white rounded-lg shadow-sm border border-gray-100">
-      <div className="flex justify-between items-start">
-        <div>
-          <h3 className="text-sm font-medium text-gray-500">{title}</h3>
-          <p className="text-2xl font-bold mt-1">{value}</p>
-          
-          {change && (
-            <div className={`mt-2 text-xs inline-flex items-center rounded-full px-2 py-1 ${change.positive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-              <span className="mr-1">{change.positive ? '↑' : '↓'}</span> 
-              {Math.abs(change.value)}%
-            </div>
-          )}
-        </div>
-        <div className="p-3 rounded-full bg-blue-50 text-blue-500">
-          {icon}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ActivityItem({ item }: { item: DashboardData['recentActivity'][0] }) {
-  const iconMap: Record<string, React.ReactNode> = {
-    'appraisal_completed': <CheckCircle size={16} className="text-green-500" />,
-    'property_added': <Home size={16} className="text-blue-500" />,
-    'appraisal_scheduled': <Calendar size={16} className="text-purple-500" />,
-  };
-
-  const getTimeString = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return date.toLocaleDateString();
-  };
+const Dashboard = () => {
+  const [recentAppraisals] = useState([
+    { id: 1, address: '123 Main St, Austin, TX', status: 'In Progress', date: '2025-04-25', value: '$425,000' },
+    { id: 2, address: '456 Oak Ave, Dallas, TX', status: 'Completed', date: '2025-04-22', value: '$512,000' },
+    { id: 3, address: '789 Pine Blvd, Houston, TX', status: 'Pending', date: '2025-04-28', value: 'TBD' },
+  ]);
 
   return (
-    <div className="flex items-start py-3 border-b border-gray-100 last:border-0">
-      <div className="p-2 mr-3 rounded-full bg-gray-100">
-        {iconMap[item.type] || <Clock size={16} />}
-      </div>
-      <div className="flex-1">
-        <h4 className="text-sm font-medium">{item.title}</h4>
-        <p className="text-xs text-gray-500 mt-1">{item.description}</p>
-      </div>
-      <div className="text-xs text-gray-400">
-        {getTimeString(item.timestamp)}
-      </div>
-    </div>
-  );
-}
-
-function Dashboard() {
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['/api/dashboard'],
-    queryFn: () => apiRequest<DashboardData>('/dashboard')
-  });
-
-  if (isLoading) {
-    return (
-      <div className="py-12 flex justify-center">
-        <div className="animate-pulse text-gray-500">Loading dashboard data...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="py-12 text-center">
-        <h3 className="text-lg font-semibold text-red-600">Error loading dashboard</h3>
-        <p className="text-gray-500 mt-2">Please try again later</p>
-      </div>
-    );
-  }
-
-  // Fallback for development - we'll use mock data if the API call fails
-  const dashboardData = data || {
-    activeAppraisals: 24,
-    completedAppraisals: 37,
-    totalProperties: 418,
-    avgCompletionTime: 3.2,
-    performanceSummary: {
-      completedThisMonth: 37,
-      changeFromLastMonth: 4,
-      averageValue: 450000,
-      valueChangePercent: 2.5
-    },
-    recentActivity: [
-      {
-        id: 1,
-        type: 'appraisal_completed',
-        title: 'Appraisal completed',
-        description: '456 Oak Drive, Austin, TX 78704',
-        timestamp: new Date().toISOString(),
-      },
-      {
-        id: 2,
-        type: 'property_added',
-        title: 'New property added',
-        description: '789 Pine Street, Austin, TX 78701',
-        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-      }
-    ],
-    upcomingAppraisals: [
-      {
-        id: 101,
-        propertyId: 201,
-        address: '123 Main Street, Austin, TX 78701',
-        clientName: 'ABC Mortgage',
-        dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-        status: 'scheduled',
-      },
-      {
-        id: 102,
-        propertyId: 202,
-        address: '456 Oak Drive, Austin, TX 78704',
-        clientName: 'First Credit Union',
-        dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
-        status: 'in_progress',
-      }
-    ]
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  };
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', { 
-      style: 'currency', 
-      currency: 'USD',
-      maximumFractionDigits: 0
-    }).format(value);
-  };
-
-  return (
-    <div className="py-6">
-      <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+    <div>
+      <h1 className="page-title">Dashboard</h1>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard 
-          title="Active Appraisals" 
-          value={dashboardData.activeAppraisals} 
-          icon={<Clock size={24} />} 
-        />
-        <StatCard 
-          title="Completed Appraisals" 
-          value={dashboardData.completedAppraisals} 
-          icon={<CheckCircle size={24} />}
-          change={{ 
-            value: dashboardData.performanceSummary.changeFromLastMonth, 
-            positive: dashboardData.performanceSummary.changeFromLastMonth > 0 
-          }}
-        />
-        <StatCard 
-          title="Properties" 
-          value={dashboardData.totalProperties} 
-          icon={<Home size={24} />} 
-        />
-        <StatCard 
-          title="Average Value" 
-          value={formatCurrency(dashboardData.performanceSummary.averageValue)} 
-          icon={<TrendingUp size={24} />}
-          change={{ 
-            value: dashboardData.performanceSummary.valueChangePercent, 
-            positive: dashboardData.performanceSummary.valueChangePercent > 0 
-          }}
-        />
-      </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-100 p-5">
-          <h2 className="font-semibold text-lg mb-4">Recent Activity</h2>
-          <div className="space-y-1">
-            {dashboardData.recentActivity.map(activity => (
-              <ActivityItem key={activity.id} item={activity} />
-            ))}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="card flex items-center">
+          <div className="p-3 rounded-full bg-primary-100 text-primary-600 mr-4">
+            <Building2 size={24} />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-500">Total Properties</p>
+            <h3 className="text-2xl font-bold">124</h3>
           </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
-          <h2 className="font-semibold text-lg mb-4">Upcoming Appraisals</h2>
+        <div className="card flex items-center">
+          <div className="p-3 rounded-full bg-secondary-100 text-secondary-600 mr-4">
+            <ClipboardList size={24} />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-500">Active Appraisals</p>
+            <h3 className="text-2xl font-bold">16</h3>
+          </div>
+        </div>
+        
+        <div className="card flex items-center">
+          <div className="p-3 rounded-full bg-accent-100 text-accent-600 mr-4">
+            <LineChart size={24} />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-500">Market Reports</p>
+            <h3 className="text-2xl font-bold">8</h3>
+          </div>
+        </div>
+        
+        <div className="card flex items-center">
+          <div className="p-3 rounded-full bg-green-100 text-green-600 mr-4">
+            <CheckCircle2 size={24} />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-500">Completed This Month</p>
+            <h3 className="text-2xl font-bold">22</h3>
+          </div>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="card">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-lg font-semibold">Recent Appraisals</h2>
+            <button className="text-sm text-primary-600 hover:text-primary-700">View All</button>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Property
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Due Date
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Value
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {recentAppraisals.map((appraisal) => (
+                  <tr key={appraisal.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {appraisal.address}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        appraisal.status === 'Completed' 
+                          ? 'bg-green-100 text-green-800'
+                          : appraisal.status === 'In Progress' 
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {appraisal.status === 'Completed' && <CheckCircle2 size={12} className="mr-1" />}
+                        {appraisal.status === 'In Progress' && <Clock size={12} className="mr-1" />}
+                        {appraisal.status === 'Pending' && <AlertCircle size={12} className="mr-1" />}
+                        {appraisal.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                      {appraisal.date}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                      {appraisal.value}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <div className="card">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-lg font-semibold">Activity Timeline</h2>
+          </div>
           <div className="space-y-4">
-            {dashboardData.upcomingAppraisals.map(appraisal => (
-              <div key={appraisal.id} className="p-3 border border-gray-100 rounded-md">
-                <h4 className="font-medium text-sm">{appraisal.address}</h4>
-                <div className="flex justify-between mt-2 text-xs text-gray-500">
-                  <span>{appraisal.clientName}</span>
-                  <span className="font-medium">Due: {formatDate(appraisal.dueDate)}</span>
+            <div className="flex">
+              <div className="flex flex-col items-center mr-4">
+                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                  <CheckCircle2 size={20} />
                 </div>
-                <div className="mt-3">
-                  <span className={`text-xs px-2 py-1 rounded-full ${
-                    appraisal.status === 'scheduled' 
-                      ? 'bg-blue-100 text-blue-700' 
-                      : 'bg-green-100 text-green-700'
-                  }`}>
-                    {appraisal.status === 'scheduled' ? 'Scheduled' : 'In Progress'}
-                  </span>
+                <div className="w-px h-full bg-gray-200 mt-2"></div>
+              </div>
+              <div className="pb-6">
+                <p className="text-sm font-medium">Appraisal Completed</p>
+                <p className="text-xs text-gray-500 mt-1">456 Oak Ave appraisal was finalized at $512,000</p>
+                <p className="text-xs text-gray-400 mt-1">Today, 10:30 AM</p>
+              </div>
+            </div>
+            
+            <div className="flex">
+              <div className="flex flex-col items-center mr-4">
+                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                  <ClipboardList size={20} />
+                </div>
+                <div className="w-px h-full bg-gray-200 mt-2"></div>
+              </div>
+              <div className="pb-6">
+                <p className="text-sm font-medium">New Appraisal Assigned</p>
+                <p className="text-xs text-gray-500 mt-1">789 Pine Blvd was added to your appraisal queue</p>
+                <p className="text-xs text-gray-400 mt-1">Today, 9:15 AM</p>
+              </div>
+            </div>
+            
+            <div className="flex">
+              <div className="flex flex-col items-center mr-4">
+                <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-600">
+                  <Building2 size={20} />
                 </div>
               </div>
-            ))}
+              <div>
+                <p className="text-sm font-medium">Property Added</p>
+                <p className="text-xs text-gray-500 mt-1">123 Main St was added to the property database</p>
+                <p className="text-xs text-gray-400 mt-1">Yesterday, 2:45 PM</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
-}
+};
 
 export default Dashboard;
