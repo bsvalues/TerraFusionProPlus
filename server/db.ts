@@ -1,33 +1,40 @@
-import { drizzle } from 'drizzle-orm/node-postgres';
-import { Pool } from 'pg';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
 import * as schema from '../shared/schema';
 import dotenv from 'dotenv';
 
 // Load environment variables
 dotenv.config();
 
-// Create a PostgreSQL connection pool
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+// Get the database URL from the environment variable
+const connectionString = process.env.DATABASE_URL || '';
+
+// Create a PostgreSQL connection
+const client = postgres(connectionString, {
+  max: 10,
+  idle_timeout: 20,
+  connect_timeout: 10
 });
 
-// Create a Drizzle instance with the schema
-export const db = drizzle(pool, { schema });
+// Create a drizzle database instance with our schema
+export const db = drizzle(client, { schema });
 
-// Function to initialize the database with initial schema
+// Initialize the database
 export async function initDatabase() {
   try {
-    console.log('Initializing database connection...');
+    // Test connection
+    console.log('Testing database connection...');
+    await db.select().from(schema.properties).limit(1);
+    console.log('Database connection successful!');
     
-    // Test the connection
-    const result = await pool.query('SELECT NOW()');
-    console.log('Database connection successful:', result.rows[0].now);
+    // If you want to check if tables exist and are properly set up
+    console.log('Checking database tables...');
+    const propertyCount = await db.select().from(schema.properties);
+    console.log(`Found ${propertyCount.length} properties in the database.`);
     
     return true;
   } catch (error) {
-    console.error('Error initializing database:', error);
-    return false;
+    console.error('Database initialization failed:', error);
+    throw error;
   }
 }
-
-export default db;

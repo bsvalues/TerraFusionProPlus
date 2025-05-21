@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-export default {
+module.exports = {
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -7,29 +7,38 @@ export default {
   theme: {
     extend: {
       colors: {
+        border: "var(--border)",
+        input: "var(--input)",
+        ring: "var(--ring)",
+        background: "var(--background)",
+        foreground: "var(--foreground)",
         primary: {
-          DEFAULT: '#1e40af',
-          hover: '#1e3a8a'
+          DEFAULT: "var(--primary)",
+          dark: "var(--primary-dark)",
+          foreground: "#FFFFFF"
         },
         secondary: {
-          DEFAULT: '#64748b',
-          hover: '#475569'
+          DEFAULT: "var(--secondary)",
+          dark: "var(--secondary-dark)",
+          foreground: "#FFFFFF"
         },
-        success: {
-          DEFAULT: '#16a34a',
-          hover: '#15803d'
+        muted: {
+          DEFAULT: "var(--muted)",
+          foreground: "var(--muted-foreground)",
         },
-        warning: {
-          DEFAULT: '#f59e0b',
-          hover: '#d97706'
+        accent: {
+          DEFAULT: "#f9fafb",
+          foreground: "#111827",
         },
-        danger: {
-          DEFAULT: '#dc2626',
-          hover: '#b91c1c'
-        }
+        card: {
+          DEFAULT: "var(--card)",
+          foreground: "var(--card-foreground)",
+        },
       },
-      boxShadow: {
-        card: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
       },
     },
   },
