@@ -1,37 +1,31 @@
+import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { Suspense, lazy } from 'react';
-import Navbar from './components/Navbar';
-import Sidebar from './components/Sidebar';
-import Dashboard from './pages/Dashboard';
-
-// Lazy loaded pages
-const Properties = lazy(() => import('./pages/Properties'));
-const PropertyDetail = lazy(() => import('./pages/PropertyDetail'));
-const MarketData = lazy(() => import('./pages/MarketData'));
-const Appraisals = lazy(() => import('./pages/Appraisals'));
-const NotFound = lazy(() => import('./pages/NotFound'));
+import NotFound from './pages/NotFound';
 
 function App() {
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
-      <Navbar />
-      <div className="flex flex-1">
-        <Sidebar />
-        <main className="flex-1 p-4 overflow-auto">
-          <Suspense fallback={<div className="flex items-center justify-center h-full">Loading...</div>}>
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/properties" element={<Properties />} />
-              <Route path="/properties/:id" element={<PropertyDetail />} />
-              <Route path="/market-data" element={<MarketData />} />
-              <Route path="/appraisals" element={<Appraisals />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-        </main>
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/properties" element={<Properties />} />
+        <Route path="/property/:id" element={<PropertyDetail />} />
+        <Route path="/market-data" element={<MarketData />} />
+        <Route path="/appraisals" element={<Appraisals />} />
+        <Route path="/appraisal/:id" element={<AppraisalDetail />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
     </div>
   );
 }
+
+// Placeholder components to be implemented
+const Dashboard = () => <div className="container mx-auto p-6">Dashboard Coming Soon</div>;
+const Properties = () => <div className="container mx-auto p-6">Properties Coming Soon</div>;
+const PropertyDetail = () => <div className="container mx-auto p-6">Property Detail Coming Soon</div>;
+const MarketData = () => <div className="container mx-auto p-6">Market Data Coming Soon</div>;
+const Appraisals = () => <div className="container mx-auto p-6">Appraisals Coming Soon</div>;
+const AppraisalDetail = () => <div className="container mx-auto p-6">Appraisal Detail Coming Soon</div>;
+const Settings = () => <div className="container mx-auto p-6">Settings Coming Soon</div>;
 
 export default App;

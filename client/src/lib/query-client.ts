@@ -1,107 +1,56 @@
 import { QueryClient } from '@tanstack/react-query';
 
-// Base URL for API requests
-const API_BASE_URL = '/api';
+interface ApiRequestOptions extends RequestInit {
+  params?: Record<string, string>;
+}
 
-// Configure the Query Client
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
+      staleTime: 1000 * 60, // 1 minute
+      gcTime: 1000 * 60 * 5, // 5 minutes
       refetchOnWindowFocus: false,
       retry: 1,
-      staleTime: 5 * 60 * 1000, // 5 minutes
     },
   },
 });
 
-// Generic fetch wrapper for API requests
 export async function apiRequest<T>(
   endpoint: string,
-  options: RequestInit = {}
+  { params, ...customConfig }: ApiRequestOptions = {}
 ): Promise<T> {
-  const url = endpoint.startsWith('http') 
-    ? endpoint 
-    : `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
-
-  const response = await fetch(url, {
-    headers: {
-      'Content-Type': 'application/json',
-      // Add auth headers here if needed
-    },
-    ...options,
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    let errorMessage = `API error: ${response.status}`;
-    try {
-      const errorData = JSON.parse(errorText);
-      errorMessage = errorData.message || errorMessage;
-    } catch (e) {
-      // If not JSON, use the text directly
-      if (errorText) {
-        errorMessage = errorText;
-      }
-    }
-    
-    throw new Error(errorMessage);
+  const url = new URL(endpoint, window.location.origin);
+  
+  // Add query parameters if they exist
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      url.searchParams.append(key, value);
+    });
   }
 
-  // For endpoints returning no content (204)
+  const config: RequestInit = {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    ...customConfig,
+  };
+
+  // Convert body to JSON string if it exists and is an object
+  if (config.body && typeof config.body === 'object') {
+    config.body = JSON.stringify(config.body);
+  }
+
+  const response = await fetch(url.toString(), config);
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    return Promise.reject(new Error(errorData.message || `API error: ${response.status}`));
+  }
+
   if (response.status === 204) {
     return {} as T;
   }
 
   return response.json();
 }
-
-// Helper for POST requests
-export async function postRequest<T, R = any>(
-  endpoint: string,
-  data: R
-): Promise<T> {
-  return apiRequest<T>(endpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
-}
-
-// Helper for PUT requests
-export async function putRequest<T, R = any>(
-  endpoint: string,
-  data: R
-): Promise<T> {
-  return apiRequest<T>(endpoint, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
-}
-
-// Helper for PATCH requests
-export async function patchRequest<T, R = any>(
-  endpoint: string,
-  data: R
-): Promise<T> {
-  return apiRequest<T>(endpoint, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
-}
-
-// Helper for DELETE requests
-export async function deleteRequest<T>(endpoint: string): Promise<T> {
-  return apiRequest<T>(endpoint, {
-    method: 'DELETE',
-  });
-}
-
-export default queryClient;
