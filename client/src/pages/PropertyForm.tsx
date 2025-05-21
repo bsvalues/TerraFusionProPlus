@@ -158,10 +158,10 @@ const PropertyForm = () => {
     // Prepare data for submission - convert empty strings to null for optional fields
     const propertyData = {
       ...formData,
-      bedrooms: formData.bedrooms === '' ? null : formData.bedrooms,
-      bathrooms: formData.bathrooms === '' ? null : formData.bathrooms,
-      yearBuilt: formData.yearBuilt === '' ? null : formData.yearBuilt,
-      lotSize: formData.lotSize === '' ? null : formData.lotSize,
+      bedrooms: formData.bedrooms === '' ? null : Number(formData.bedrooms),
+      bathrooms: formData.bathrooms === '' ? null : Number(formData.bathrooms),
+      yearBuilt: formData.yearBuilt === '' ? null : Number(formData.yearBuilt),
+      lotSize: formData.lotSize === '' ? null : Number(formData.lotSize),
       description: formData.description === '' ? null : formData.description
     };
 
@@ -421,7 +421,7 @@ const PropertyForm = () => {
                   type="number"
                   id="lotSize"
                   name="lotSize"
-                  value={formData.lotSize}
+                  value={formData.lotSize === null ? '' : formData.lotSize}
                   onChange={handleInputChange}
                   className="block w-full border-gray-300 rounded-md"
                   min="0.01"
