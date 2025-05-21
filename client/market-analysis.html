@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Market Analysis | TerraFusion Professional</title>
+  <meta name="description" content="Analyze real estate market trends and data with TerraFusion Professional's comprehensive market analysis tools.">
+  
+  <style>
+    :root {
+      --primary: #1a3a5f;
+      --primary-light: #2c5282;
+      --secondary: #3182ce;
+      --accent: #4fd1c5;
+      --gray-50: #f8fafc;
+      --gray-100: #f0f4f8;
+      --gray-200: #e2e8f0;
+      --gray-300: #cbd5e0;
+      --gray-400: #a0aec0;
+      --gray-500: #718096;
+      --gray-700: #4a5568;
+      --gray-800: #2d3748;
+      --gray-900: #1a202c;
+      --danger: #e53e3e;
+      --success: #38a169;
+      --warning: #ed8936;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: var(--gray-100);
+      color: var(--gray-800);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    * {
+      box-sizing: border-box;
+    }
+    
+    .dashboard-container {
+      display: flex;
+      flex: 1;
+    }
+    
+    /* Sidebar Styles - Same as other pages */
+    .sidebar {
+      width: 250px;
+      background-color: var(--primary);
+      color: white;
+      padding: 1.5rem 0;
+      flex-shrink: 0;
+      overflow-y: auto;
+      height: 100vh;
+      position: sticky;
+      top: 0;
+    }
+    
+    .logo-container {
+      padding: 0 1.5rem 1.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      margin-bottom: 1.5rem;
+    }
+    
+    .logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+      white-space: nowrap;
+      margin: 0;
+    }
+    
+    .logo-subtitle {
+      font-size: 0.8rem;
+      opacity: 0.8;
+      margin: 0.25rem 0 0;
+    }
+    
+    .nav-section {
+      margin-bottom: 1.5rem;
+    }
+    
+    .nav-section-title {
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      font-weight: bold;
+      letter-spacing: 0.05em;
+      color: rgba(255,255,255,0.6);
+      padding: 0 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .nav-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .nav-item {
+      margin-bottom: 0.25rem;
+    }
+    
+    .nav-link {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      color: rgba(255,255,255,0.8);
+      padding: 0.75rem 1.5rem;
+      transition: all 0.2s;
+    }
+    
+    .nav-link:hover, .nav-link.active {
+      background-color: rgba(255,255,255,0.1);
+      color: white;
+    }
+    
+    .nav-link svg {
+      width: 18px;
+      height: 18px;
+      margin-right: 0.75rem;
+      opacity: 0.8;
+    }
+    
+    .nav-link:hover svg, .nav-link.active svg {
+      opacity: 1;
+    }
+    
+    .user-section {
+      margin-top: auto;
+      padding: 1rem 1.5rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      align-items: center;
+    }
+    
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: var(--secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 0.75rem;
+      font-weight: bold;
+      font-size: 1rem;
+    }
+    
+    .user-info {
+      flex: 1;
+    }
+    
+    .user-name {
+      font-weight: 600;
+      margin: 0;
+      line-height: 1.2;
+    }
+    
+    .user-role {
+      font-size: 0.8rem;
+      opacity: 0.8;
+      margin: 0;
+    }
+    
+    /* Main Content Area */
+    .main-content {
+      flex: 1;
+      max-width: calc(100% - 250px);
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* Header */
+    .header {
+      background-color: white;
+      padding: 1rem 2rem;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 10;
+    }
+    
+    .page-title {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin: 0;
+      color: var(--gray-900);
+    }
+    
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 500;
+      font-size: 0.875rem;
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+    
+    .btn svg {
+      width: 16px;
+      height: 16px;
+      margin-right: 0.5rem;
+    }
+    
+    .btn-primary {
+      background-color: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background-color: var(--primary-light);
+    }
+    
+    .btn-secondary {
+      background-color: white;
+      border: 1px solid var(--gray-300);
+      color: var(--gray-800);
+    }
+    
+    .btn-secondary:hover {
+      background-color: var(--gray-50);
+    }
+    
+    /* Market Analysis Content */
+    .market-content {
+      padding: 2rem;
+      flex: 1;
+    }
+    
+    .filters-section {
+      background-color: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .filters-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin: 0 0 1rem;
+      color: var(--gray-900);
+    }
+    
+    .filters-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.5rem;
+    }
+    
+    .filter-group {
+      margin-bottom: 1rem;
+    }
+    
+    .filter-label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      color: var(--gray-800);
+      font-size: 0.875rem;
+    }
+    
+    .filter-control {
+      display: block;
+      width: 100%;
+      padding: 0.625rem 0.75rem;
+      font-size: 0.875rem;
+      line-height: 1.5;
+      color: var(--gray-900);
+      background-color: white;
+      background-clip: padding-box;
+      border: 1px solid var(--gray-300);
+      border-radius: 0.375rem;
+      transition: border-color 0.15s ease-in-out;
+    }
+    
+    .filter-control:focus {
+      border-color: var(--secondary);
+      outline: 0;
+      box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.25);
+    }
+    
+    .filter-select {
+      display: block;
+      width: 100%;
+      padding: 0.625rem 2rem 0.625rem 0.75rem;
+      font-size: 0.875rem;
+      font-weight: 400;
+      line-height: 1.5;
+      color: var(--gray-900);
+      background-color: white;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%234a5568'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.75rem center;
+      background-size: 16px 12px;
+      border: 1px solid var(--gray-300);
+      border-radius: 0.375rem;
+      appearance: none;
+    }
+    
+    .filters-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 1.5rem;
+      gap: 0.75rem;
+    }
+    
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--gray-900);
+      margin: 0 0 1.5rem;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+      background-color: white;
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .stat-title {
+      font-size: 0.875rem;
+      color: var(--gray-700);
+      margin: 0 0 0.75rem;
+    }
+    
+    .stat-value {
+      font-size: 1.875rem;
+      font-weight: bold;
+      color: var(--gray-900);
+      margin: 0 0 0.5rem;
+    }
+    
+    .stat-change {
+      display: flex;
+      align-items: center;
+      font-size: 0.875rem;
+    }
+    
+    .stat-change.positive {
+      color: var(--success);
+    }
+    
+    .stat-change.negative {
+      color: var(--danger);
+    }
+    
+    .stat-change svg {
+      width: 14px;
+      height: 14px;
+      margin-right: 0.25rem;
+    }
+    
+    .chart-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .chart-card {
+      background-color: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      padding: 1.5rem;
+    }
+    
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    .chart-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--gray-900);
+      margin: 0;
+    }
+    
+    .chart-period {
+      font-size: 0.875rem;
+      color: var(--gray-500);
+    }
+    
+    .chart-container {
+      height: 300px;
+      position: relative;
+    }
+    
+    .chart-placeholder {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--gray-50);
+      color: var(--gray-700);
+      border-radius: 0.5rem;
+    }
+    
+    .property-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .property-card {
+      background-color: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    
+    .property-image {
+      height: 180px;
+      background-color: var(--gray-300);
+      position: relative;
+    }
+    
+    .property-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .property-price {
+      position: absolute;
+      bottom: 1rem;
+      left: 1rem;
+      background-color: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 0.375rem 0.75rem;
+      border-radius: 0.375rem;
+      font-weight: 600;
+    }
+    
+    .property-content {
+      padding: 1.5rem;
+    }
+    
+    .property-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin: 0 0 0.5rem;
+      color: var(--gray-900);
+    }
+    
+    .property-address {
+      color: var(--gray-700);
+      margin: 0 0 1rem;
+      font-size: 0.875rem;
+    }
+    
+    .property-specs {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.875rem;
+      color: var(--gray-700);
+    }
+    
+    .property-spec {
+      display: flex;
+      align-items: center;
+    }
+    
+    .property-spec svg {
+      width: 16px;
+      height: 16px;
+      margin-right: 0.5rem;
+      color: var(--gray-500);
+    }
+    
+    .property-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--gray-200);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.875rem;
+    }
+    
+    .property-date {
+      color: var(--gray-500);
+    }
+    
+    .property-ppsqft {
+      color: var(--primary-light);
+      font-weight: 600;
+    }
+    
+    .data-table-container {
+      background-color: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+    
+    .data-table-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--gray-200);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .data-table-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin: 0;
+      color: var(--gray-900);
+    }
+    
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .data-table th,
+    .data-table td {
+      padding: 1rem 1.5rem;
+      text-align: left;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    
+    .data-table th {
+      background-color: var(--gray-50);
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: var(--gray-700);
+    }
+    
+    .data-table tr:last-child td {
+      border-bottom: none;
+    }
+    
+    .data-table-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--gray-200);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .pagination {
+      display: flex;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .pagination-item {
+      margin: 0 0.25rem;
+    }
+    
+    .pagination-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      border-radius: 0.375rem;
+      color: var(--gray-700);
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    
+    .pagination-link:hover {
+      background-color: var(--gray-100);
+    }
+    
+    .pagination-link.active {
+      background-color: var(--primary);
+      color: white;
+    }
+    
+    .pagination-link.disabled {
+      color: var(--gray-400);
+      cursor: not-allowed;
+    }
+    
+    .pagination-link svg {
+      width: 16px;
+      height: 16px;
+    }
+    
+    /* Heat map component */
+    .heatmap-container {
+      background-color: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .heatmap-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    .heatmap-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--gray-900);
+      margin: 0;
+    }
+    
+    .heatmap-map {
+      height: 400px;
+      background-color: var(--gray-100);
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gray-700);
+    }
+    
+    .heatmap-legend {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1.5rem;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin-right: 1rem;
+      font-size: 0.875rem;
+      color: var(--gray-700);
+    }
+    
+    .legend-color {
+      width: 1rem;
+      height: 1rem;
+      border-radius: 0.25rem;
+      margin-right: 0.5rem;
+    }
+    
+    .legend-low {
+      background-color: #9ae6b4;
+    }
+    
+    .legend-medium {
+      background-color: #fbd38d;
+    }
+    
+    .legend-high {
+      background-color: #feb2b2;
+    }
+    
+    .legend-very-high {
+      background-color: #fc8181;
+    }
+    
+    /* Media Queries */
+    @media (max-width: 1200px) {
+      .chart-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .dashboard-container {
+        flex-direction: column;
+      }
+      
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: static;
+      }
+      
+      .main-content {
+        max-width: 100%;
+      }
+      
+      .header {
+        padding: 1rem;
+      }
+      
+      .market-content {
+        padding: 1rem;
+      }
+      
+      .filters-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      .property-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .filters-actions {
+        flex-direction: column;
+      }
+      
+      .filters-actions .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Sidebar - Same as previous pages -->
+    <aside class="sidebar">
+      <div class="logo-container">
+        <h1 class="logo">TerraFusion Pro</h1>
+        <p class="logo-subtitle">Real Estate Appraisal Platform</p>
+      </div>
+      
+      <div class="nav-section">
+        <h2 class="nav-section-title">Main</h2>
+        <ul class="nav-list">
+          <li class="nav-item">
+            <a href="dashboard.html" class="nav-link">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+              </svg>
+              Dashboard
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="property-details.html" class="nav-link">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+              </svg>
+              Properties
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="appraisal-form.html" class="nav-link">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+              </svg>
+              Appraisals
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+              Reports
+            </a>
+          </li>
+        </ul>
+      </div>
+      
+      <div class="nav-section">
+        <h2 class="nav-section-title">Analysis</h2>
+        <ul class="nav-list">
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+              </svg>
+              Comparables
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link active">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="3" y1="9" x2="21" y2="9"></line>
+                <line x1="9" y1="21" x2="9" y2="9"></line>
+              </svg>
+              Market Data
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 20v-6M6 20V10M18 20V4"></path>
+              </svg>
+              Valuation
+            </a>
+          </li>
+        </ul>
+      </div>
+      
+      <!-- Settings section and user section - same as previous pages -->
+      <div class="nav-section">
+        <h2 class="nav-section-title">Settings</h2>
+        <ul class="nav-list">
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              Profile
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              </svg>
+              Settings
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              Team
+            </a>
+          </li>
+        </ul>
+      </div>
+      
+      <div class="user-section">
+        <div class="user-avatar">JD</div>
+        <div class="user-info">
+          <p class="user-name">John Doe</p>
+          <p class="user-role">Senior Appraiser</p>
+        </div>
+      </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+      <header class="header">
+        <h1 class="page-title">Market Analysis</h1>
+        <div class="header-actions">
+          <button class="btn btn-secondary">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <polyline points="1 20 1 14 7 14"></polyline>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+            Refresh Data
+          </button>
+          <button class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Export Report
+          </button>
+        </div>
+      </header>
+      
+      <div class="market-content">
+        <!-- Filters Section -->
+        <div class="filters-section">
+          <h2 class="filters-title">Market Data Filters</h2>
+          <div class="filters-grid">
+            <div class="filter-group">
+              <label class="filter-label" for="location">Location</label>
+              <select class="filter-select" id="location">
+                <option value="">All Areas</option>
+                <option value="94105">San Francisco (94105)</option>
+                <option value="94107">San Francisco (94107)</option>
+                <option value="94111">San Francisco (94111)</option>
+                <option value="94114">San Francisco (94114)</option>
+                <option value="94117">San Francisco (94117)</option>
+              </select>
+            </div>
+            
+            <div class="filter-group">
+              <label class="filter-label" for="property-type">Property Type</label>
+              <select class="filter-select" id="property-type">
+                <option value="">All Types</option>
+                <option value="single-family">Single Family</option>
+                <option value="condo">Condominium</option>
+                <option value="townhouse">Townhouse</option>
+                <option value="multi-family">Multi-Family</option>
+                <option value="commercial">Commercial</option>
+              </select>
+            </div>
+            
+            <div class="filter-group">
+              <label class="filter-label" for="date-range">Date Range</label>
+              <select class="filter-select" id="date-range">
+                <option value="last-month">Last Month</option>
+                <option value="last-quarter" selected>Last Quarter</option>
+                <option value="last-6-months">Last 6 Months</option>
+                <option value="last-year">Last Year</option>
+                <option value="custom">Custom Range</option>
+              </select>
+            </div>
+            
+            <div class="filter-group">
+              <label class="filter-label" for="min-price">Min Price</label>
+              <input type="number" class="filter-control" id="min-price" placeholder="Enter minimum price">
+            </div>
+            
+            <div class="filter-group">
+              <label class="filter-label" for="max-price">Max Price</label>
+              <input type="number" class="filter-control" id="max-price" placeholder="Enter maximum price">
+            </div>
+            
+            <div class="filter-group">
+              <label class="filter-label" for="min-size">Min Size (sq ft)</label>
+              <input type="number" class="filter-control" id="min-size" placeholder="Enter minimum size">
+            </div>
+          </div>
+          
+          <div class="filters-actions">
+            <button class="btn btn-secondary">Reset Filters</button>
+            <button class="btn btn-primary">Apply Filters</button>
+          </div>
+        </div>
+        
+        <!-- Market Stats -->
+        <h2 class="section-title">Market Summary</h2>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <h3 class="stat-title">Median Sale Price</h3>
+            <p class="stat-value">$985,000</p>
+            <div class="stat-change positive">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="18 15 12 9 6 15"></polyline>
+              </svg>
+              4.2% from last quarter
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <h3 class="stat-title">Average Sale Price</h3>
+            <p class="stat-value">$1,050,000</p>
+            <div class="stat-change positive">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="18 15 12 9 6 15"></polyline>
+              </svg>
+              3.8% from last quarter
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <h3 class="stat-title">Price per Square Foot</h3>
+            <p class="stat-value">$525</p>
+            <div class="stat-change positive">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="18 15 12 9 6 15"></polyline>
+              </svg>
+              2.5% from last quarter
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <h3 class="stat-title">Total Sales</h3>
+            <p class="stat-value">127</p>
+            <div class="stat-change negative">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+              5.2% from last quarter
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <h3 class="stat-title">Avg. Days on Market</h3>
+            <p class="stat-value">18</p>
+            <div class="stat-change negative">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+              2 days from last quarter
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <h3 class="stat-title">Sale to List Ratio</h3>
+            <p class="stat-value">98.5%</p>
+            <div class="stat-change negative">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+              1.2% from last quarter
+            </div>
+          </div>
+        </div>
+        
+        <!-- Charts Section -->
+        <div class="chart-grid">
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3 class="chart-title">Price Trends</h3>
+              <div class="chart-period">Last 12 Months</div>
+            </div>
+            <div class="chart-container">
+              <div class="chart-placeholder">
+                Price Trend Chart - Shows median prices over time
+              </div>
+            </div>
+          </div>
+          
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3 class="chart-title">Property Types</h3>
+              <div class="chart-period">Current Quarter</div>
+            </div>
+            <div class="chart-container">
+              <div class="chart-placeholder">
+                Property Type Distribution Chart
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="chart-grid">
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3 class="chart-title">Price Ranges</h3>
+              <div class="chart-period">Current Quarter</div>
+            </div>
+            <div class="chart-container">
+              <div class="chart-placeholder">
+                Price Range Distribution Chart
+              </div>
+            </div>
+          </div>
+          
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3 class="chart-title">Days on Market</h3>
+              <div class="chart-period">Last 12 Months</div>
+            </div>
+            <div class="chart-container">
+              <div class="chart-placeholder">
+                Days on Market Trend Chart
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Heat Map Section -->
+        <div class="heatmap-container">
+          <div class="heatmap-header">
+            <h3 class="heatmap-title">Price Heat Map by Location</h3>
+            <div class="chart-period">Current Quarter</div>
+          </div>
+          <div class="heatmap-map">
+            Price Heat Map - Geographic distribution of property prices
+          </div>
+          <div class="heatmap-legend">
+            <div class="legend-item">
+              <div class="legend-color legend-low"></div>
+              <span>Low ($500k-$750k)</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color legend-medium"></div>
+              <span>Medium ($750k-$1M)</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color legend-high"></div>
+              <span>High ($1M-$1.5M)</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color legend-very-high"></div>
+              <span>Very High ($1.5M+)</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Recent Sales Section -->
+        <h2 class="section-title">Recent Sales</h2>
+        <div class="property-grid">
+          <div class="property-card">
+            <div class="property-image">
+              <img src="https://placehold.co/600x400" alt="Property at 145 Oak Street">
+              <div class="property-price">$895,000</div>
+            </div>
+            <div class="property-content">
+              <h3 class="property-title">145 Oak Street</h3>
+              <p class="property-address">San Francisco, CA 94105</p>
+              <div class="property-specs">
+                <div class="property-spec">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                  </svg>
+                  <span>2,250 sq ft</span>
+                </div>
+                <div class="property-spec">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 22v-8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v8"></path>
+                    <path d="M5 12V7a5 5 0 0 1 9.9-1"></path>
+                  </svg>
+                  <span>4 Beds</span>
+                </div>
+                <div class="property-spec">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                  <span>2.5 Baths</span>
+                </div>
+              </div>
+            </div>
+            <div class="property-footer">
+              <div class="property-date">Sold: Apr 12, 2025</div>
+              <div class="property-ppsqft">$398/sq ft</div>
+            </div>
+          </div>
+          
+          <div class="property-card">
+            <div class="property-image">
+              <img src="https://placehold.co/600x400" alt="Property at 78 Pine Avenue">
+              <div class="property-price">$925,000</div>
+            </div>
+            <div class="property-content">
+              <h3 class="property-title">78 Pine Avenue</h3>
+              <p class="property-address">San Francisco, CA 94107</p>
+              <div class="property-specs">
+                <div class="property-spec">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                  </svg>
+                  <span>2,400 sq ft</span>
+                </div>
+                <div class="property-spec">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 22v-8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v8"></path>
+                    <path d="M5 12V7a5 5 0 0 1 9.9-1"></path>
+                  </svg>
+                  <span>4 Beds</span>
+                </div>
+                <div class="property-spec">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                  <span>3 Baths</span>
+                </div>
+              </div>
+            </div>
+            <div class="property-footer">
+              <div class="property-date">Sold: Mar 28, 2025</div>
+              <div class="property-ppsqft">$385/sq ft</div>
+            </div>
+          </div>
+          
+          <div class="property-card">
+            <div class="property-image">
+              <img src="https://placehold.co/600x400" alt="Property at 210 Maple Lane">
+              <div class="property-price">$850,000</div>
+            </div>
+            <div class="property-content">
+              <h3 class="property-title">210 Maple Lane</h3>
+              <p class="property-address">San Francisco, CA 94114</p>
+              <div class="property-specs">
+                <div class="property-spec">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                  </svg>
+                  <span>2,100 sq ft</span>
+                </div>
+                <div class="property-spec">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 22v-8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v8"></path>
+                    <path d="M5 12V7a5 5 0 0 1 9.9-1"></path>
+                  </svg>
+                  <span>3 Beds</span>
+                </div>
+                <div class="property-spec">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                  <span>2 Baths</span>
+                </div>
+              </div>
+            </div>
+            <div class="property-footer">
+              <div class="property-date">Sold: Mar 15, 2025</div>
+              <div class="property-ppsqft">$405/sq ft</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Market Data Table -->
+        <div class="data-table-container">
+          <div class="data-table-header">
+            <h3 class="data-table-title">Detailed Market Data by Zip Code</h3>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Zip Code</th>
+                  <th>Property Type</th>
+                  <th>Median Price</th>
+                  <th>Average Price</th>
+                  <th>Avg. Price/Sq Ft</th>
+                  <th>Total Sales</th>
+                  <th>Avg DOM</th>
+                  <th>YoY Change</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>94105</td>
+                  <td>Single Family</td>
+                  <td>$985,000</td>
+                  <td>$1,050,000</td>
+                  <td>$525</td>
+                  <td>43</td>
+                  <td>18</td>
+                  <td>+4.2%</td>
+                </tr>
+                <tr>
+                  <td>94105</td>
+                  <td>Condo</td>
+                  <td>$750,000</td>
+                  <td>$785,000</td>
+                  <td>$620</td>
+                  <td>27</td>
+                  <td>22</td>
+                  <td>+2.8%</td>
+                </tr>
+                <tr>
+                  <td>94107</td>
+                  <td>Single Family</td>
+                  <td>$1,050,000</td>
+                  <td>$1,125,000</td>
+                  <td>$550</td>
+                  <td>32</td>
+                  <td>15</td>
+                  <td>+5.5%</td>
+                </tr>
+                <tr>
+                  <td>94107</td>
+                  <td>Condo</td>
+                  <td>$795,000</td>
+                  <td>$825,000</td>
+                  <td>$640</td>
+                  <td>38</td>
+                  <td>19</td>
+                  <td>+3.4%</td>
+                </tr>
+                <tr>
+                  <td>94111</td>
+                  <td>Single Family</td>
+                  <td>$1,250,000</td>
+                  <td>$1,375,000</td>
+                  <td>$585</td>
+                  <td>24</td>
+                  <td>16</td>
+                  <td>+4.8%</td>
+                </tr>
+                <tr>
+                  <td>94111</td>
+                  <td>Condo</td>
+                  <td>$925,000</td>
+                  <td>$975,000</td>
+                  <td>$695</td>
+                  <td>35</td>
+                  <td>20</td>
+                  <td>+2.5%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="data-table-footer">
+            <div>Showing 6 of 24 records</div>
+            <ul class="pagination">
+              <li class="pagination-item">
+                <a href="#" class="pagination-link disabled">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                  </svg>
+                </a>
+              </li>
+              <li class="pagination-item">
+                <a href="#" class="pagination-link active">1</a>
+              </li>
+              <li class="pagination-item">
+                <a href="#" class="pagination-link">2</a>
+              </li>
+              <li class="pagination-item">
+                <a href="#" class="pagination-link">3</a>
+              </li>
+              <li class="pagination-item">
+                <a href="#" class="pagination-link">4</a>
+              </li>
+              <li class="pagination-item">
+                <a href="#" class="pagination-link">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // This would normally contain JavaScript for the interactive charts and maps
+      console.log('Market Analysis page loaded');
+      
+      // Placeholder for chart initialization
+      // In a real implementation, you'd use a library like Chart.js or Recharts
+    });
+  </script>
+</body>
+</html>
