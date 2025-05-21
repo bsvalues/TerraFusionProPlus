@@ -1,32 +1,45 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useState } from 'react';
+import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
+import Dashboard from './pages/Dashboard';
 import Properties from './pages/Properties';
 import PropertyDetail from './pages/PropertyDetail';
+import Appraisals from './pages/Appraisals';
+import Comparables from './pages/Comparables';
+import Reports from './pages/Reports';
+import MarketData from './pages/MarketData';
+import Settings from './pages/Settings';
+import PropertyForm from './pages/PropertyForm';
 
-function App() {
+export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
   return (
-    <Router>
-      <div className="flex h-screen bg-gray-100">
-        <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
-        
-        <div className="flex flex-col flex-1 overflow-hidden">
-          <Navbar onMenuButtonClick={() => setSidebarOpen(!sidebarOpen)} />
-          
-          <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
-            <Routes>
-              <Route path="/" element={<Properties />} />
-              <Route path="/properties" element={<Properties />} />
-              <Route path="/properties/:id" element={<PropertyDetail />} />
-            </Routes>
-          </main>
-        </div>
+    <div className="flex h-screen bg-gray-50">
+      <Navbar toggleSidebar={toggleSidebar} />
+      <Sidebar isOpen={sidebarOpen} />
+      
+      <div className="flex-1 pt-16 lg:pl-20 overflow-auto">
+        <main className="p-4 md:p-6">
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/properties" element={<Properties />} />
+            <Route path="/properties/:id" element={<PropertyDetail />} />
+            <Route path="/properties/new" element={<PropertyForm />} />
+            <Route path="/properties/edit/:id" element={<PropertyForm />} />
+            <Route path="/appraisals" element={<Appraisals />} />
+            <Route path="/comparables" element={<Comparables />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/market-data" element={<MarketData />} />
+            <Route path="/settings" element={<Settings />} />
+          </Routes>
+        </main>
       </div>
-    </Router>
+    </div>
   );
 }
-
-export default App;

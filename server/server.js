@@ -1,148 +1,164 @@
 const express = require('express');
-const path = require('path');
 const cors = require('cors');
-const { Pool } = require('pg');
-require('dotenv').config();
+const path = require('path');
+const { initDatabase } = require('./db');
+const { storage } = require('./storage');
 
-// Initialize Express app
+// Create Express app
 const app = express();
 const PORT = process.env.PORT || 5000;
-
-// Connect to PostgreSQL database
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-// Test database connection
-pool.query('SELECT NOW()', (err, res) => {
-  if (err) {
-    console.error('Error connecting to database:', err);
-  } else {
-    console.log('Database connected successfully at:', res.rows[0].now);
-  }
-});
+// Database initialization
+let dbInitialized = false;
 
-// API Routes - Using real data from PostgreSQL
+// API Endpoints
 app.get('/api/properties', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM properties ORDER BY id');
-    res.json(result.rows);
+    if (!dbInitialized) {
+      await initDatabase();
+      dbInitialized = true;
+    }
+    
+    const properties = await storage.getProperties();
+    res.json(properties);
   } catch (error) {
     console.error('Error fetching properties:', error);
-    res.status(500).json({ message: 'Error fetching properties' });
+    res.status(500).json({ error: 'Failed to fetch properties' });
   }
 });
 
 app.get('/api/properties/:id', async (req, res) => {
   try {
-    const { id } = req.params;
-    const result = await pool.query('SELECT * FROM properties WHERE id = $1', [id]);
-    
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Property not found' });
+    if (!dbInitialized) {
+      await initDatabase();
+      dbInitialized = true;
     }
     
-    res.json(result.rows[0]);
+    const property = await storage.getProperty(parseInt(req.params.id));
+    if (!property) {
+      return res.status(404).json({ error: 'Property not found' });
+    }
+    res.json(property);
   } catch (error) {
     console.error('Error fetching property:', error);
-    res.status(500).json({ message: 'Error fetching property' });
+    res.status(500).json({ error: 'Failed to fetch property' });
   }
 });
 
-app.post('/api/properties', async (req, res) => {
+app.get('/api/appraisals', async (req, res) => {
   try {
-    const { 
-      address, city, state, zip_code, property_type, 
-      year_built, square_feet, bedrooms, bathrooms, 
-      lot_size, description, parcel_number, zoning 
-    } = req.body;
-    
-    const result = await pool.query(
-      `INSERT INTO properties 
-       (address, city, state, zip_code, property_type, year_built, square_feet, 
-        bedrooms, bathrooms, lot_size, description, parcel_number, zoning, created_at, updated_at) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW()) 
-       RETURNING *`,
-      [address, city, state, zip_code, property_type, year_built, square_feet, 
-       bedrooms, bathrooms, lot_size, description, parcel_number, zoning]
-    );
-    
-    res.status(201).json(result.rows[0]);
-  } catch (error) {
-    console.error('Error creating property:', error);
-    res.status(500).json({ message: 'Error creating property' });
-  }
-});
-
-app.put('/api/properties/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { 
-      address, city, state, zip_code, property_type, 
-      year_built, square_feet, bedrooms, bathrooms, 
-      lot_size, description, parcel_number, zoning 
-    } = req.body;
-    
-    const result = await pool.query(
-      `UPDATE properties SET 
-        address = $1, 
-        city = $2, 
-        state = $3, 
-        zip_code = $4, 
-        property_type = $5, 
-        year_built = $6, 
-        square_feet = $7, 
-        bedrooms = $8, 
-        bathrooms = $9, 
-        lot_size = $10, 
-        description = $11, 
-        parcel_number = $12, 
-        zoning = $13,
-        updated_at = NOW()
-       WHERE id = $14 
-       RETURNING *`,
-      [address, city, state, zip_code, property_type, year_built, square_feet, 
-       bedrooms, bathrooms, lot_size, description, parcel_number, zoning, id]
-    );
-    
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Property not found' });
+    if (!dbInitialized) {
+      await initDatabase();
+      dbInitialized = true;
     }
     
-    res.json(result.rows[0]);
+    // If property ID is provided, get appraisals for that property
+    if (req.query.propertyId) {
+      const appraisals = await storage.getAppraisalsByProperty(parseInt(req.query.propertyId));
+      return res.json(appraisals);
+    }
+    
+    // If appraiser ID is provided, get appraisals for that appraiser
+    if (req.query.appraiserId) {
+      const appraisals = await storage.getAppraisalsByAppraiser(parseInt(req.query.appraiserId));
+      return res.json(appraisals);
+    }
+    
+    // Default: return an empty array (in a real app, you'd return all appraisals)
+    res.json([]);
   } catch (error) {
-    console.error('Error updating property:', error);
-    res.status(500).json({ message: 'Error updating property' });
+    console.error('Error fetching appraisals:', error);
+    res.status(500).json({ error: 'Failed to fetch appraisals' });
   }
 });
 
-// Serve static files from the React build in production
+app.get('/api/appraisals/:id', async (req, res) => {
+  try {
+    if (!dbInitialized) {
+      await initDatabase();
+      dbInitialized = true;
+    }
+    
+    const appraisal = await storage.getAppraisal(parseInt(req.params.id));
+    if (!appraisal) {
+      return res.status(404).json({ error: 'Appraisal not found' });
+    }
+    res.json(appraisal);
+  } catch (error) {
+    console.error('Error fetching appraisal:', error);
+    res.status(500).json({ error: 'Failed to fetch appraisal' });
+  }
+});
+
+app.get('/api/comparables', async (req, res) => {
+  try {
+    if (!dbInitialized) {
+      await initDatabase();
+      dbInitialized = true;
+    }
+    
+    if (req.query.appraisalId) {
+      const comparables = await storage.getComparablesByAppraisal(parseInt(req.query.appraisalId));
+      return res.json(comparables);
+    }
+    
+    // Default: return an empty array
+    res.json([]);
+  } catch (error) {
+    console.error('Error fetching comparables:', error);
+    res.status(500).json({ error: 'Failed to fetch comparables' });
+  }
+});
+
+app.get('/api/market-data', async (req, res) => {
+  try {
+    if (!dbInitialized) {
+      await initDatabase();
+      dbInitialized = true;
+    }
+    
+    if (req.query.zipCode) {
+      const marketData = await storage.getMarketDataByZipCode(req.query.zipCode);
+      return res.json(marketData);
+    }
+    
+    if (req.query.propertyId) {
+      const marketData = await storage.getMarketDataForProperty(parseInt(req.query.propertyId));
+      return res.json(marketData);
+    }
+    
+    // Default: return an empty array
+    res.json([]);
+  } catch (error) {
+    console.error('Error fetching market data:', error);
+    res.status(500).json({ error: 'Failed to fetch market data' });
+  }
+});
+
+// Serve static assets in production
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static('client/dist'));
+  app.use(express.static(path.join(__dirname, '../client/dist')));
+  
+  app.get('*', (req, res) => {
+    res.sendFile(path.resolve(__dirname, '../client/dist', 'index.html'));
+  });
 }
 
-// For any other requests, serve the React app
-app.get('*', (req, res) => {
-  // Exclude API routes from this catch-all handler
-  if (req.path.startsWith('/api/')) {
-    return res.status(404).json({ message: 'API endpoint not found' });
-  }
-  
-  // Serve the React app for frontend routes
-  if (process.env.NODE_ENV === 'production') {
-    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
-  } else {
-    res.status(404).json({ message: 'Route not found' });
-  }
-});
-
 // Start the server
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-module.exports = app;
+// Initialize database on startup
+initDatabase()
+  .then(() => {
+    console.log('Database connected successfully at:', new Date().toISOString());
+    dbInitialized = true;
+  })
+  .catch(err => {
+    console.error('Database initialization error:', err);
+  });

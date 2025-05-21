@@ -1,152 +1,237 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Home, Plus, Search, MapPin } from 'lucide-react';
-import { Property } from '../types/schema';
+import { useQuery } from '@tanstack/react-query';
+import { Building, Plus, Search, Filter, ArrowUpDown } from 'lucide-react';
 
-const Properties = () => {
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+interface Property {
+  id: number;
+  address: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  property_type: string;
+  bedrooms: number;
+  bathrooms: string;
+  square_feet: string;
+  year_built: number;
+  description: string;
+}
+
+export default function Properties() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [propertyTypeFilter, setPropertyTypeFilter] = useState('');
+  const [sortField, setSortField] = useState<keyof Property>('address');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
-  useEffect(() => {
-    const fetchProperties = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch('/api/properties');
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch properties: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        setProperties(data);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching properties:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load properties.');
-      } finally {
-        setLoading(false);
+  const { data: properties, isLoading, error } = useQuery({
+    queryKey: ['/api/properties'],
+    queryFn: async () => {
+      const response = await fetch('/api/properties');
+      if (!response.ok) {
+        throw new Error('Failed to fetch properties');
       }
-    };
-
-    fetchProperties();
-  }, []);
-
-  // Filter properties based on search term
-  const filteredProperties = properties.filter(property => {
-    const searchFields = [
-      property.address,
-      property.city,
-      property.state,
-      property.zip_code,
-      property.property_type,
-      property.parcel_number
-    ].filter(Boolean).join(' ').toLowerCase();
-    
-    return searchTerm === '' || searchFields.includes(searchTerm.toLowerCase());
+      return response.json() as Promise<Property[]>;
+    }
   });
 
+  const handleSort = (field: keyof Property) => {
+    if (field === sortField) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  // Filter and sort properties
+  const filteredProperties = properties
+    ? properties.filter(property => {
+        const matchesSearch = 
+          searchTerm === '' || 
+          property.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          property.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          property.zip_code.toLowerCase().includes(searchTerm.toLowerCase());
+        
+        const matchesType = 
+          propertyTypeFilter === '' || 
+          property.property_type === propertyTypeFilter;
+        
+        return matchesSearch && matchesType;
+      })
+    : [];
+
+  // Sort the filtered properties
+  const sortedProperties = [...filteredProperties].sort((a, b) => {
+    const valueA = a[sortField];
+    const valueB = b[sortField];
+    
+    if (valueA < valueB) return sortDirection === 'asc' ? -1 : 1;
+    if (valueA > valueB) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  // Get unique property types for filter dropdown
+  const propertyTypes = properties 
+    ? [...new Set(properties.map(p => p.property_type))]
+    : [];
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+        <strong className="font-bold">Error!</strong>
+        <span className="block sm:inline"> Failed to load properties. Please try again later.</span>
+      </div>
+    );
+  }
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold flex items-center">
-          <Home className="mr-2 h-6 w-6 text-blue-600" />
-          Properties
-        </h1>
-        <Link
-          to="/properties/new"
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center"
-        >
-          <Plus className="h-4 w-4 mr-1" />
-          Add Property
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Properties</h1>
+          <p className="text-gray-600">Manage your real estate properties</p>
+        </div>
+        <Link to="/properties/new" className="btn btn-primary flex items-center gap-2">
+          <Plus className="w-5 h-5" />
+          <span>Add Property</span>
         </Link>
       </div>
-      
-      <div className="relative mb-6">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <Search className="h-5 w-5 text-gray-400" />
-        </div>
-        <input
-          type="text"
-          className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-          placeholder="Search properties by address, city, state, or property type..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
 
-      {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700"></div>
-        </div>
-      ) : error ? (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          <h2 className="text-xl font-bold mb-2">Error</h2>
-          <p>{error}</p>
-        </div>
-      ) : filteredProperties.length === 0 ? (
-        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-8 rounded flex flex-col items-center">
-          <div className="bg-yellow-100 p-3 rounded-full mb-4">
-            <Home className="h-6 w-6 text-yellow-600" />
+      <div className="card p-5">
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="relative flex-grow">
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+              <Search className="w-5 h-5 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              className="form-input pl-10"
+              placeholder="Search by address, city, or zip code"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
-          <h2 className="text-xl font-semibold mb-2">No Properties Found</h2>
-          {searchTerm ? (
-            <p>No properties match your search criteria. Try adjusting your search.</p>
-          ) : (
-            <p>No properties have been added yet. Click "Add Property" to create one.</p>
-          )}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProperties.map((property) => (
-            <Link
-              key={property.id}
-              to={`/properties/${property.id}`}
-              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
+          
+          <div className="flex-shrink-0 w-full md:w-48">
+            <select
+              className="form-input"
+              value={propertyTypeFilter}
+              onChange={(e) => setPropertyTypeFilter(e.target.value)}
             >
-              <div className="p-6">
-                <h2 className="text-xl font-semibold text-gray-800 mb-2">{property.address}</h2>
-                <div className="flex items-start text-gray-600 mb-4">
-                  <MapPin className="h-5 w-5 text-gray-400 mr-1 mt-0.5 flex-shrink-0" />
-                  <span>
-                    {property.city}, {property.state} {property.zip_code}
-                  </span>
-                </div>
-                
-                <div className="flex flex-wrap text-sm mt-3">
-                  {property.property_type && (
-                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs mr-2 mb-2">
-                      {property.property_type}
-                    </span>
-                  )}
-                  {property.bedrooms && (
-                    <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs mr-2 mb-2">
-                      {property.bedrooms} {property.bedrooms === 1 ? 'Bed' : 'Beds'}
-                    </span>
-                  )}
-                  {property.bathrooms && (
-                    <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs mr-2 mb-2">
-                      {property.bathrooms} {property.bathrooms === 1 ? 'Bath' : 'Baths'}
-                    </span>
-                  )}
-                  {property.square_feet && (
-                    <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs mr-2 mb-2">
-                      {property.square_feet.toLocaleString()} sq ft
-                    </span>
-                  )}
-                </div>
-              </div>
-              
-              <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
-                <span className="text-blue-600 font-medium hover:underline">View Details →</span>
-              </div>
-            </Link>
-          ))}
+              <option value="">All Property Types</option>
+              {propertyTypes.map((type) => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+          </div>
         </div>
-      )}
+
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th 
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  onClick={() => handleSort('address')}
+                >
+                  <div className="flex items-center gap-2">
+                    Address
+                    {sortField === 'address' && (
+                      <ArrowUpDown className="w-4 h-4" />
+                    )}
+                  </div>
+                </th>
+                <th 
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  onClick={() => handleSort('property_type')}
+                >
+                  <div className="flex items-center gap-2">
+                    Type
+                    {sortField === 'property_type' && (
+                      <ArrowUpDown className="w-4 h-4" />
+                    )}
+                  </div>
+                </th>
+                <th 
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  onClick={() => handleSort('city')}
+                >
+                  <div className="flex items-center gap-2">
+                    Location
+                    {sortField === 'city' && (
+                      <ArrowUpDown className="w-4 h-4" />
+                    )}
+                  </div>
+                </th>
+                <th 
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  onClick={() => handleSort('square_feet')}
+                >
+                  <div className="flex items-center gap-2">
+                    Details
+                    {sortField === 'square_feet' && (
+                      <ArrowUpDown className="w-4 h-4" />
+                    )}
+                  </div>
+                </th>
+                <th 
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  onClick={() => handleSort('year_built')}
+                >
+                  <div className="flex items-center gap-2">
+                    Year
+                    {sortField === 'year_built' && (
+                      <ArrowUpDown className="w-4 h-4" />
+                    )}
+                  </div>
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {sortedProperties.length > 0 ? (
+                sortedProperties.map((property) => (
+                  <tr key={property.id}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <Link to={`/properties/${property.id}`} className="hover:text-primary">
+                        {property.address}
+                      </Link>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{property.property_type}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {property.city}, {property.state} {property.zip_code}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {property.square_feet} sq ft • {property.bedrooms} bd • {property.bathrooms} ba
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{property.year_built}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 space-x-3">
+                      <Link to={`/properties/${property.id}`} className="text-primary hover:underline">View</Link>
+                      <Link to={`/properties/edit/${property.id}`} className="text-secondary hover:underline">Edit</Link>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} className="px-6 py-10 text-center text-gray-500">
+                    No properties found matching your search criteria.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
-};
-
-export default Properties;
+}
