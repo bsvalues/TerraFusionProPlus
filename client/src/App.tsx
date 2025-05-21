@@ -1,48 +1,45 @@
-import React, { useState } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from './lib/query-client';
+
+// Layout Components
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
+
+// Pages
 import Dashboard from './pages/Dashboard';
 import Properties from './pages/Properties';
-import Appraisals from './pages/Appraisals';
 import PropertyDetail from './pages/PropertyDetail';
-import AppraisalDetail from './pages/AppraisalDetail';
-import Comparables from './pages/Comparables';
-import MarketData from './pages/MarketData';
-import Reports from './pages/Reports';
-import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
 
 const App = () => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  
   const toggleSidebar = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
+    setSidebarOpen(!sidebarOpen);
   };
 
   return (
-    <div className="app-container">
-      <Sidebar collapsed={sidebarCollapsed} />
-      
-      <main className={`main-content ${sidebarCollapsed ? 'main-content-expanded' : ''}`}>
-        <Navbar toggleSidebar={toggleSidebar} />
-        
-        <div className="page-container">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/properties" element={<Properties />} />
-            <Route path="/properties/:id" element={<PropertyDetail />} />
-            <Route path="/appraisals" element={<Appraisals />} />
-            <Route path="/appraisals/:id" element={<AppraisalDetail />} />
-            <Route path="/comparables" element={<Comparables />} />
-            <Route path="/market-data" element={<MarketData />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <div className="min-h-screen bg-gray-50">
+          <Navbar toggleSidebar={toggleSidebar} />
+          <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
+
+          <div className="p-4 lg:ml-64 pt-20">
+            <div className="p-2 md:p-4">
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/properties" element={<Properties />} />
+                <Route path="/properties/:id" element={<PropertyDetail />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </div>
+          </div>
         </div>
-      </main>
-    </div>
+      </Router>
+    </QueryClientProvider>
   );
 };
 
