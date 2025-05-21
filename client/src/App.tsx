@@ -9,6 +9,7 @@ import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Properties from './pages/Properties';
 import PropertyDetail from './pages/PropertyDetail';
+import PropertyForm from './pages/PropertyForm';
 import Appraisals from './pages/Appraisals';
 import MarketData from './pages/MarketData';
 import Reports from './pages/Reports';
@@ -37,7 +38,9 @@ function App() {
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/properties" element={<Properties />} />
+                <Route path="/properties/new" element={<PropertyForm />} />
                 <Route path="/properties/:id" element={<PropertyDetail />} />
+                <Route path="/properties/:id/edit" element={<PropertyForm />} />
                 <Route path="/appraisals" element={<Appraisals />} />
                 <Route path="/market-data" element={<MarketData />} />
                 <Route path="/reports" element={<Reports />} />
