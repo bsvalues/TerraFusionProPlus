@@ -1,68 +1,92 @@
-import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { Dispatch, SetStateAction } from 'react';
 import { 
-  Home, 
+  X, 
+  Home,
   Building2, 
-  ClipboardCheck, 
-  TrendingUp, 
+  Scale, 
   FileText, 
-  Settings as SettingsIcon,
-  Menu,
-  X
+  BarChart4, 
+  Users, 
+  Settings 
 } from 'lucide-react';
 
-const Sidebar = () => {
-  const location = useLocation();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  
-  const navItems = [
-    { path: '/', label: 'Dashboard', icon: <Home className="h-5 w-5" /> },
-    { path: '/properties', label: 'Properties', icon: <Building2 className="h-5 w-5" /> },
-    { path: '/appraisals', label: 'Appraisals', icon: <ClipboardCheck className="h-5 w-5" /> },
-    { path: '/market-data', label: 'Market Data', icon: <TrendingUp className="h-5 w-5" /> },
-    { path: '/reports', label: 'Reports', icon: <FileText className="h-5 w-5" /> },
-    { path: '/settings', label: 'Settings', icon: <SettingsIcon className="h-5 w-5" /> },
-  ];
+interface SidebarProps {
+  isOpen: boolean;
+  setIsOpen: Dispatch<SetStateAction<boolean>>;
+}
 
-  const toggleSidebar = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
+const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
+  const navItems = [
+    { name: 'Dashboard', path: '/', icon: Home },
+    { name: 'Properties', path: '/properties', icon: Building2 },
+    { name: 'Appraisals', path: '/appraisals', icon: Scale },
+    { name: 'Reports', path: '/reports', icon: FileText },
+    { name: 'Market Data', path: '/market-data', icon: BarChart4 },
+    { name: 'Team', path: '/team', icon: Users },
+    { name: 'Settings', path: '/settings', icon: Settings },
+  ];
 
   return (
     <>
-      {/* Mobile menu button */}
-      <div className="lg:hidden fixed top-4 left-4 z-20">
-        <button 
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="p-2 rounded-md bg-white shadow-md"
-        >
-          {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
-      </div>
+      {/* Mobile sidebar backdrop */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-gray-600 bg-opacity-75 z-20 md:hidden"
+          onClick={() => setIsOpen(false)}
+        ></div>
+      )}
 
-      {/* Sidebar for desktop */}
-      <div className={`bg-gray-800 text-white w-64 fixed inset-y-0 left-0 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-200 ease-in-out z-10`}>
-        <div className="flex items-center justify-center h-16 border-b border-gray-700">
-          <span className="text-xl font-semibold">TerraFusion Pro</span>
+      {/* Sidebar */}
+      <div 
+        className={`fixed md:sticky top-0 left-0 bottom-0 flex flex-col w-64 bg-white border-r border-gray-200 z-30 transform ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        } md:translate-x-0 transition-transform duration-300 ease-in-out`}
+      >
+        <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
+          <Link to="/" className="flex items-center">
+            <img
+              src="/assets/logo.svg"
+              alt="TerraFusion Professional"
+              className="h-8 w-auto mr-2"
+              onError={(e) => {
+                e.currentTarget.src = 'https://via.placeholder.com/32?text=TFP';
+              }}
+            />
+            <span className="text-xl font-semibold text-gray-900">TFP</span>
+          </Link>
+          <button
+            className="text-gray-500 hover:text-gray-700 md:hidden"
+            onClick={() => setIsOpen(false)}
+          >
+            <X className="h-6 w-6" />
+          </button>
         </div>
-        <nav className="mt-5">
-          <div className="px-2 space-y-1">
-            {navItems.map((item) => (
+
+        <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            return (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center px-4 py-3 text-sm rounded-md ${
-                  location.pathname === item.path
-                    ? 'bg-gray-900 text-white'
-                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                }`}
+                className="flex items-center px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-md"
               >
-                {item.icon}
-                <span className="ml-3">{item.label}</span>
+                <Icon className="h-5 w-5 mr-3" />
+                <span>{item.name}</span>
               </Link>
-            ))}
-          </div>
+            );
+          })}
         </nav>
+
+        <div className="p-4 border-t border-gray-200">
+          <a
+            href="#"
+            className="flex items-center text-sm text-gray-500 hover:text-gray-700"
+          >
+            <span className="ml-2">Documentation</span>
+          </a>
+        </div>
       </div>
     </>
   );
