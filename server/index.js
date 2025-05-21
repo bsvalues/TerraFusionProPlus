@@ -7,7 +7,7 @@ const { insertPropertySchema, insertAppraisalSchema, insertComparableSchema } = 
 
 // Initialize the Express application
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 
 // Middlewares
 app.use(cors());
@@ -222,132 +222,17 @@ app.use('/api/appraisals', appraisalsRouter);
 app.use('/api/comparables', comparablesRouter);
 app.use('/api/market-data', marketDataRouter);
 
-// Serve static files from the 'client/dist' directory
-app.use(express.static(path.join(__dirname, '../client/dist')));
+// Serve static files from the client directory
+app.use(express.static(path.join(__dirname, '../client')));
 
-// Create a simple HTML response for the root route
+// Create the root route with our enhanced landing page
 app.get('/', (req, res) => {
-  res.send(`
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>TerraFusion Professional - Real Estate Appraisal Platform</title>
-      <style>
-        body {
-          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          margin: 0;
-          padding: 0;
-          background-color: #f0f4f8;
-          color: #333;
-        }
-        header {
-          background-color: #1a3a5f;
-          color: white;
-          padding: 1rem 2rem;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        h1 {
-          margin: 0;
-          font-size: 2rem;
-        }
-        main {
-          max-width: 1200px;
-          margin: 2rem auto;
-          padding: 0 2rem;
-        }
-        .hero {
-          background-color: white;
-          border-radius: 8px;
-          padding: 2rem;
-          box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-          margin-bottom: 2rem;
-        }
-        h2 {
-          color: #2c5282;
-          margin-top: 0;
-        }
-        p {
-          line-height: 1.6;
-        }
-        .features {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-          gap: 2rem;
-        }
-        .feature-card {
-          background-color: white;
-          border-radius: 8px;
-          padding: 1.5rem;
-          box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        }
-        .feature-card h3 {
-          color: #3182ce;
-          margin-top: 0;
-        }
-        footer {
-          background-color: #1a3a5f;
-          color: white;
-          text-align: center;
-          padding: 1rem;
-          margin-top: 2rem;
-        }
-      </style>
-    </head>
-    <body>
-      <header>
-        <h1>TerraFusion Professional</h1>
-      </header>
-      <main>
-        <section class="hero">
-          <h2>Advanced Real Estate Appraisal Platform</h2>
-          <p>Welcome to TerraFusion Professional, a comprehensive solution for real estate appraisers. Streamline your appraisal process, manage properties efficiently, and generate accurate valuations with our powerful tools.</p>
-        </section>
-        
-        <div class="features">
-          <div class="feature-card">
-            <h3>Property Management</h3>
-            <p>Manage detailed property information including location, specifications, and ownership details in one centralized database.</p>
-          </div>
-          
-          <div class="feature-card">
-            <h3>Comparable Analysis</h3>
-            <p>Find and analyze comparable properties with our advanced filtering system. Make adjustments and see results in real-time.</p>
-          </div>
-          
-          <div class="feature-card">
-            <h3>Market Data Integration</h3>
-            <p>Access up-to-date market data, trends, and statistics to include in your appraisal reports for enhanced accuracy.</p>
-          </div>
-          
-          <div class="feature-card">
-            <h3>Comprehensive Reports</h3>
-            <p>Generate professional appraisal reports with customizable templates that meet industry standards and regulations.</p>
-          </div>
-          
-          <div class="feature-card">
-            <h3>Team Collaboration</h3>
-            <p>Work together seamlessly with team members on complex appraisals with our collaborative workflow system.</p>
-          </div>
-          
-          <div class="feature-card">
-            <h3>Mobile Access</h3>
-            <p>Access your appraisal data on-the-go with our responsive design that works on desktop, tablet, and mobile devices.</p>
-          </div>
-        </div>
-      </main>
-      <footer>
-        <p>&copy; 2025 TerraFusion Professional. All rights reserved.</p>
-      </footer>
-    </body>
-    </html>
-  `);
+  res.sendFile(path.join(__dirname, '../client/index.html'));
 });
 
-// All other requests will be directed to the main index.html file for client-side routing
+// All other requests will be directed to the index.html file for client-side routing
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+  res.sendFile(path.join(__dirname, '../client/index.html'));
 });
 
 // Start the server
