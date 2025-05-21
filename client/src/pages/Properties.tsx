@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Property } from '../../shared/schema';
-import { ArrowUpDown, PlusCircle } from 'lucide-react';
+import { Building2, PlusCircle } from 'lucide-react';
+import { Property } from '../types/schema';
 
-// Properties component that fetches real data from the database
 const Properties = () => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,10 +70,10 @@ const Properties = () => {
               <div className="p-6">
                 <h2 className="text-xl font-bold mb-2">{property.address}</h2>
                 <p className="text-gray-600 mb-2">
-                  {property.city}, {property.state} {property.zipCode}
+                  {property.city}, {property.state} {property.zip_code}
                 </p>
                 <p className="text-gray-600 mb-4">
-                  {property.propertyType} • {property.squareFeet} sq ft
+                  {property.property_type} • {property.square_feet ? `${property.square_feet} sq ft` : 'N/A'}
                 </p>
                 <div className="flex space-x-2">
                   <Link
