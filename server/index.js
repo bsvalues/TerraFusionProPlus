@@ -4,6 +4,7 @@ const path = require('path');
 const { initDatabase } = require('./db');
 const { storage } = require('./storage');
 const { insertPropertySchema, insertAppraisalSchema, insertComparableSchema } = require('../shared/schema');
+const { properties, appraisals, comparables, marketData } = require('./mock-data');
 
 // Initialize the Express application
 const app = express();
@@ -25,7 +26,7 @@ const propertiesRouter = express.Router();
 
 propertiesRouter.get('/', async (req, res) => {
   try {
-    const properties = await storage.getProperties();
+    // Use the mock data for development
     return res.status(200).json(properties);
   } catch (error) {
     console.error('Error getting properties:', error);
@@ -40,7 +41,7 @@ propertiesRouter.get('/:id', async (req, res) => {
       return res.status(400).json({ error: 'Invalid property ID' });
     }
 
-    const property = await storage.getProperty(id);
+    const property = properties.find(p => p.id === id);
     if (!property) {
       return res.status(404).json({ error: 'Property not found' });
     }
@@ -112,19 +113,15 @@ appraisalsRouter.get('/', async (req, res) => {
     const propertyId = req.query.propertyId ? parseInt(req.query.propertyId, 10) : undefined;
     const appraiserId = req.query.appraiserId ? parseInt(req.query.appraiserId, 10) : undefined;
     
-    let appraisals = [];
+    let filteredAppraisals = appraisals;
     
     if (propertyId) {
-      appraisals = await storage.getAppraisalsByProperty(propertyId);
+      filteredAppraisals = appraisals.filter(a => a.propertyId === propertyId);
     } else if (appraiserId) {
-      appraisals = await storage.getAppraisalsByAppraiser(appraiserId);
-    } else {
-      // In a real application, you might want to limit this or implement pagination
-      // For now, we'll return an error asking for a filter
-      return res.status(400).json({ error: 'Please provide either propertyId or appraiserId as a query parameter' });
+      filteredAppraisals = appraisals.filter(a => a.appraiserId === appraiserId);
     }
     
-    return res.status(200).json(appraisals);
+    return res.status(200).json(filteredAppraisals);
   } catch (error) {
     console.error('Error getting appraisals:', error);
     return res.status(500).json({ error: 'Failed to get appraisals' });
@@ -138,7 +135,7 @@ appraisalsRouter.get('/:id', async (req, res) => {
       return res.status(400).json({ error: 'Invalid appraisal ID' });
     }
 
-    const appraisal = await storage.getAppraisal(id);
+    const appraisal = appraisals.find(a => a.id === id);
     if (!appraisal) {
       return res.status(404).json({ error: 'Appraisal not found' });
     }
@@ -172,8 +169,8 @@ comparablesRouter.get('/', async (req, res) => {
       return res.status(400).json({ error: 'Please provide appraisalId as a query parameter' });
     }
     
-    const comparables = await storage.getComparablesByAppraisal(appraisalId);
-    return res.status(200).json(comparables);
+    const filteredComparables = comparables.filter(c => c.appraisalId === appraisalId);
+    return res.status(200).json(filteredComparables);
   } catch (error) {
     console.error('Error getting comparables:', error);
     return res.status(500).json({ error: 'Failed to get comparables' });
