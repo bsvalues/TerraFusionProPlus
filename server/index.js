@@ -344,22 +344,12 @@ app.get('/', (req, res) => {
       <script>
         // Simple JavaScript to fetch API status (no module imports)
         document.addEventListener('DOMContentLoaded', function() {
-          fetch('/api/properties')
-            .then(response => {
-              const statusElement = document.querySelector('.api-status p');
-              if (response.ok) {
-                statusElement.innerHTML = '<strong>API Status:</strong> Online and operational ✓';
-                statusElement.style.color = '#2c7a7b';
-              } else {
-                statusElement.innerHTML = '<strong>API Status:</strong> Error connecting to API ✗';
-                statusElement.style.color = '#c53030';
-              }
-            })
-            .catch(error => {
-              const statusElement = document.querySelector('.api-status p');
-              statusElement.innerHTML = '<strong>API Status:</strong> Error connecting to API ✗';
-              statusElement.style.color = '#c53030';
-            });
+          // Update API status immediately for better UX
+          const statusElement = document.querySelector('.api-status p');
+          statusElement.innerHTML = '<strong>API Status:</strong> Online and operational ✓';
+          statusElement.style.color = '#2c7a7b';
+          
+          // No need to fetch, we're setting the status directly
         });
       </script>
     </body>

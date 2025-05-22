@@ -1,5 +1,5 @@
-import { neon } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
+import { Client } from 'pg';
+import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "../shared/schema";
 
 if (!process.env.DATABASE_URL) {
@@ -8,14 +8,22 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-// Create a Neon client
-const sql = neon(process.env.DATABASE_URL);
-export const db = drizzle(sql, { schema });
+// Use PG Client instead of Pool for more reliable connections
+const client = new Client({ 
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false } 
+});
+
+// Connect the client
+client.connect();
+
+// Export the drizzle instance
+export const db = drizzle(client, { schema });
 
 export async function initDatabase(): Promise<boolean> {
   try {
-    // Test database connection by executing a simple query
-    await db.execute(sql`SELECT 1`);
+    // Test database connection with a simple query
+    await client.query('SELECT 1');
     console.log('Database connection successful');
     
     console.log('Database connected successfully at:', new Date().toISOString());
