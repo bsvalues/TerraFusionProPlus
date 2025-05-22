@@ -1,5 +1,5 @@
-import { Pool } from 'pg';
-import { drizzle } from 'drizzle-orm/node-postgres';
+import { neon } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-http';
 import * as schema from "../shared/schema";
 
 if (!process.env.DATABASE_URL) {
@@ -8,17 +8,15 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-export const db = drizzle(pool, { schema });
+// Create a Neon client
+const sql = neon(process.env.DATABASE_URL);
+export const db = drizzle(sql, { schema });
 
 export async function initDatabase(): Promise<boolean> {
   try {
-    // Test database connection
-    const client = await pool.connect();
+    // Test database connection by executing a simple query
+    await db.execute(sql`SELECT 1`);
     console.log('Database connection successful');
-    
-    // Release the client
-    client.release();
     
     console.log('Database connected successfully at:', new Date().toISOString());
     return true;
