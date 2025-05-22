@@ -6,7 +6,5 @@ metadata:
   labels:
     {{- include "terrafusion.labels" . | nindent 4 }}
 data:
-  {{- range $key, $value := .Values.configMaps.app.data }}
-  {{ $key }}: {{ $value | quote }}
-  {{- end }}
+  {{- toYaml .Values.configMaps.app.data | nindent 2 }}
 {{- end }}
