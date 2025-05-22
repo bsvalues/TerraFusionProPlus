@@ -2,139 +2,129 @@ name: TerraFusion CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
+  release:
+    types: [published]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  test:
+  build-and-test:
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linting
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to Container Registry
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,format=long,prefix=
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build-and-test
+    if: ${{ github.event_name != 'pull_request' }}
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.ref_name == 'main' && 'production' || 'development' }}
     
-    services:
-      postgres:
-        image: postgres:14
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set Kubernetes context
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'latest'
+
+      - name: Deploy to development environment
+        if: github.ref == 'refs/heads/develop'
+        run: |
+          helm upgrade --install terrafusion-dev ./helm/terrafusion \
+            --namespace terrafusion-dev \
+            --create-namespace \
+            --values ./helm/terrafusion/values-dev.yaml \
+            --set image.tag=$(echo ${{ github.sha }} | cut -c1-7) \
+            --set secrets.database.data.DATABASE_URL="${{ secrets.DEV_DATABASE_URL }}" \
+            --set secrets.api.data.AI_SERVICE_API_KEY="${{ secrets.DEV_AI_SERVICE_API_KEY }}"
+
+      - name: Deploy to production environment
+        if: github.ref == 'refs/heads/main'
+        run: |
+          helm upgrade --install terrafusion ./helm/terrafusion \
+            --namespace terrafusion \
+            --create-namespace \
+            --values ./helm/terrafusion/values-prod.yaml \
+            --set image.tag=$(echo ${{ github.sha }} | cut -c1-7) \
+            --set secrets.database.data.DATABASE_URL="${{ secrets.PROD_DATABASE_URL }}" \
+            --set secrets.api.data.AI_SERVICE_API_KEY="${{ secrets.PROD_AI_SERVICE_API_KEY }}"
+
+  notify:
+    needs: [deploy]
+    if: ${{ github.event_name != 'pull_request' && always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Slack notification
+        uses: rtCamp/action-slack-notify@v2
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: terrafusion_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    
-    steps:
-    - uses: actions/checkout@v3
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '20'
-        cache: 'npm'
-    
-    - name: Install dependencies
-      run: npm ci
-    
-    - name: Run linter
-      run: npm run lint
-    
-    - name: Run tests
-      run: npm test
-      env:
-        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/terrafusion_test
-  
-  build:
-    needs: test
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v3
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '20'
-        cache: 'npm'
-    
-    - name: Install dependencies
-      run: npm ci
-    
-    - name: Build application
-      run: npm run build
-    
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
-    
-    - name: Login to DockerHub
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-    
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v4
-      with:
-        context: .
-        push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
-        tags: |
-          terrafusionpro/api:latest
-          terrafusionpro/api:${{ github.sha }}
-        cache-from: type=registry,ref=terrafusionpro/api:latest
-        cache-to: type=inline
-  
-  deploy-staging:
-    if: github.ref == 'refs/heads/develop'
-    needs: build
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v3
-    
-    - name: Set up kubectl
-      uses: azure/setup-kubectl@v3
-    
-    - name: Set up Kubernetes config
-      run: |
-        mkdir -p ~/.kube
-        echo "${{ secrets.KUBE_CONFIG_STAGING }}" > ~/.kube/config
-    
-    - name: Deploy to staging
-      run: |
-        kubectl apply -f kubernetes/staging/namespace.yml
-        kubectl apply -f kubernetes/staging/configmap.yml
-        kubectl apply -f kubernetes/staging/secrets.yml
-        kubectl set image deployment/terrafusion-api terrafusion-api=terrafusionpro/api:${{ github.sha }} -n terrafusion-staging
-    
-    - name: Verify deployment
-      run: |
-        kubectl rollout status deployment/terrafusion-api -n terrafusion-staging
-  
-  deploy-production:
-    if: github.ref == 'refs/heads/main'
-    needs: build
-    runs-on: ubuntu-latest
-    environment: production
-    
-    steps:
-    - uses: actions/checkout@v3
-    
-    - name: Set up kubectl
-      uses: azure/setup-kubectl@v3
-    
-    - name: Set up Kubernetes config
-      run: |
-        mkdir -p ~/.kube
-        echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" > ~/.kube/config
-    
-    - name: Deploy to production
-      run: |
-        kubectl apply -f kubernetes/production/namespace.yml
-        kubectl apply -f kubernetes/production/configmap.yml
-        kubectl apply -f kubernetes/production/secrets.yml
-        kubectl set image deployment/terrafusion-api terrafusion-api=terrafusionpro/api:${{ github.sha }} -n terrafusion-production
-    
-    - name: Verify deployment
-      run: |
-        kubectl rollout status deployment/terrafusion-api -n terrafusion-production
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: deployments
+          SLACK_COLOR: ${{ needs.deploy.result == 'success' && 'good' || 'danger' }}
+          SLACK_TITLE: Deployment ${{ needs.deploy.result }}
+          SLACK_MESSAGE: |
+            Environment: ${{ github.ref_name == 'main' && 'Production' || 'Development' }}
+            Commit: ${{ github.event.head_commit.message }}
+            Author: ${{ github.actor }}
+            SHA: ${{ github.sha }}

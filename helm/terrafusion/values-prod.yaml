@@ -1,0 +1,75 @@
+replicaCount: 3
+
+image:
+  repository: terrafusionpro/api
+  tag: "stable"
+  pullPolicy: Always
+
+resources:
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+  requests:
+    cpu: 1000m
+    memory: 1Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 20
+  targetCPUUtilizationPercentage: 60
+  targetMemoryUtilizationPercentage: 70
+
+ingress:
+  enabled: true
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+    nginx.ingress.kubernetes.io/from-to-www-redirect: "true"
+  hosts:
+    - host: api.terrafusion.pro
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: terrafusion-api-prod-tls
+      hosts:
+        - api.terrafusion.pro
+
+env:
+  NODE_ENV: production
+  PORT: 5000
+  LOG_LEVEL: info
+  ENABLE_METRICS: "true"
+
+configMaps:
+  app:
+    enabled: true
+    data:
+      CORS_ALLOWED_ORIGINS: "https://terrafusion.pro,https://www.terrafusion.pro,https://app.terrafusion.pro"
+      API_VERSION: "v1"
+      RATE_LIMIT_WINDOW_MS: "60000"
+      RATE_LIMIT_MAX: "100"
+
+postgresql:
+  enabled: false # Using external RDS in production
+
+livenessProbe:
+  enabled: true
+  path: /api/health
+  initialDelaySeconds: 30
+  periodSeconds: 20
+  timeoutSeconds: 5
+  failureThreshold: 3
+  successThreshold: 1
+
+readinessProbe:
+  enabled: true
+  path: /api/health
+  initialDelaySeconds: 15
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+  successThreshold: 1
