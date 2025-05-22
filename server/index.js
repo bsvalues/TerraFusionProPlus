@@ -196,17 +196,23 @@ marketDataRouter.get('/', async (req, res) => {
     const zipCode = req.query.zipCode;
     const propertyId = req.query.propertyId ? parseInt(req.query.propertyId, 10) : undefined;
     
-    let marketData = [];
+    let filteredMarketData = marketData;
     
     if (zipCode) {
-      marketData = await storage.getMarketDataByZipCode(zipCode);
+      filteredMarketData = marketData.filter(md => md.zipCode === zipCode);
     } else if (propertyId) {
-      marketData = await storage.getMarketDataForProperty(propertyId);
+      // Get property to retrieve zipCode
+      const property = properties.find(p => p.id === propertyId);
+      if (property) {
+        filteredMarketData = marketData.filter(md => md.zipCode === property.zipCode);
+      } else {
+        filteredMarketData = [];
+      }
     } else {
       return res.status(400).json({ error: 'Please provide either zipCode or propertyId as a query parameter' });
     }
     
-    return res.status(200).json(marketData);
+    return res.status(200).json(filteredMarketData);
   } catch (error) {
     console.error('Error getting market data:', error);
     return res.status(500).json({ error: 'Failed to get market data' });
