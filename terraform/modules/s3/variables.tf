@@ -1,44 +1,62 @@
+variable "region" {
+  description = "AWS region to deploy the S3 bucket"
+  type        = string
+  default     = "us-west-2"
+}
+
+variable "prefix" {
+  description = "Prefix to be added to all resource names"
+  type        = string
+  default     = "terrafusion"
+}
+
 variable "bucket_name" {
-  description = "The name of the S3 bucket"
+  description = "The name of the S3 bucket (will be prefixed with the prefix)"
   type        = string
 }
 
-variable "force_destroy" {
-  description = "A boolean that indicates all objects should be deleted from the bucket so that the bucket can be destroyed without error"
+variable "enable_versioning" {
+  description = "Whether to enable versioning for the S3 bucket"
+  type        = bool
+  default     = true
+}
+
+variable "lifecycle_expiration_days" {
+  description = "Number of days after which objects should be deleted (0 to disable)"
+  type        = number
+  default     = 0
+}
+
+variable "noncurrent_version_expiration_days" {
+  description = "Number of days after which noncurrent versions should be deleted (0 to disable)"
+  type        = number
+  default     = 90
+}
+
+variable "enable_cors" {
+  description = "Whether to enable CORS for the S3 bucket"
   type        = bool
   default     = false
 }
 
-variable "versioning" {
-  description = "Map containing versioning configuration"
-  type        = object({
-    enabled = bool
-  })
-  default = {
-    enabled = false
-  }
+variable "cors_allowed_origins" {
+  description = "List of allowed origins for CORS"
+  type        = list(string)
+  default     = ["*"]
 }
 
-variable "server_side_encryption_configuration" {
-  description = "Map containing server-side encryption configuration"
-  type        = object({
-    rule = object({
-      apply_server_side_encryption_by_default = object({
-        sse_algorithm = string
-      })
-    })
-  })
-  default = {
-    rule = {
-      apply_server_side_encryption_by_default = {
-        sse_algorithm = "AES256"
-      }
-    }
-  }
+variable "create_iam_user" {
+  description = "Whether to create an IAM user with access to the bucket"
+  type        = bool
+  default     = false
 }
 
 variable "tags" {
-  description = "A map of tags to add to all resources"
+  description = "Map of tags to apply to all resources"
   type        = map(string)
-  default     = {}
+  default     = {
+    Environment = "production"
+    Project     = "TerraFusion"
+    ManagedBy   = "terraform"
+  }
 }
