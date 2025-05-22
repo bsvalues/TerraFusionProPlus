@@ -7,6 +7,8 @@ import { WebSocketServer } from 'ws';
 import { initDatabase } from './db';
 import { storage } from './storage';
 import { insertPropertySchema, insertAppraisalSchema, insertComparableSchema } from '../shared/schema';
+// Import monitoring components
+const monitoring = require('./monitoring');
 
 // Initialize the Express application
 const app = express();
@@ -70,6 +72,9 @@ export function broadcastMessage(type: string, payload: any) {
 // Middlewares
 app.use(cors());
 app.use(express.json());
+
+// Initialize monitoring (must be after middleware setup)
+monitoring.initializeMonitoring(app);
 
 // Initialize the database connection
 initDatabase().then((success) => {
@@ -274,11 +279,15 @@ marketDataRouter.get('/', async (req: Request, res: Response) => {
   }
 });
 
+// Import pipelines router
+import pipelinesRouter from './routes/pipelines';
+
 // Register API routes
 app.use('/api/properties', propertiesRouter);
 app.use('/api/appraisals', appraisalsRouter);
 app.use('/api/comparables', comparablesRouter);
 app.use('/api/market-data', marketDataRouter);
+app.use('/api/pipelines', pipelinesRouter);
 
 // Serve static files from the 'client/dist' directory
 app.use(express.static(path.join(__dirname, '../client/dist')));
