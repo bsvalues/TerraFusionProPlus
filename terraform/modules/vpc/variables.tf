@@ -1,42 +1,33 @@
-variable "vpc_name" {
-  description = "Name of the VPC"
+variable "region" {
+  description = "AWS region to deploy the VPC"
   type        = string
+  default     = "us-west-2"
+}
+
+variable "prefix" {
+  description = "Prefix to be added to all resource names"
+  type        = string
+  default     = "terrafusion"
 }
 
 variable "vpc_cidr" {
   description = "CIDR block for the VPC"
   type        = string
+  default     = "10.0.0.0/16"
 }
 
-variable "azs" {
-  description = "List of availability zones"
+variable "availability_zones" {
+  description = "List of availability zones to deploy resources"
   type        = list(string)
-}
-
-variable "private_subnets" {
-  description = "List of private subnet CIDR blocks"
-  type        = list(string)
-}
-
-variable "public_subnets" {
-  description = "List of public subnet CIDR blocks"
-  type        = list(string)
-}
-
-variable "enable_nat_gateway" {
-  description = "Should be true to provision NAT Gateway(s)"
-  type        = bool
-  default     = true
-}
-
-variable "single_nat_gateway" {
-  description = "Should be true to provision a single NAT Gateway for all private subnets"
-  type        = bool
-  default     = false
+  default     = ["us-west-2a", "us-west-2b", "us-west-2c"]
 }
 
 variable "tags" {
-  description = "A map of tags to add to all resources"
+  description = "Map of tags to apply to all resources"
   type        = map(string)
-  default     = {}
+  default     = {
+    Environment = "production"
+    Project     = "TerraFusion"
+    ManagedBy   = "terraform"
+  }
 }
