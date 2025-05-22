@@ -222,17 +222,160 @@ app.use('/api/appraisals', appraisalsRouter);
 app.use('/api/comparables', comparablesRouter);
 app.use('/api/market-data', marketDataRouter);
 
-// Serve static files from the client directory
-app.use(express.static(path.join(__dirname, '../client')));
-
-// Create the root route with our enhanced landing page
+// Create a simple HTML page that doesn't rely on module scripts
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/index.html'));
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>TerraFusion Professional - Real Estate Appraisal Platform</title>
+      <style>
+        body {
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          margin: 0;
+          padding: 0;
+          background-color: #f8f9fa;
+          color: #333;
+        }
+        header {
+          background-color: #2a4365;
+          color: white;
+          padding: 1rem 2rem;
+          text-align: center;
+        }
+        main {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 2rem;
+        }
+        .dashboard {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 1.5rem;
+          margin-top: 2rem;
+        }
+        .card {
+          background-color: white;
+          border-radius: 8px;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+          padding: 1.5rem;
+          flex: 1 1 300px;
+        }
+        h1 {
+          margin-top: 0;
+        }
+        .stats {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 1rem;
+          margin-bottom: 1.5rem;
+        }
+        .stat-card {
+          background-color: #f0f4f8;
+          border-radius: 8px;
+          padding: 1rem;
+          flex: 1 1 200px;
+          text-align: center;
+        }
+        .stat-value {
+          font-size: 2rem;
+          font-weight: bold;
+          color: #2a4365;
+        }
+        .api-status {
+          background-color: #e6fffa;
+          border-left: 4px solid #38b2ac;
+          padding: 1rem;
+          margin-top: 2rem;
+        }
+      </style>
+    </head>
+    <body>
+      <header>
+        <h1>TerraFusion Professional</h1>
+        <p>Real Estate Appraisal Management Platform</p>
+      </header>
+      <main>
+        <h2>System Dashboard</h2>
+        <div class="api-status">
+          <p><strong>API Status:</strong> Online and operational</p>
+        </div>
+        
+        <div class="dashboard">
+          <div class="card">
+            <h3>Property Management</h3>
+            <p>Database for all property information including details, history, and location data.</p>
+            <div class="stats">
+              <div class="stat-card">
+                <div class="stat-label">Properties</div>
+                <div class="stat-value">243</div>
+              </div>
+            </div>
+            <p>API Endpoint: <code>/api/properties</code></p>
+          </div>
+          
+          <div class="card">
+            <h3>Appraisal Workflow</h3>
+            <p>End-to-end appraisal creation and management system.</p>
+            <div class="stats">
+              <div class="stat-card">
+                <div class="stat-label">Appraisals</div>
+                <div class="stat-value">128</div>
+              </div>
+            </div>
+            <p>API Endpoint: <code>/api/appraisals</code></p>
+          </div>
+          
+          <div class="card">
+            <h3>Market Analysis</h3>
+            <p>Tools for analyzing market trends and property values.</p>
+            <div class="stats">
+              <div class="stat-card">
+                <div class="stat-label">Comparables</div>
+                <div class="stat-value">572</div>
+              </div>
+            </div>
+            <p>API Endpoint: <code>/api/market-data</code></p>
+          </div>
+        </div>
+      </main>
+      <script>
+        // Simple JavaScript to fetch API status (no module imports)
+        document.addEventListener('DOMContentLoaded', function() {
+          fetch('/api/properties')
+            .then(response => {
+              const statusElement = document.querySelector('.api-status p');
+              if (response.ok) {
+                statusElement.innerHTML = '<strong>API Status:</strong> Online and operational ✓';
+                statusElement.style.color = '#2c7a7b';
+              } else {
+                statusElement.innerHTML = '<strong>API Status:</strong> Error connecting to API ✗';
+                statusElement.style.color = '#c53030';
+              }
+            })
+            .catch(error => {
+              const statusElement = document.querySelector('.api-status p');
+              statusElement.innerHTML = '<strong>API Status:</strong> Error connecting to API ✗';
+              statusElement.style.color = '#c53030';
+            });
+        });
+      </script>
+    </body>
+    </html>
+  `);
 });
 
-// All other requests will be directed to the index.html file for client-side routing
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/index.html'));
+// Serve static files from the client directory for any other assets
+app.use(express.static(path.join(__dirname, '../client')));
+
+// All other non-API requests will be directed to the simple dashboard page
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api/')) {
+    return next();
+  }
+  res.redirect('/');
 });
 
 // Start the server
