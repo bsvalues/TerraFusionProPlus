@@ -1,0 +1,12 @@
+{{- if .Values.configMaps.app.enabled -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "terrafusion.fullname" . }}-config
+  labels:
+    {{- include "terrafusion.labels" . | nindent 4 }}
+data:
+  {{- range $key, $value := .Values.configMaps.app.data }}
+  {{ $key }}: {{ $value | quote }}
+  {{- end }}
+{{- end }}
