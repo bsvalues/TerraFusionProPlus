@@ -1,14 +1,6 @@
 apiVersion: v2
 name: terrafusion
-description: A Helm chart for TerraFusion Professional real estate appraisal platform
+description: A Helm chart for TerraFusionProfessional
 type: application
 version: 0.1.0
 appVersion: "1.0.0"
-dependencies:
-  - name: postgresql
-    version: ~12.5.1
-    repository: https://charts.bitnami.com/bitnami
-    condition: postgresql.enabled
-maintainers:
-  - name: TerraFusion Team
-    email: devops@terrafusion.pro
