@@ -360,15 +360,12 @@ app.get('/', (req, res) => {
   `);
 });
 
-// Serve static files from the client directory for any other assets
-app.use(express.static(path.join(__dirname, '../client')));
+// Serve static files from the root directory
+app.use(express.static(path.join(__dirname, '..')));
 
-// All other non-API requests will be directed to the simple dashboard page
-app.get('*', (req, res, next) => {
-  if (req.path.startsWith('/api/')) {
-    return next();
-  }
-  res.redirect('/');
+// Serve the appraisal application
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../appraisal-app.html'));
 });
 
 // Start the server
