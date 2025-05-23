@@ -1,24 +1,21 @@
 const { spawn } = require('child_process');
+const path = require('path');
 
 function spawnProcess(command, args, options, name) {
   const proc = spawn(command, args, options);
   
-  console.log(`${name} process started`);
+  console.log(`[${name}] Starting process...`);
   
   proc.stdout.on('data', (data) => {
-    console.log(`[${name}] ${data}`);
+    console.log(`[${name}] ${data.toString().trim()}`);
   });
   
   proc.stderr.on('data', (data) => {
-    console.error(`[${name}] ${data}`);
+    console.error(`[${name}] ${data.toString().trim()}`);
   });
   
   proc.on('close', (code) => {
-    console.log(`${name} process exited with code ${code}`);
-    if (name === 'SERVER' && code !== 0) {
-      console.log('Server crashed, restarting...');
-      startServer();
-    }
+    console.log(`[${name}] Process exited with code ${code}`);
   });
   
   return proc;
@@ -27,28 +24,29 @@ function spawnProcess(command, args, options, name) {
 function startServer() {
   return spawnProcess(
     'node',
-    ['server/server.js'],
-    { stdio: 'pipe', shell: process.platform === 'win32' },
+    ['server/index.js'],
+    { stdio: ['inherit', 'pipe', 'pipe'] },
     'SERVER'
   );
 }
 
-// Start both server and client
-const serverProc = startServer();
-const clientProc = spawnProcess(
-  process.platform === 'win32' ? 'npx.cmd' : 'npx',
-  ['vite', '--config', 'client/vite.config.ts', 'client'],
-  { stdio: 'pipe', shell: process.platform === 'win32', cwd: process.cwd() },
-  'CLIENT'
-);
+function startClient() {
+  return spawnProcess(
+    'npm',
+    ['run', 'dev'],
+    { cwd: path.join(process.cwd(), 'client'), stdio: ['inherit', 'pipe', 'pipe'] },
+    'CLIENT'
+  );
+}
+
+// Start both processes
+const serverProcess = startServer();
+const clientProcess = startClient();
 
 // Handle graceful shutdown
-const shutdown = () => {
-  console.log('Shutting down all processes...');
-  if (serverProc && !serverProc.killed) serverProc.kill();
-  if (clientProc && !clientProc.killed) clientProc.kill();
+process.on('SIGINT', () => {
+  console.log('Received SIGINT. Shutting down processes...');
+  serverProcess.kill();
+  clientProcess.kill();
   process.exit(0);
-};
-
-process.on('SIGTERM', shutdown);
-process.on('SIGINT', shutdown);
+});
