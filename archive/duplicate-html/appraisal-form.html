@@ -1,503 +1,1292 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TerraFusion Professional - Appraisal Form</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f5f7fa;
-        }
-        .container {
-            display: flex;
-            min-height: 100vh;
-        }
-        .sidebar {
-            width: 250px;
-            background: linear-gradient(to bottom, #1e3a8a, #2563eb);
-            color: white;
-            padding: 20px 0;
-        }
-        .logo {
-            padding: 0 20px 20px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            margin-bottom: 20px;
-        }
-        .logo h1 {
-            margin: 0;
-            font-size: 24px;
-        }
-        .logo h2 {
-            margin: 0;
-            font-size: 16px;
-            opacity: 0.8;
-        }
-        .menu {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .menu li {
-            padding: 12px 20px;
-            cursor: pointer;
-        }
-        .menu li:hover, .menu li.active {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-        .menu li.active {
-            border-left: 3px solid white;
-        }
-        .content {
-            flex: 1;
-            padding: 30px;
-        }
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            color: #3b82f6;
-            text-decoration: none;
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-        .back-link:hover {
-            text-decoration: underline;
-        }
-        .back-link svg {
-            margin-right: 5px;
-        }
-        .header {
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-        }
-        .header-left h1 {
-            margin: 0;
-            font-size: 28px;
-            background: linear-gradient(to right, #3b82f6, #2563eb);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .header-left p {
-            margin: 5px 0 0 0;
-            color: #6b7280;
-        }
-        .header-right button {
-            padding: 10px 16px;
-            background-color: #3b82f6;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-        }
-        .header-right button:hover {
-            background-color: #2563eb;
-        }
-        .header-right button svg {
-            margin-right: 8px;
-        }
-        .card {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-        }
-        .card-header {
-            border-bottom: 1px solid #e5e7eb;
-            padding-bottom: 16px;
-            margin-bottom: 20px;
-        }
-        .card-header h2 {
-            margin: 0;
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-        }
-        .card-header h2 .icon {
-            width: 24px;
-            height: 24px;
-            margin-right: 8px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-        }
-        .icon-property {
-            background-color: #dbeafe;
-            color: #3b82f6;
-        }
-        .icon-purpose {
-            background-color: #dcfce7;
-            color: #22c55e;
-        }
-        .icon-client {
-            background-color: #f3e8ff;
-            color: #a855f7;
-        }
-        .icon-approach {
-            background-color: #fff7ed;
-            color: #f97316;
-        }
-        .form-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            color: #374151;
-        }
-        .form-control {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-        .form-control:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-        }
-        select.form-control {
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 10px center;
-            background-size: 16px;
-            padding-right: 40px;
-        }
-        textarea.form-control {
-            min-height: 100px;
-            resize: vertical;
-        }
-        .form-hint {
-            font-size: 12px;
-            color: #6b7280;
-            margin-top: 4px;
-        }
-        .required::after {
-            content: " *";
-            color: #ef4444;
-        }
-        .btn-group {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 30px;
-        }
-        .btn {
-            padding: 10px 16px;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-        }
-        .btn-primary {
-            background-color: #3b82f6;
-            color: white;
-            border: none;
-        }
-        .btn-primary:hover {
-            background-color: #2563eb;
-        }
-        .btn-secondary {
-            background-color: white;
-            color: #374151;
-            border: 1px solid #d1d5db;
-        }
-        .btn-secondary:hover {
-            background-color: #f9fafb;
-        }
-        .property-info {
-            padding: 16px;
-            background-color: #f0f9ff;
-            border: 1px solid #bae6fd;
-            border-radius: 6px;
-            margin-bottom: 20px;
-        }
-        .property-info-header {
-            display: flex;
-            margin-bottom: 12px;
-        }
-        .property-info-header .icon {
-            margin-right: 12px;
-            color: #0284c7;
-        }
-        .property-info-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            font-size: 14px;
-        }
-        .property-info-item {
-            display: flex;
-        }
-        .property-info-label {
-            width: 100px;
-            font-weight: 500;
-            color: #374151;
-        }
-        .property-info-value {
-            color: #6b7280;
-        }
-        .radio-group {
-            display: flex;
-            gap: 16px;
-        }
-        .radio-option {
-            display: flex;
-            align-items: center;
-        }
-        .radio-option input {
-            margin-right: 6px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Appraisal | TerraFusion Professional</title>
+  <meta name="description" content="Create a new property appraisal with TerraFusion Professional's comprehensive appraisal form tool.">
+  
+  <style>
+    :root {
+      --primary: #1a3a5f;
+      --primary-light: #2c5282;
+      --secondary: #3182ce;
+      --accent: #4fd1c5;
+      --gray-50: #f8fafc;
+      --gray-100: #f0f4f8;
+      --gray-200: #e2e8f0;
+      --gray-300: #cbd5e0;
+      --gray-400: #a0aec0;
+      --gray-500: #718096;
+      --gray-700: #4a5568;
+      --gray-800: #2d3748;
+      --gray-900: #1a202c;
+      --danger: #e53e3e;
+      --success: #38a169;
+      --warning: #ed8936;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: var(--gray-100);
+      color: var(--gray-800);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    * {
+      box-sizing: border-box;
+    }
+    
+    .dashboard-container {
+      display: flex;
+      flex: 1;
+    }
+    
+    /* Sidebar Styles - Same as dashboard.html */
+    .sidebar {
+      width: 250px;
+      background-color: var(--primary);
+      color: white;
+      padding: 1.5rem 0;
+      flex-shrink: 0;
+      overflow-y: auto;
+      height: 100vh;
+      position: sticky;
+      top: 0;
+    }
+    
+    .logo-container {
+      padding: 0 1.5rem 1.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      margin-bottom: 1.5rem;
+    }
+    
+    .logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+      white-space: nowrap;
+      margin: 0;
+    }
+    
+    .logo-subtitle {
+      font-size: 0.8rem;
+      opacity: 0.8;
+      margin: 0.25rem 0 0;
+    }
+    
+    .nav-section {
+      margin-bottom: 1.5rem;
+    }
+    
+    .nav-section-title {
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      font-weight: bold;
+      letter-spacing: 0.05em;
+      color: rgba(255,255,255,0.6);
+      padding: 0 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .nav-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .nav-item {
+      margin-bottom: 0.25rem;
+    }
+    
+    .nav-link {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      color: rgba(255,255,255,0.8);
+      padding: 0.75rem 1.5rem;
+      transition: all 0.2s;
+    }
+    
+    .nav-link:hover, .nav-link.active {
+      background-color: rgba(255,255,255,0.1);
+      color: white;
+    }
+    
+    .nav-link svg {
+      width: 18px;
+      height: 18px;
+      margin-right: 0.75rem;
+      opacity: 0.8;
+    }
+    
+    .nav-link:hover svg, .nav-link.active svg {
+      opacity: 1;
+    }
+    
+    .user-section {
+      margin-top: auto;
+      padding: 1rem 1.5rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      align-items: center;
+    }
+    
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: var(--secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 0.75rem;
+      font-weight: bold;
+      font-size: 1rem;
+    }
+    
+    .user-info {
+      flex: 1;
+    }
+    
+    .user-name {
+      font-weight: 600;
+      margin: 0;
+      line-height: 1.2;
+    }
+    
+    .user-role {
+      font-size: 0.8rem;
+      opacity: 0.8;
+      margin: 0;
+    }
+    
+    /* Main Content Area */
+    .main-content {
+      flex: 1;
+      max-width: calc(100% - 250px);
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* Header */
+    .header {
+      background-color: white;
+      padding: 1rem 2rem;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 10;
+    }
+    
+    .header-title {
+      display: flex;
+      align-items: center;
+    }
+    
+    .back-link {
+      color: var(--gray-700);
+      display: flex;
+      align-items: center;
+      margin-right: 1rem;
+      text-decoration: none;
+    }
+    
+    .back-link:hover {
+      color: var(--primary);
+    }
+    
+    .back-link svg {
+      width: 20px;
+      height: 20px;
+    }
+    
+    .page-title {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin: 0;
+      color: var(--gray-900);
+    }
+    
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 500;
+      font-size: 0.875rem;
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+    
+    .btn svg {
+      width: 16px;
+      height: 16px;
+      margin-right: 0.5rem;
+    }
+    
+    .btn-primary {
+      background-color: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background-color: var(--primary-light);
+    }
+    
+    .btn-secondary {
+      background-color: white;
+      border: 1px solid var(--gray-300);
+      color: var(--gray-800);
+    }
+    
+    .btn-secondary:hover {
+      background-color: var(--gray-50);
+    }
+    
+    .btn-success {
+      background-color: var(--success);
+      color: white;
+    }
+    
+    .btn-success:hover {
+      background-color: #2f855a;
+    }
+    
+    .btn-danger {
+      background-color: var(--danger);
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background-color: #c53030;
+    }
+    
+    /* Appraisal Form Content */
+    .appraisal-content {
+      padding: 2rem;
+      flex: 1;
+    }
+    
+    .form-header {
+      margin-bottom: 2rem;
+    }
+    
+    .progress-container {
+      margin-top: 1rem;
+      background-color: var(--gray-200);
+      height: 0.5rem;
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+    
+    .progress-bar {
+      height: 100%;
+      background-color: var(--secondary);
+      width: 25%; /* Adjust based on form progress */
+    }
+    
+    .steps {
+      display: flex;
+      margin-top: 0.75rem;
+    }
+    
+    .step {
+      display: flex;
+      align-items: center;
+      font-size: 0.875rem;
+      color: var(--gray-500);
+      margin-right: 2rem;
+    }
+    
+    .step.active {
+      color: var(--secondary);
+      font-weight: 500;
+    }
+    
+    .step.completed {
+      color: var(--success);
+    }
+    
+    .step-number {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background-color: var(--gray-200);
+      color: var(--gray-700);
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+    
+    .step.active .step-number {
+      background-color: var(--secondary);
+      color: white;
+    }
+    
+    .step.completed .step-number {
+      background-color: var(--success);
+      color: white;
+    }
+    
+    .form-section {
+      background-color: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+    
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--gray-900);
+      margin: 0 0 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    
+    .form-row {
+      display: flex;
+      margin-bottom: 1.5rem;
+      gap: 1.5rem;
+    }
+    
+    .form-group {
+      flex: 1;
+      margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      color: var(--gray-800);
+    }
+    
+    .form-control {
+      display: block;
+      width: 100%;
+      padding: 0.625rem 0.75rem;
+      font-size: 0.875rem;
+      line-height: 1.5;
+      color: var(--gray-900);
+      background-color: white;
+      background-clip: padding-box;
+      border: 1px solid var(--gray-300);
+      border-radius: 0.375rem;
+      transition: border-color 0.15s ease-in-out;
+    }
+    
+    .form-control:focus {
+      border-color: var(--secondary);
+      outline: 0;
+      box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.25);
+    }
+    
+    .form-control-sm {
+      padding: 0.375rem 0.625rem;
+      font-size: 0.75rem;
+    }
+    
+    .form-select {
+      display: block;
+      width: 100%;
+      padding: 0.625rem 2rem 0.625rem 0.75rem;
+      font-size: 0.875rem;
+      font-weight: 400;
+      line-height: 1.5;
+      color: var(--gray-900);
+      background-color: white;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%234a5568'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.75rem center;
+      background-size: 16px 12px;
+      border: 1px solid var(--gray-300);
+      border-radius: 0.375rem;
+      appearance: none;
+    }
+    
+    .form-check {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    
+    .form-check-input {
+      margin-right: 0.5rem;
+      width: 1rem;
+      height: 1rem;
+    }
+    
+    .input-group {
+      display: flex;
+    }
+    
+    .input-group-text {
+      display: flex;
+      align-items: center;
+      padding: 0.625rem 0.75rem;
+      font-size: 0.875rem;
+      font-weight: 400;
+      line-height: 1.5;
+      color: var(--gray-700);
+      text-align: center;
+      white-space: nowrap;
+      background-color: var(--gray-100);
+      border: 1px solid var(--gray-300);
+      border-radius: 0.375rem;
+    }
+    
+    .input-group .form-control:not(:first-child) {
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+    }
+    
+    .input-group .input-group-text:first-child {
+      border-right: 0;
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+    
+    .form-text {
+      display: block;
+      margin-top: 0.25rem;
+      font-size: 0.75rem;
+      color: var(--gray-500);
+    }
+    
+    .form-invalid .form-control,
+    .form-invalid .form-select {
+      border-color: var(--danger);
+    }
+    
+    .form-invalid-feedback {
+      width: 100%;
+      margin-top: 0.25rem;
+      font-size: 0.75rem;
+      color: var(--danger);
+    }
+    
+    .card {
+      background-color: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      margin-bottom: 1rem;
+    }
+    
+    .card-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--gray-200);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0;
+    }
+    
+    .card-body {
+      padding: 1.5rem;
+    }
+    
+    .table {
+      width: 100%;
+      margin-bottom: 1rem;
+      color: var(--gray-800);
+      border-collapse: collapse;
+    }
+    
+    .table th,
+    .table td {
+      padding: 0.75rem;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    
+    .table thead th {
+      vertical-align: bottom;
+      border-bottom: 2px solid var(--gray-200);
+      font-weight: 600;
+      color: var(--gray-700);
+      text-align: left;
+    }
+    
+    .table tbody tr:last-child td {
+      border-bottom: 0;
+    }
+    
+    .table-sm th,
+    .table-sm td {
+      padding: 0.3rem;
+    }
+    
+    .comparison-container {
+      overflow-x: auto;
+    }
+    
+    .drag-handle {
+      cursor: move;
+      color: var(--gray-400);
+    }
+    
+    .drag-handle:hover {
+      color: var(--gray-700);
+    }
+    
+    .adjustment-row {
+      border-top: 1px solid var(--gray-200);
+      padding-top: 1rem;
+    }
+    
+    .form-footer {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 2rem;
+    }
+    
+    .upload-box {
+      border: 2px dashed var(--gray-300);
+      border-radius: 0.5rem;
+      padding: 2rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      background-color: var(--gray-50);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .upload-box:hover {
+      border-color: var(--secondary);
+      background-color: var(--gray-100);
+    }
+    
+    .upload-icon {
+      font-size: 2rem;
+      color: var(--gray-400);
+      margin-bottom: 1rem;
+    }
+    
+    .upload-text {
+      font-size: 0.875rem;
+      color: var(--gray-700);
+      margin-bottom: 0.5rem;
+    }
+    
+    .upload-subtext {
+      font-size: 0.75rem;
+      color: var(--gray-500);
+    }
+    
+    .file-list {
+      margin-top: 1rem;
+    }
+    
+    .file-item {
+      display: flex;
+      align-items: center;
+      padding: 0.5rem;
+      background-color: white;
+      border: 1px solid var(--gray-200);
+      border-radius: 0.375rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .file-icon {
+      margin-right: 0.75rem;
+      color: var(--gray-700);
+    }
+    
+    .file-name {
+      flex: 1;
+      font-size: 0.875rem;
+    }
+    
+    .file-size {
+      font-size: 0.75rem;
+      color: var(--gray-500);
+      margin-right: 1rem;
+    }
+    
+    .file-remove {
+      color: var(--gray-500);
+      cursor: pointer;
+    }
+    
+    .file-remove:hover {
+      color: var(--danger);
+    }
+    
+    /* Media Queries */
+    @media (max-width: 1024px) {
+      .form-row {
+        flex-direction: column;
+        gap: 0;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .dashboard-container {
+        flex-direction: column;
+      }
+      
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: static;
+      }
+      
+      .main-content {
+        max-width: 100%;
+      }
+      
+      .header {
+        padding: 1rem;
+      }
+      
+      .appraisal-content {
+        padding: 1rem;
+      }
+      
+      .form-section {
+        padding: 1.5rem;
+      }
+      
+      .steps {
+        flex-wrap: wrap;
+      }
+      
+      .step {
+        margin-bottom: 0.5rem;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="sidebar">
-            <div class="logo">
-                <h1>TerraFusion</h1>
-                <h2>Professional</h2>
-            </div>
-            <ul class="menu">
-                <li>Dashboard</li>
-                <li>Properties</li>
-                <li>Appraisals</li>
-                <li class="active">New Appraisal</li>
-                <li>Comparables</li>
-                <li>Valuation Calculator</li>
-                <li>Market Analysis</li>
-            </ul>
-        </div>
-        <div class="content">
-            <a href="#" class="back-link">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
-                Back to Appraisals
+  <div class="dashboard-container">
+    <!-- Sidebar - Same as previous pages -->
+    <aside class="sidebar">
+      <div class="logo-container">
+        <h1 class="logo">TerraFusion Pro</h1>
+        <p class="logo-subtitle">Real Estate Appraisal Platform</p>
+      </div>
+      
+      <div class="nav-section">
+        <h2 class="nav-section-title">Main</h2>
+        <ul class="nav-list">
+          <li class="nav-item">
+            <a href="dashboard.html" class="nav-link">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+              </svg>
+              Dashboard
             </a>
-            
-            <div class="header">
-                <div class="header-left">
-                    <h1>New Appraisal</h1>
-                    <p>Create a detailed property appraisal report</p>
-                </div>
-                <div class="header-right">
-                    <button>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-                        Save Draft
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Property Selection -->
-            <div class="card">
-                <div class="card-header">
-                    <h2><span class="icon icon-property">P</span> Select Property</h2>
-                </div>
-                <div class="form-group">
-                    <label for="property" class="required">Property</label>
-                    <select id="property" class="form-control">
-                        <option value="">-- Select a property --</option>
-                        <option value="1">123 Main Street, Austin, TX 78701</option>
-                        <option value="2">456 Oak Avenue, Austin, TX 78704</option>
-                        <option value="3">789 Elm Drive, Austin, TX 78745</option>
-                        <option value="4">101 Pine Road, Austin, TX 78735</option>
-                    </select>
-                    <div class="form-hint">Choose an existing property or create a new one</div>
-                </div>
-                
-                <div class="property-info">
-                    <div class="property-info-header">
-                        <div class="icon">📍</div>
-                        <div>
-                            <div style="font-weight: 500; margin-bottom: 4px;">123 Main Street</div>
-                            <div style="font-size: 14px; color: #6b7280;">Austin, TX 78701</div>
-                        </div>
-                    </div>
-                    
-                    <div class="property-info-details">
-                        <div class="property-info-item">
-                            <div class="property-info-label">Type:</div>
-                            <div class="property-info-value">Single Family</div>
-                        </div>
-                        <div class="property-info-item">
-                            <div class="property-info-label">Size:</div>
-                            <div class="property-info-value">2,450 sq.ft.</div>
-                        </div>
-                        <div class="property-info-item">
-                            <div class="property-info-label">Bedrooms:</div>
-                            <div class="property-info-value">3</div>
-                        </div>
-                        <div class="property-info-item">
-                            <div class="property-info-label">Bathrooms:</div>
-                            <div class="property-info-value">2.5</div>
-                        </div>
-                        <div class="property-info-item">
-                            <div class="property-info-label">Year Built:</div>
-                            <div class="property-info-value">2005</div>
-                        </div>
-                        <div class="property-info-item">
-                            <div class="property-info-label">Lot Size:</div>
-                            <div class="property-info-value">8,500 sq.ft.</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <button class="btn btn-secondary" style="width: auto; display: inline-flex; align-items: center;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-                    Add New Property
-                </button>
-            </div>
-            
-            <!-- Appraisal Purpose -->
-            <div class="card">
-                <div class="card-header">
-                    <h2><span class="icon icon-purpose">A</span> Appraisal Purpose & Dates</h2>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="purpose" class="required">Appraisal Purpose</label>
-                        <select id="purpose" class="form-control">
-                            <option value="">-- Select purpose --</option>
-                            <option value="purchase">Purchase Financing</option>
-                            <option value="refinance">Refinance</option>
-                            <option value="home_equity">Home Equity</option>
-                            <option value="estate">Estate Planning</option>
-                            <option value="divorce">Divorce Settlement</option>
-                            <option value="tax">Tax Assessment Appeal</option>
-                            <option value="insurance">Insurance Valuation</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="appraisalType" class="required">Report Type</label>
-                        <select id="appraisalType" class="form-control">
-                            <option value="">-- Select type --</option>
-                            <option value="form1004">Uniform Residential (Form 1004)</option>
-                            <option value="form1073">Individual Condo Unit (Form 1073)</option>
-                            <option value="form1025">Small Residential Income (Form 1025)</option>
-                            <option value="deskReview">Desktop Review</option>
-                            <option value="fieldReview">Field Review</option>
-                            <option value="narrative">Narrative Report</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="inspectionDate" class="required">Inspection Date</label>
-                        <input type="date" id="inspectionDate" class="form-control">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="effectiveDate" class="required">Effective Date</label>
-                        <input type="date" id="effectiveDate" class="form-control">
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="intendedUse">Intended Use</label>
-                    <input type="text" id="intendedUse" class="form-control" placeholder="e.g., 'To determine market value for refinancing purposes'">
-                </div>
-            </div>
-            
-            <!-- Client Information -->
-            <div class="card">
-                <div class="card-header">
-                    <h2><span class="icon icon-client">C</span> Client Information</h2>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="clientName" class="required">Client Name</label>
-                        <input type="text" id="clientName" class="form-control" placeholder="Full name of client">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="clientEmail">Client Email</label>
-                        <input type="email" id="clientEmail" class="form-control" placeholder="client@example.com">
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="clientPhone">Client Phone</label>
-                        <input type="tel" id="clientPhone" class="form-control" placeholder="(555) 123-4567">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="lenderName">Lender Name</label>
-                        <input type="text" id="lenderName" class="form-control" placeholder="Name of lending institution (if applicable)">
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="loanNumber">Loan/File Number</label>
-                    <input type="text" id="loanNumber" class="form-control" placeholder="Loan or file reference number">
-                </div>
-            </div>
-            
-            <!-- Valuation Approach -->
-            <div class="card">
-                <div class="card-header">
-                    <h2><span class="icon icon-approach">V</span> Valuation Approach</h2>
-                </div>
-                
-                <div class="form-group">
-                    <label>Valuation Methods to Apply</label>
-                    <div class="radio-group">
-                        <div class="radio-option">
-                            <input type="checkbox" id="salesComp" checked>
-                            <label for="salesComp">Sales Comparison</label>
-                        </div>
-                        <div class="radio-option">
-                            <input type="checkbox" id="costApproach">
-                            <label for="costApproach">Cost Approach</label>
-                        </div>
-                        <div class="radio-option">
-                            <input type="checkbox" id="incomeApproach">
-                            <label for="incomeApproach">Income Approach</label>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="scopeOfWork">Scope of Work</label>
-                    <textarea id="scopeOfWork" class="form-control" placeholder="Describe the scope of work for this appraisal..."></textarea>
-                    <div class="form-hint">Outline the specific tasks performed during the appraisal process</div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="additionalNotes">Additional Notes</label>
-                    <textarea id="additionalNotes" class="form-control" placeholder="Any additional information or instructions..."></textarea>
-                </div>
-            </div>
-            
-            <div class="btn-group">
-                <button class="btn btn-secondary">Cancel</button>
-                <button class="btn btn-secondary">Save as Draft</button>
-                <button class="btn btn-primary">Create Appraisal</button>
-            </div>
+          </li>
+          <li class="nav-item">
+            <a href="property-details.html" class="nav-link">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+              </svg>
+              Properties
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link active">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+              </svg>
+              Appraisals
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+              Reports
+            </a>
+          </li>
+        </ul>
+      </div>
+      
+      <div class="nav-section">
+        <h2 class="nav-section-title">Analysis</h2>
+        <ul class="nav-list">
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+              </svg>
+              Comparables
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="3" y1="9" x2="21" y2="9"></line>
+                <line x1="9" y1="21" x2="9" y2="9"></line>
+              </svg>
+              Market Data
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 20v-6M6 20V10M18 20V4"></path>
+              </svg>
+              Valuation
+            </a>
+          </li>
+        </ul>
+      </div>
+      
+      <!-- Settings section and user section - same as previous pages -->
+      <div class="nav-section">
+        <h2 class="nav-section-title">Settings</h2>
+        <ul class="nav-list">
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              Profile
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              </svg>
+              Settings
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              Team
+            </a>
+          </li>
+        </ul>
+      </div>
+      
+      <div class="user-section">
+        <div class="user-avatar">JD</div>
+        <div class="user-info">
+          <p class="user-name">John Doe</p>
+          <p class="user-role">Senior Appraiser</p>
         </div>
+      </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+      <header class="header">
+        <div class="header-title">
+          <a href="property-details.html" class="back-link">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+          </a>
+          <h1 class="page-title">New Appraisal: 123 Main Street</h1>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-secondary">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+              <polyline points="17 21 17 13 7 13 7 21"></polyline>
+              <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+            Save Draft
+          </button>
+        </div>
+      </header>
+      
+      <div class="appraisal-content">
+        <div class="form-header">
+          <div class="progress-container">
+            <div class="progress-bar"></div>
+          </div>
+          <div class="steps">
+            <div class="step active">
+              <div class="step-number">1</div>
+              <span>Basic Information</span>
+            </div>
+            <div class="step">
+              <div class="step-number">2</div>
+              <span>Comparables</span>
+            </div>
+            <div class="step">
+              <div class="step-number">3</div>
+              <span>Valuation</span>
+            </div>
+            <div class="step">
+              <div class="step-number">4</div>
+              <span>Attachments</span>
+            </div>
+          </div>
+        </div>
+        
+        <form id="appraisal-form">
+          <!-- Step 1: Basic Information -->
+          <div class="form-section">
+            <h2 class="section-title">Basic Information</h2>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="property">Property</label>
+                <select class="form-select" id="property" disabled>
+                  <option>123 Main Street, San Francisco, CA 94105</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="appraiser">Appraiser</label>
+                <select class="form-select" id="appraiser">
+                  <option>John Doe</option>
+                  <option>Sarah Johnson</option>
+                  <option>Michael Lee</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="purpose">Appraisal Purpose</label>
+                <select class="form-select" id="purpose">
+                  <option>Purchase</option>
+                  <option>Refinance</option>
+                  <option>Home Equity</option>
+                  <option>Estate Planning</option>
+                  <option>Tax Assessment</option>
+                  <option>Insurance</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="approach">Valuation Approach</label>
+                <select class="form-select" id="approach">
+                  <option>Sales Comparison</option>
+                  <option>Cost Approach</option>
+                  <option>Income Approach</option>
+                  <option>Multiple Approaches</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="effective-date">Effective Date</label>
+                <input type="date" class="form-control" id="effective-date">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="inspection-date">Inspection Date</label>
+                <input type="date" class="form-control" id="inspection-date">
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="client">Client</label>
+              <input type="text" class="form-control" id="client" placeholder="Enter client name">
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="special-instructions">Special Instructions</label>
+              <textarea class="form-control" id="special-instructions" rows="3" placeholder="Enter any special instructions or notes for this appraisal"></textarea>
+            </div>
+          </div>
+          
+          <!-- Step 2: Comparables -->
+          <div class="form-section">
+            <h2 class="section-title">Comparable Properties</h2>
+            
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Subject Property</h3>
+              </div>
+              <div class="card-body">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="subject-address">Address</label>
+                    <input type="text" class="form-control" id="subject-address" value="123 Main Street" disabled>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="subject-city">City</label>
+                    <input type="text" class="form-control" id="subject-city" value="San Francisco" disabled>
+                  </div>
+                </div>
+                
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="subject-sqft">Square Footage</label>
+                    <input type="number" class="form-control" id="subject-sqft" value="2350" disabled>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="subject-beds">Bedrooms</label>
+                    <input type="number" class="form-control" id="subject-beds" value="4" disabled>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="subject-baths">Bathrooms</label>
+                    <input type="number" class="form-control" id="subject-baths" value="2.5" disabled>
+                  </div>
+                </div>
+                
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="subject-yearbuilt">Year Built</label>
+                    <input type="number" class="form-control" id="subject-yearbuilt" value="1992" disabled>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="subject-lotsize">Lot Size (sq ft)</label>
+                    <input type="number" class="form-control" id="subject-lotsize" value="5200" disabled>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="subject-garage">Garage</label>
+                    <input type="text" class="form-control" id="subject-garage" value="2-car attached" disabled>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="comparison-container">
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th width="5%"></th>
+                    <th width="30%">Address</th>
+                    <th width="10%">Sale Price</th>
+                    <th width="10%">Sale Date</th>
+                    <th width="10%">Sq Ft</th>
+                    <th width="10%">Bed/Bath</th>
+                    <th width="10%">Year Built</th>
+                    <th width="10%">Lot Size</th>
+                    <th width="5%"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      <div class="drag-handle">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <line x1="8" y1="6" x2="21" y2="6"></line>
+                          <line x1="8" y1="12" x2="21" y2="12"></line>
+                          <line x1="8" y1="18" x2="21" y2="18"></line>
+                          <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                          <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                          <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                        </svg>
+                      </div>
+                    </td>
+                    <td>145 Oak Street, San Francisco, CA</td>
+                    <td>$895,000</td>
+                    <td>Apr 12, 2025</td>
+                    <td>2,250</td>
+                    <td>4/2.5</td>
+                    <td>1990</td>
+                    <td>5,000</td>
+                    <td>
+                      <button type="button" class="btn btn-secondary btn-sm">Edit</button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div class="drag-handle">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <line x1="8" y1="6" x2="21" y2="6"></line>
+                          <line x1="8" y1="12" x2="21" y2="12"></line>
+                          <line x1="8" y1="18" x2="21" y2="18"></line>
+                          <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                          <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                          <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                        </svg>
+                      </div>
+                    </td>
+                    <td>78 Pine Avenue, San Francisco, CA</td>
+                    <td>$925,000</td>
+                    <td>Mar 28, 2025</td>
+                    <td>2,400</td>
+                    <td>4/3</td>
+                    <td>1995</td>
+                    <td>5,300</td>
+                    <td>
+                      <button type="button" class="btn btn-secondary btn-sm">Edit</button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div class="drag-handle">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <line x1="8" y1="6" x2="21" y2="6"></line>
+                          <line x1="8" y1="12" x2="21" y2="12"></line>
+                          <line x1="8" y1="18" x2="21" y2="18"></line>
+                          <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                          <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                          <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                        </svg>
+                      </div>
+                    </td>
+                    <td>210 Maple Lane, San Francisco, CA</td>
+                    <td>$850,000</td>
+                    <td>Mar 15, 2025</td>
+                    <td>2,100</td>
+                    <td>3/2</td>
+                    <td>1988</td>
+                    <td>4,800</td>
+                    <td>
+                      <button type="button" class="btn btn-secondary btn-sm">Edit</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <button type="button" class="btn btn-secondary" style="margin-top: 1rem;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="16"></line>
+                <line x1="8" y1="12" x2="16" y2="12"></line>
+              </svg>
+              Add Comparable
+            </button>
+            
+            <h3 class="section-title" style="margin-top: 2rem;">Adjustments</h3>
+            
+            <div class="adjustment-row">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Square Footage Adjustment ($/sq ft)</label>
+                  <div class="input-group">
+                    <div class="input-group-text">$</div>
+                    <input type="number" class="form-control" value="125">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Bedroom Adjustment</label>
+                  <div class="input-group">
+                    <div class="input-group-text">$</div>
+                    <input type="number" class="form-control" value="15000">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Bathroom Adjustment</label>
+                  <div class="input-group">
+                    <div class="input-group-text">$</div>
+                    <input type="number" class="form-control" value="12500">
+                  </div>
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Age/Condition Adjustment (per year)</label>
+                  <div class="input-group">
+                    <div class="input-group-text">$</div>
+                    <input type="number" class="form-control" value="1500">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Lot Size Adjustment ($/sq ft)</label>
+                  <div class="input-group">
+                    <div class="input-group-text">$</div>
+                    <input type="number" class="form-control" value="10">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Garage Adjustment (per space)</label>
+                  <div class="input-group">
+                    <div class="input-group-text">$</div>
+                    <input type="number" class="form-control" value="10000">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Step 3: Valuation -->
+          <div class="form-section">
+            <h2 class="section-title">Valuation</h2>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="market-value">Market Value</label>
+                <div class="input-group">
+                  <div class="input-group-text">$</div>
+                  <input type="number" class="form-control" id="market-value" placeholder="Enter market value">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="price-per-sqft">Price per Square Foot</label>
+                <div class="input-group">
+                  <div class="input-group-text">$</div>
+                  <input type="number" class="form-control" id="price-per-sqft" placeholder="Calculated automatically" disabled>
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="value-range-low">Value Range - Low</label>
+                <div class="input-group">
+                  <div class="input-group-text">$</div>
+                  <input type="number" class="form-control" id="value-range-low" placeholder="Enter low range value">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="value-range-high">Value Range - High</label>
+                <div class="input-group">
+                  <div class="input-group-text">$</div>
+                  <input type="number" class="form-control" id="value-range-high" placeholder="Enter high range value">
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="valuation-rationale">Valuation Rationale</label>
+              <textarea class="form-control" id="valuation-rationale" rows="4" placeholder="Explain the reasoning behind your valuation"></textarea>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="other-approaches">Other Approaches Considered</label>
+              <textarea class="form-control" id="other-approaches" rows="3" placeholder="If applicable, describe other valuation approaches considered"></textarea>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="market-conditions">Market Conditions Summary</label>
+              <textarea class="form-control" id="market-conditions" rows="3" placeholder="Describe current market conditions affecting the valuation"></textarea>
+            </div>
+          </div>
+          
+          <!-- Step 4: Attachments -->
+          <div class="form-section">
+            <h2 class="section-title">Attachments</h2>
+            
+            <div class="upload-box">
+              <div class="upload-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+              </div>
+              <div class="upload-text">Drag and drop files here or click to browse</div>
+              <div class="upload-subtext">Supported formats: PDF, JPG, PNG, DOC, DOCX</div>
+            </div>
+            
+            <div class="file-list">
+              <div class="file-item">
+                <div class="file-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                  </svg>
+                </div>
+                <div class="file-name">Property_Inspection_Photos.pdf</div>
+                <div class="file-size">2.4 MB</div>
+                <div class="file-remove">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                  </svg>
+                </div>
+              </div>
+              <div class="file-item">
+                <div class="file-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                  </svg>
+                </div>
+                <div class="file-name">Front_Exterior.jpg</div>
+                <div class="file-size">1.8 MB</div>
+                <div class="file-remove">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                  </svg>
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-group" style="margin-top: 1.5rem;">
+              <label class="form-label" for="attachment-notes">Attachment Notes</label>
+              <textarea class="form-control" id="attachment-notes" rows="3" placeholder="Add notes about the attached files"></textarea>
+            </div>
+          </div>
+          
+          <div class="form-footer">
+            <button type="button" class="btn btn-secondary">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+              </svg>
+              Previous Step
+            </button>
+            <div>
+              <button type="button" class="btn btn-secondary">Save as Draft</button>
+              <button type="button" class="btn btn-primary">
+                Next Step
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 0.5rem; margin-right: 0;">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
     </div>
+  </div>
+  
+  <script>
+    // This would contain JavaScript for form validation, step navigation, etc.
+    document.addEventListener('DOMContentLoaded', function() {
+      // Example functionality to navigate between form steps
+      const nextButton = document.querySelector('.btn-primary');
+      const prevButton = document.querySelector('.btn-secondary');
+      
+      // This is a placeholder for actual implementation
+      console.log('Form loaded and ready');
+    });
+  </script>
 </body>
 </html>
